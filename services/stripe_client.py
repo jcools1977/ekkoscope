@@ -126,7 +126,8 @@ def get_stripe_client():
 async def create_checkout_session(
     business_id: int,
     success_url: str,
-    cancel_url: str
+    cancel_url: str,
+    metadata: Optional[dict] = None
 ) -> stripe.checkout.Session:
     """
     Create a Stripe Checkout session for a one-time Snapshot Audit payment.
@@ -138,6 +139,13 @@ async def create_checkout_session(
     
     stripe.api_key = config.api_key
     
+    session_metadata = {
+        "business_id": str(business_id),
+        "product": "ekkoscope_snapshot"
+    }
+    if metadata:
+        session_metadata.update(metadata)
+    
     session = stripe.checkout.Session.create(
         mode="payment",
         line_items=[{
@@ -146,10 +154,7 @@ async def create_checkout_session(
         }],
         success_url=success_url,
         cancel_url=cancel_url,
-        metadata={
-            "business_id": str(business_id),
-            "product": "ekkoscope_snapshot"
-        }
+        metadata=session_metadata
     )
     
     return session
@@ -157,7 +162,8 @@ async def create_checkout_session(
 async def create_subscription_checkout_session(
     business_id: int,
     success_url: str,
-    cancel_url: str
+    cancel_url: str,
+    metadata: Optional[dict] = None
 ) -> stripe.checkout.Session:
     """
     Create a Stripe Checkout session for the Ongoing subscription plan.
@@ -183,16 +189,20 @@ async def create_subscription_checkout_session(
         "quantity": 1
     })
     
+    session_metadata = {
+        "business_id": str(business_id),
+        "product": "ekkoscope_ongoing",
+        "plan": "ongoing"
+    }
+    if metadata:
+        session_metadata.update(metadata)
+    
     session = stripe.checkout.Session.create(
         mode="subscription",
         line_items=line_items,
         success_url=success_url,
         cancel_url=cancel_url,
-        metadata={
-            "business_id": str(business_id),
-            "product": "ekkoscope_ongoing",
-            "plan": "ongoing"
-        }
+        metadata=session_metadata
     )
     
     return session
