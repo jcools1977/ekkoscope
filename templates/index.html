@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EchoScope · GEO Engine for AI Visibility</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>EchoScope</h1>
+            <p class="tagline">GEO Engine for AI Visibility</p>
+            <p class="brand">Powered by AN2B</p>
+        </header>
+
+        {% if error %}
+        <div class="error-message">
+            <strong>Error:</strong> {{ error }}
+        </div>
+        {% endif %}
+
+        <div class="form-card">
+            <h2>Select Business Tenant</h2>
+            <form method="POST" action="/analyze">
+                <div class="form-group">
+                    <label for="tenant_id">Tenant:</label>
+                    <select name="tenant_id" id="tenant_id" required>
+                        <option value="">-- Select a tenant --</option>
+                        {% for tenant in tenants %}
+                        <option value="{{ tenant.id }}" {% if selected_tenant_id == tenant.id %}selected{% endif %}>
+                            {{ tenant.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Run GEO Analysis</button>
+            </form>
+        </div>
+
+        {% if analysis %}
+        <div class="summary-card">
+            <h2>AI Visibility Summary</h2>
+            <div class="summary-meta">
+                <p><strong>Tenant:</strong> {{ analysis.tenant_name }}</p>
+                <p><strong>Analysis Run:</strong> {{ analysis.run_at }}</p>
+            </div>
+            <div class="visibility-metrics">
+                <div class="metric">
+                    <span class="metric-label">Mentioned</span>
+                    <span class="metric-value">{{ analysis.mentioned_count }} / {{ analysis.total_queries }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Primary Recommendation</span>
+                    <span class="metric-value">{{ analysis.primary_count }} / {{ analysis.total_queries }}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Average Score</span>
+                    <span class="metric-value">{{ analysis.avg_score }} / 2.0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-card">
+            <h2>Query Results</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Query</th>
+                            <th>Score</th>
+                            <th>Mentioned?</th>
+                            <th>Primary?</th>
+                            <th>Competitors</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in analysis.results %}
+                        <tr>
+                            <td class="query-cell">{{ result.query }}</td>
+                            <td class="score-cell">
+                                <span class="score-badge score-{{ result.score }}">{{ result.score }}</span>
+                            </td>
+                            <td>{{ "Yes" if result.mentioned else "No" }}</td>
+                            <td>{{ "Yes" if result.primary_recommendation else "No" }}</td>
+                            <td class="competitors-cell">
+                                {% if result.competitors %}
+                                    {{ result.competitors|join(", ") }}
+                                {% else %}
+                                    <em>None</em>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if analysis.suggestions %}
+        <div class="recommendations-card">
+            <h2>Recommended Actions</h2>
+            {% if analysis.visibility_summary %}
+            <p class="visibility-summary">{{ analysis.visibility_summary }}</p>
+            {% endif %}
+            
+            <div class="suggestions-grid">
+                {% for suggestion in analysis.suggestions %}
+                <div class="suggestion-card">
+                    <div class="suggestion-header">
+                        <h3>{{ suggestion.title }}</h3>
+                        <span class="type-badge type-{{ suggestion.type }}">{{ suggestion.type }}</span>
+                    </div>
+                    <p class="suggestion-details">{{ suggestion.details }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>
