@@ -40,7 +40,10 @@
 
         {% if analysis %}
         <div class="summary-card">
-            <h2>AI Visibility Summary</h2>
+            <div class="summary-header">
+                <h2>AI Visibility Summary</h2>
+                <a href="/report/{{ selected_tenant_id }}" class="btn-secondary">Download Report (PDF)</a>
+            </div>
             <div class="summary-meta">
                 <p><strong>Tenant:</strong> {{ analysis.tenant_name }}</p>
                 <p><strong>Analysis Run:</strong> {{ analysis.run_at }}</p>

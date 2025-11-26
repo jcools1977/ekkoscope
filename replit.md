@@ -40,6 +40,7 @@ Simple, stateless UI that doesn't require complex client-side state management. 
 main.py              # FastAPI application and route handlers
 services/
   analysis.py        # Core business logic for AI visibility analysis
+  reporting.py       # PDF report generation using fpdf2
 data/
   tenants.json       # Tenant configuration (queries, brand aliases, geo focus)
 templates/           # Jinja2 HTML templates
@@ -53,6 +54,16 @@ static/              # CSS styling
 4. Scores results (0-2 scale) based on brand mention and ranking
 5. Generates content recommendations via additional OpenAI call
 6. Renders complete analysis results back to template
+7. User can download a professional PDF report via "Download Report (PDF)" button
+
+**PDF Report Generation:**
+The `/report/{tenant_id}` endpoint generates a client-ready PDF containing:
+- Cover page with EchoScope branding and tenant name
+- AI visibility summary with score distribution
+- Per-query details table showing each query and its score
+- Competitor overview showing top 5 competitors by frequency
+- Grouped recommendations (new pages, updates, FAQs, authority, branding)
+- Professional footer with page numbering
 
 **Scoring Logic:**
 - **Score 0**: Business not mentioned in AI response
@@ -116,6 +127,9 @@ Using OpenAI's structured outputs ensures consistent, parseable responses. The t
 
 **API Clients:**
 - `openai`: Official OpenAI Python client
+
+**PDF Generation:**
+- `fpdf2`: Pure-Python PDF generation library for professional reports
 
 **Utilities:**
 - `python-dotenv`: Environment variable management (optional)
