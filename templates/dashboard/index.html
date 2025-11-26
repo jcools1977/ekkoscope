@@ -23,14 +23,9 @@
             text-decoration: none;
         }
         
-        .nav-logo img {
-            width: 36px;
-            height: 36px;
-        }
-        
-        .nav-logo span {
-            font-size: 1.25rem;
-            font-weight: 600;
+        .nav-logo img.full-logo {
+            height: 32px;
+            width: auto;
         }
         
         .nav-user {
@@ -259,8 +254,7 @@
 <body>
     <nav class="dashboard-nav">
         <a href="/dashboard" class="nav-logo">
-            <img src="/static/img/ekkoscope-icon.svg" alt="EkkoScope">
-            <span>Ekko<span class="teal">Scope</span></span>
+            <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope" class="full-logo">
         </a>
         <div class="nav-user">
             <span class="user-name">{{ user.full_name }}</span>
