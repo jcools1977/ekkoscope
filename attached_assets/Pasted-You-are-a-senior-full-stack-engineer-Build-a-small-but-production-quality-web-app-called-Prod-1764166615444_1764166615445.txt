@@ -1,0 +1,411 @@
+You are a senior full-stack engineer. Build a small but production-quality web app called:
+
+  Product name: EchoScope
+  Tagline: GEO Engine for AI Visibility
+  Brand: Powered by AN2B
+
+The goal of this app is simple:
+
+  - Let me pick a business tenant (A-D Roofing or Better Pak).
+  - Run a set of pre-defined "money questions" against OpenAI as if it were a search engine.
+  - See how often my brand is recommended vs competitors.
+  - Get 5–10 concrete content recommendations to improve my "AI visibility."
+
+This is V1, so keep it focused and clean.
+
+====================
+HIGH-LEVEL REQUIREMENTS
+====================
+
+1. Stack
+   - Language: Python 3
+   - Web framework: FastAPI
+   - Templates: Jinja2 (via fastapi.templating / starlette)
+   - HTTP server for local/dev: uvicorn
+   - Config: JSON file for tenants
+   - AI: OpenAI API (via the official `openai` Python client)
+   - Styling: a single lightweight CSS file, nothing fancy, just clean layout
+
+2. Core behavior
+   - A single-page web UI with:
+     - Header showing "EchoScope · GEO Engine for AI Visibility"
+     - A dropdown to choose a tenant: "A-D Roofing" or "Better Pak"
+     - A button: "Run GEO Analysis"
+   - When I submit:
+     - Backend loads that tenant’s config (queries + brand aliases).
+     - For each query, backend calls OpenAI with a structured prompt to return a JSON list of recommended businesses.
+     - Backend scores:
+       - Whether my tenant is mentioned at all.
+       - Whether my tenant is the top/primary recommendation.
+       - Which competitors are recommended.
+     - Backend then calls OpenAI once more to generate 5–10 content recommendations for that tenant based on the scores.
+   - The results are rendered back in the same page:
+     - An "AI Visibility Summary" card.
+     - A table of queries vs scores.
+     - A "Recommended Actions" section with nice, readable bullet cards.
+
+3. NO extra features yet:
+   - No user authentication.
+   - No database.
+   - No cron/scheduling.
+   - No crawling of websites (V1 is only about how AI answers queries using the tenant profile + general knowledge).
+   - No multi-tenant account system; tenants are hardcoded in a config file.
+
+====================
+FILE / PROJECT STRUCTURE
+====================
+
+Create a simple, organized layout like this:
+
+  /main.py                 # FastAPI app entrypoint
+  /requirements.txt        # Python dependencies
+  /data/tenants.json       # Tenant configuration (business profiles + queries)
+  /templates/index.html    # Main Jinja template
+  /static/styles.css       # Basic CSS for layout and typography
+  /README.md               # How to run + how it works
+
+You can add small helper modules (e.g. /services/analysis.py) if it keeps main.py clean, but don’t over-engineer it.
+
+====================
+TENANT CONFIG (data/tenants.json)
+====================
+
+Create a JSON config with two tenants and keep it very easy to edit later.
+
+Example shape (use THIS structure):
+
+{
+  "ad_roofing": {
+    "id": "ad_roofing",
+    "display_name": "A-D Roofing & Metal Supply",
+    "domains": [
+      "AD_ROOFING_SITE_URL",
+      "AD_METAL_SUPPLY_SITE_URL"
+    ],
+    "brand_aliases": [
+      "A-D Roofing",
+      "AD Roofing",
+      "A-D Metal Supply",
+      "AD Metal Supply"
+    ],
+    "geo_focus": [
+      "Morehead City, NC",
+      "Eastern North Carolina"
+    ],
+    "priority_queries": [
+      "best roofing company in Morehead City, NC",
+      "metal roof installation in Eastern North Carolina",
+      "roof replacement contractor near Morehead City, NC",
+      "metal roofing panel supplier in Eastern North Carolina"
+    ]
+  },
+  "better_pak": {
+    "id": "better_pak",
+    "display_name": "Better Pak / BetterPak Supplies",
+    "domains": [
+      "https://better-pak.com",
+      "https://betterpaksupplies.com"
+    ],
+    "brand_aliases": [
+      "Better Pak",
+      "BetterPak",
+      "BetterPak Supplies",
+      "Better Pak Packaging"
+    ],
+    "geo_focus": [
+      "United States"
+    ],
+    "priority_queries": [
+      "bulk trash can liners supplier in the United States",
+      "poly bags supplier for school districts",
+      "where to buy industrial packaging and janitorial supplies online",
+      "6 mil heavy duty flat poly bags supplier"
+    ]
+  }
+}
+
+Use this file as the single source of truth for tenants and their queries. The app should read from this file at startup.
+
+====================
+BACKEND LOGIC (OpenAI + Scoring)
+====================
+
+Use the official `openai` Python client. Do NOT hardcode API keys; read the key from the environment variable `OPENAI_API_KEY`.
+
+1) Recommendation call per query
+
+For each tenant’s `priority_queries`, call OpenAI with a prompt that forces a JSON output.
+
+- Use a chat completion model (e.g. gpt-4o-mini or gpt-4o), and ask for a structured JSON response.
+
+Prompt structure (in code, format it as a Python f-string):
+
+SYSTEM:
+"You are an assistant that recommends businesses to customers based on a question. You must respond with strict JSON only, no extra text."
+
+USER:
+"""
+A customer asks:
+
+{query}
+
+Return JSON of this shape:
+
+{
+  "recommendations": [
+    {"name": "Business Name", "reason": "Short explanation"},
+    ...
+  ]
+}
+
+List 3 to 5 businesses you would genuinely recommend. Be realistic and do not fabricate the target brand if it is not a good fit or not widely known.
+"""
+
+The response MUST be valid JSON, so parse it safely.
+
+2) Scoring logic
+
+Implement a small scoring function in Python, something like:
+
+- Inputs:
+  - tenant brand_aliases (list of strings)
+  - JSON response from OpenAI: { "recommendations": [ { "name": "...", "reason": "..." }, ... ] }
+
+- Normalization:
+  - Compare business names case-insensitively and strip whitespace.
+
+- Determine:
+  - mentioned: True if any recommendation name matches any alias.
+  - primary_recommendation: True if the FIRST recommendation matches an alias.
+  - score:
+    - 0 if not mentioned
+    - 1 if mentioned but not first
+    - 2 if first recommendation matches an alias
+  - competitors: list of other recommendation names that do NOT match the aliases.
+
+Store per-query result in a Python dict like:
+
+{
+  "query": ...,
+  "mentioned": true/false,
+  "primary_recommendation": true/false,
+  "score": 0|1|2,
+  "our_names": [list of rec names matching aliases],
+  "competitors": [list of competitor names],
+  "raw_recommendations": [the parsed list from OpenAI]
+}
+
+3) Run-level summary
+
+After all queries for a tenant are processed, compute:
+
+- total_queries
+- mentioned_count (how many had mentioned = True)
+- primary_count (how many had primary_recommendation = True)
+- avg_score (float, average of scores across queries, 0–2)
+
+Create a summary dict:
+
+{
+  "tenant_id": "ad_roofing",
+  "tenant_name": "...",
+  "run_at": "<ISO timestamp>",
+  "total_queries": ...,
+  "mentioned_count": ...,
+  "primary_count": ...,
+  "avg_score": ...,
+  "results": [list of per-query results]
+}
+
+4) Suggestions engine
+
+After you’ve computed the summary, call OpenAI ONCE more to generate recommendations.
+
+Prompt structure:
+
+SYSTEM:
+"You are a GEO (Generative Engine Optimization) consultant. You help businesses get recommended more often inside AI-generated answers like ChatGPT or other LLMs."
+
+USER:
+"""
+Here is the tenant profile (JSON):
+
+{tenant_config_json}
+
+Here are the current AI visibility results (JSON):
+
+{analysis_summary_json}
+
+Based on this, generate 5 to 10 concrete, actionable content recommendations to improve this business's visibility in AI-generated answers.
+
+Rules:
+- Focus on changes to the business's OWN domains: {domains_from_config}.
+- Each recommendation should have:
+  - "title": a short label
+  - "type": one of ["new_page", "update_page", "faq", "authority", "branding"]
+  - "details": 2–4 sentences explaining WHAT to create/change and WHY it helps AI mention them more.
+- Output strict JSON of this structure:
+
+{
+  "visibility_summary": "One-paragraph human-readable summary",
+  "suggestions": [
+    {"title": "...", "type": "...", "details": "..."},
+    ...
+  ]
+}
+"""
+
+Parse this JSON and attach it to the overall analysis result.
+
+====================
+FASTAPI APP DESIGN (main.py)
+====================
+
+Set up FastAPI with Jinja templates and a simple UI.
+
+- Create the app:
+
+  from fastapi import FastAPI, Request, Form
+  from fastapi.responses import HTMLResponse
+  from fastapi.staticfiles import StaticFiles
+  from fastapi.templating import Jinja2Templates
+
+  app = FastAPI()
+  app.mount("/static", StaticFiles(directory="static"), name="static")
+  templates = Jinja2Templates(directory="templates")
+
+- At startup, load tenants.json into memory:
+
+  with open("data/tenants.json") as f:
+      TENANTS = json.load(f)
+
+- Create a helper function to get a list of tenants for the dropdown:
+  - Each entry: { "id": "ad_roofing", "name": "A-D Roofing & Metal Supply" }
+
+Routes:
+
+1) GET "/"
+   - Renders templates/index.html
+   - Pass to template:
+     - `tenants` list
+     - optional `analysis` (None on first load)
+
+2) POST "/analyze"
+   - Accepts form field: tenant_id (string)
+   - Loads the tenant config from TENANTS
+   - Runs the analysis pipeline described above:
+     - For each query: call OpenAI, build per-query result.
+     - Compute summary.
+     - Call OpenAI again to generate suggestions.
+   - Renders index.html again with:
+     - `tenants` list
+     - `selected_tenant_id`
+     - `analysis` = summary dict including suggestions.
+
+Make sure error conditions (bad tenant_id, OpenAI issues) are handled gracefully:
+- Show a message in the template if something goes wrong, but don’t crash the app.
+
+====================
+TEMPLATE (templates/index.html)
+====================
+
+Use a clean, minimal layout.
+
+Requirements:
+
+- Show a header:
+  - EchoScope logo text, tagline, and "Powered by AN2B".
+- Show a form:
+  - Tenant dropdown: [A-D Roofing & Metal Supply, Better Pak / BetterPak Supplies]
+  - "Run GEO Analysis" button.
+- If `analysis` is present, show:
+
+  1. Summary card:
+     - Tenant name
+     - Run timestamp
+     - "AI Visibility Index":
+       - Mentioned in X / total queries
+       - Primary recommendation in Y / total queries
+       - Average score (0–2)
+
+  2. Table of queries:
+     - Columns:
+       - Query
+       - Score (0–2)
+       - Mentioned? (Yes/No)
+       - Primary? (Yes/No)
+       - Example competitors (comma-separated list)
+
+  3. "Recommended Actions" section:
+     - Show `visibility_summary` as a short paragraph.
+     - For each suggestion:
+       - Card with:
+         - Title
+         - Type (badge)
+         - Details text underneath.
+
+Use `styles.css` to make it readable:
+- Centered content with max-width.
+- Simple cards with light borders.
+- Table with alternating row background.
+
+====================
+STYLING (static/styles.css)
+====================
+
+Keep it minimal:
+
+- Set a global font: system UI font (e.g. -apple-system, BlinkMacSystemFont, etc.).
+- Body background: light gray (#f5f5f5).
+- Use a main container with max-width: 900px and margin: 2rem auto.
+- Header with product name and tagline.
+- Cards with white background, border-radius, box-shadow light.
+
+No need for advanced responsiveness; just don’t make it ugly.
+
+====================
+DEPENDENCIES (requirements.txt)
+====================
+
+Add at least:
+
+fastapi
+uvicorn
+jinja2
+openai
+python-dotenv
+
+====================
+README.md
+====================
+
+Include a short README with:
+
+- Project name + tagline.
+- How to set up and run:
+
+  1. Create virtual env (if needed).
+  2. Install requirements: `pip install -r requirements.txt`
+  3. Set `OPENAI_API_KEY` in environment (on Replit, use the Secrets manager).
+  4. Run the app: `uvicorn.main:app --reload` or similar.
+  5. Open the web URL and pick a tenant, click "Run GEO Analysis".
+
+- Explanation of the scoring (0/1/2).
+- Note that tenants can be edited via `data/tenants.json`.
+
+====================
+GOAL
+====================
+
+When you are done, I should be able to:
+
+- Run the FastAPI app on Replit.
+- Open the URL.
+- Choose "A-D Roofing & Metal Supply" or "Better Pak / BetterPak Supplies".
+- Click "Run GEO Analysis".
+- See:
+  - A visibility summary.
+  - Per-query scores.
+  - A set of content recommendations.
+
+All of this must be powered by real OpenAI API calls and be implemented with clean, readable Python code and templates.
