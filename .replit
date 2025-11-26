@@ -37,3 +37,8 @@ externalPort = 80
 [[ports]]
 localPort = 34523
 externalPort = 3000
+
+[userenv]
+
+[userenv.shared]
+STRIPE_PRICE_SNAPSHOT = "price_1SXqAxBB4Ktzr0dekmYdYQpb"

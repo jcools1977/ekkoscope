@@ -190,6 +190,7 @@ Using OpenAI's structured outputs ensures consistent, parseable responses. The t
 
 **API Clients:**
 - `openai`: Official OpenAI Python client
+- `stripe`: Stripe payment processing SDK
 
 **PDF Generation:**
 - `fpdf2`: Pure-Python PDF generation library for professional reports
@@ -197,6 +198,7 @@ Using OpenAI's structured outputs ensures consistent, parseable responses. The t
 **Utilities:**
 - `python-dotenv`: Environment variable management (optional)
 - `python-multipart`: Form data parsing for FastAPI
+- `httpx`: Async HTTP client for Replit connector API
 
 **Deployment:**
 - Designed for Replit deployment
@@ -205,10 +207,38 @@ Using OpenAI's structured outputs ensures consistent, parseable responses. The t
 
 ### Data Storage
 
-**File-based Configuration:**
-- `data/tenants.json`: Static tenant configuration
-- No persistent database in V1
-- All analysis results are ephemeral (displayed once, not stored)
+**SQLite Database (Sprint 1):**
+- `echoscope.db`: SQLite database file
+- SQLAlchemy ORM with Business and Audit models
+- JSON-encoded text fields for arrays (extra_domains, regions, categories, visibility_summary, suggestions)
 
-**Rationale:**
-File-based approach eliminates database setup complexity. For V1 scope with 2 tenants and limited queries, JSON configuration is sufficient and easier to modify.
+**File-based Configuration:**
+- `data/tenants.json`: Legacy tenant configuration for original analysis feature
+- `reports/`: Generated PDF reports storage
+
+### Stripe Integration (Sprint 2)
+
+**Stripe Checkout Flow:**
+- One-time payment for EchoScope Snapshot Audit ($49)
+- Stripe credentials fetched from Replit connector API
+- Environment variable `STRIPE_PRICE_SNAPSHOT` stores the price ID
+
+**Public Snapshot Flow:**
+1. `/snapshot` - Landing page with pricing info
+2. `/snapshot/business` - Business info form
+3. `/snapshot/checkout` - Creates Stripe Checkout session
+4. Stripe Hosted Checkout - User pays
+5. `/webhooks/stripe` - Webhook creates audit on successful payment
+6. `/snapshot/success` - Shows payment confirmation and audit status
+7. `/snapshot/audit/{id}` - Public view of completed audit with PDF download
+
+**Webhook Handler:**
+- Listens for `checkout.session.completed` events
+- Extracts `business_id` from session metadata
+- Creates Audit with `channel="self_serve"` and `status="pending"`
+- Runs audit in FastAPI BackgroundTasks to avoid blocking
+
+**Security:**
+- Business ID stored in session to prevent checkout hijacking
+- Webhook signature verification (when STRIPE_WEBHOOK_SECRET is set)
+- Audits only accessible via `self_serve` channel check
