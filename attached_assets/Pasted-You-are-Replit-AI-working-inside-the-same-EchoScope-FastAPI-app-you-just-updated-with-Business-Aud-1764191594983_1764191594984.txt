@@ -1,0 +1,133 @@
+You are Replit AI working inside the same EchoScope FastAPI app you just updated with Business + Audit models and an admin dashboard.
+
+GOAL OF THIS TASK (SPRINT 2)
+
+Add a **public, paid flow** for a ONE-TIME EchoScope GEO Audit “Snapshot”:
+
+- Public user:
+  1) Fills in business info.
+  2) Pays a one-time fee via Stripe Checkout (e.g. ECHOSCOPE_SNAPSHOT price).
+  3) After successful payment, an Audit is created and run automatically.
+  4) User can view the status and download the PDF when ready.
+
+- Admin (me):
+  - Sees these businesses in `/admin` with `source = "public"`.
+  - Sees their audits with `channel = "self_serve"`.
+
+ASSUMPTIONS
+
+- We will use Stripe Checkout (one-time payment).
+- We will configure a single Stripe price ID, e.g. `STRIPE_PRICE_SNAPSHOT`, via environment variable.
+- We will use a Stripe webhook to be notified of successful payments and to trigger audits.
+
+IMPLEMENTATION DETAILS
+
+1) Install and configure Stripe (if not already present):
+
+- Add `stripe` to requirements.txt.
+- Read `STRIPE_API_KEY` from environment.
+- Create a small config module, e.g. `config/stripe_config.py`, that initializes Stripe with the API key.
+
+2) Public “Start Snapshot Audit” flow
+
+A. Marketing / entry page:
+
+- Route: `GET /snapshot`
+  - Show a public page explaining EchoScope Snapshot:
+    - One-time GEO audit
+    - What they get
+    - Price (but you can hardcode for now in text)
+  - Button: “Start My Snapshot Audit” → links to `/snapshot/business`
+
+B. Business info form:
+
+- Route: `GET /snapshot/business`
+  - Show a form with fields:
+    - Business name
+    - Website URL (primary_domain)
+    - Extra domains (optional)
+    - Business type (select)
+    - Regions
+    - Categories
+    - Contact name
+    - Contact email
+
+- Route: `POST /snapshot/business`
+  - Create a Business record with:
+    - source = "public"
+    - subscription_active = False
+  - Store the `business_id` in a secure session or a short-lived server-side cache keyed by a token.
+  - Redirect to `/snapshot/checkout?business_id=...` or use a signed token.
+
+C. Stripe Checkout session creation:
+
+- Route: `GET or POST /snapshot/checkout`
+  - Read `business_id` (or token) from query or session.
+  - Use the Stripe API to create a Checkout Session with:
+    - mode = "payment"
+    - line_items = [ { price: STRIPE_PRICE_SNAPSHOT, quantity: 1 } ]
+    - success_url = "https://<your-app>/snapshot/success?session_id={CHECKOUT_SESSION_ID}"
+    - cancel_url = "https://<your-app>/snapshot/cancel"
+    - metadata: include `business_id` so the webhook can link this payment to the Business.
+
+  - Return a redirect to `session.url` (Stripe Hosted Checkout).
+
+3) Stripe Webhook to capture successful payment and create the Audit
+
+- Add a route, e.g. `POST /webhook/stripe`.
+- Verify the webhook signature using `STRIPE_WEBHOOK_SECRET` from environment.
+- For event type:
+  - `checkout.session.completed`
+    - Extract the `business_id` from `session.metadata`.
+    - Create a new Audit row:
+      - business_id = that business
+      - channel = "self_serve"
+      - status = "pending"
+    - Immediately call `run_audit_for_business(business, audit, db_session)`:
+      - Update status to "done" when finished.
+    - Alternatively, you can just mark it "pending" here and have a background worker, but for this sprint it’s OK to run synchronously inside the webhook handler as long as we keep it simple.
+
+4) Success page for the user
+
+- Route: `GET /snapshot/success`
+  - Takes `session_id` as a query parameter.
+  - Use Stripe API to retrieve the session (optional) and display:
+    - “Payment successful! We’re running your EchoScope GEO Audit.”
+  - Find the Business via `business_id` in the session metadata.
+  - Also find the latest Audit for that business with `channel="self_serve"`.
+  - Show:
+    - A status indicator if audit is still running,
+    - Or a link to `/snapshot/audit/{audit_id}` if done.
+
+- Route: `GET /snapshot/audit/{audit_id}`
+  - Public-facing view of that Audit:
+    - Show a trimmed-down version of the summary:
+      - Business name
+      - Visibility summary
+      - 3–5 key opportunities from Genius Mode
+    - Provide a link “Download Full PDF Report”.
+
+Note: This route should only show audits that came from `channel="self_serve"` and should check that the caller has some minimal proof (like a session flag or a signed link). For now, keep it simple: the success page can link to it, and we assume obscurity is enough in early testing.
+
+5) Admin visibility for Snapshot audits
+
+- In `/admin/businesses` and `/admin/business/{id}`, ensure:
+  - Businesses created via Snapshot have `source = "public"`.
+  - Their audits have `channel = "self_serve"` and can be viewed in `/admin/audit/{id}` exactly like admin-run audits.
+
+6) Safety and constraints
+
+- Do NOT break the existing v0.3 analysis logic.
+- Do NOT apply Stripe to admin flows. Admin can run unlimited audits regardless of payment.
+- Enforce that a public Snapshot audit can only run AFTER a successful Stripe payment by:
+  - Creating the Audit inside the webhook handler (or just after it).
+  - Not exposing any public route to call `run_audit_for_business` directly.
+
+After this sprint, I should be able to:
+
+- Visit `/snapshot`.
+- Fill in my business info.
+- Be redirected to Stripe Checkout, pay.
+- Get redirected back to `/snapshot/success`.
+- Then later see my completed audit and download the EchoScope PDF.
+- In admin, see that business and its self_serve audit.
