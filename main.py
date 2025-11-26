@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from services.analysis import run_analysis
+from services.analysis import run_analysis, MissingAPIKeyError
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -67,6 +67,18 @@ async def analyze(request: Request, tenant_id: str = Form(...)):
                 "analysis": analysis,
                 "selected_tenant_id": tenant_id,
                 "error": None
+            }
+        )
+    
+    except MissingAPIKeyError as e:
+        return templates.TemplateResponse(
+            "index.html",
+            {
+                "request": request,
+                "tenants": get_tenant_list(),
+                "analysis": None,
+                "selected_tenant_id": tenant_id,
+                "error": str(e)
             }
         )
     

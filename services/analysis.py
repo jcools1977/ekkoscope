@@ -1,10 +1,20 @@
 import os
 import json
 from datetime import datetime
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+class MissingAPIKeyError(Exception):
+    """Raised when OPENAI_API_KEY is not configured"""
+    pass
+
+
+def get_openai_client() -> OpenAI:
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise MissingAPIKeyError("OPENAI_API_KEY environment variable is not set. Please add your OpenAI API key in the Secrets tab to run GEO analysis.")
+    return OpenAI(api_key=api_key)
 
 
 def normalize_name(name: str) -> str:
@@ -51,6 +61,7 @@ def score_query_result(brand_aliases: List[str], recommendations: List[Dict[str,
 
 def get_recommendations_for_query(query: str) -> List[Dict[str, str]]:
     try:
+        client = get_openai_client()
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -86,6 +97,8 @@ List 3 to 5 businesses you would genuinely recommend. Be realistic and do not fa
         parsed = json.loads(content)
         return parsed.get("recommendations", [])
     
+    except MissingAPIKeyError:
+        raise
     except Exception as e:
         print(f"Error getting recommendations for query '{query}': {e}")
         return []
@@ -103,6 +116,7 @@ def generate_suggestions(tenant_config: Dict[str, Any], analysis_summary: Dict[s
         
         domains = ", ".join(tenant_config.get("domains", []))
         
+        client = get_openai_client()
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -151,6 +165,8 @@ Rules:
             }
         return json.loads(content)
     
+    except MissingAPIKeyError:
+        raise
     except Exception as e:
         print(f"Error generating suggestions: {e}")
         return {
