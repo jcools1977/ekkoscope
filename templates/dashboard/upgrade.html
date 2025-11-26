@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Plan - EkkoScope</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .dashboard-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+        
+        .nav-logo img {
+            width: 36px;
+            height: 36px;
+        }
+        
+        .nav-logo span {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .back-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.2s;
+        }
+        
+        .back-link:hover {
+            color: var(--brand-teal);
+        }
+        
+        .upgrade-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .upgrade-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .upgrade-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .upgrade-header p {
+            color: var(--text-secondary);
+        }
+        
+        .business-badge {
+            display: inline-block;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .business-badge .name {
+            font-weight: 600;
+            color: var(--brand-teal);
+        }
+        
+        .business-badge .domain {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+        
+        .plan-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+            position: relative;
+        }
+        
+        .plan-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .plan-card.featured {
+            border-color: var(--brand-teal);
+        }
+        
+        .plan-card.featured::before {
+            content: "BEST VALUE";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.35rem 1rem;
+            border-radius: 20px;
+        }
+        
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-tagline {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .plan-price {
+            margin: 1.5rem 0;
+        }
+        
+        .plan-price .amount {
+            font-size: 3rem;
+            font-weight: bold;
+        }
+        
+        .plan-price .period {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+        
+        .plan-price .setup-note {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+        
+        .plan-features {
+            list-style: none;
+            padding: 0;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+        
+        .plan-features li {
+            padding: 0.6rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .plan-features .check {
+            color: var(--brand-teal);
+            flex-shrink: 0;
+        }
+        
+        .plan-cta {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 1.5rem;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .plan-cta.primary {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+        }
+        
+        .plan-cta.secondary {
+            background: transparent;
+            border: 2px solid var(--brand-teal);
+            color: var(--brand-teal);
+        }
+        
+        .plan-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 230, 168, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <nav class="dashboard-nav">
+        <a href="/dashboard" class="nav-logo">
+            <img src="/static/img/ekkoscope-icon.svg" alt="EkkoScope">
+            <span>Ekko<span class="teal">Scope</span></span>
+        </a>
+        <a href="/dashboard" class="back-link">
+            &#8592; Back to Dashboard
+        </a>
+    </nav>
+
+    <main class="upgrade-container">
+        <div class="upgrade-header">
+            <h1>Choose Your <span class="teal">GEO Plan</span></h1>
+            <p>Discover how AI sees your business and get actionable recommendations</p>
+            
+            <div class="business-badge">
+                <span class="name">{{ business.name }}</span>
+                <span class="domain">{{ business.primary_domain }}</span>
+            </div>
+        </div>
+        
+        <div class="plans-grid">
+            <div class="plan-card">
+                <div class="plan-name">Snapshot Audit</div>
+                <div class="plan-tagline">One-time visibility check</div>
+                
+                <div class="plan-price">
+                    <span class="amount">$497</span>
+                    <span class="period">one-time</span>
+                </div>
+                
+                <ul class="plan-features">
+                    <li>
+                        <span class="check">&#10003;</span>
+                        <span>Complete AI visibility analysis</span>
+                    </li>
+                    <li>
+                        <span class="check">&#10003;</span>
+                        <span>Competitor identification</span>
+                    </li>
+                    <li>
+                        <span class="check">&#10003;</span>
+                        <span>Genius Insights with action items</span>
+                    </li>
+                    <li>
+                        <span class="check">&#10003;</span>
+                        <span>Professional PDF report</span>
+                    </li>
+                </ul>
+                
+                <form method="POST" action="/dashboard/business/{{ business.id }}/checkout/snapshot">
+                    <button type="submit" class="plan-cta secondary">Get Snapshot</button>
+                </form>
+            </div>
+            
+            <div class="plan-card featured">
+                <div class="plan-name">Ongoing Monitoring</div>
+                <div class="plan-tagline">Monthly visibility tracking</div>
+                
+                <div class="plan-price">
+                    <span class="amount">$99</span>
+                    <span class="period">/month</span>
+                    <div class="setup-note">+ $197 setup fee (includes first audit)</div>
+                </div>
+                
+                <ul class="plan-features">
+                    <li>
+                        <span class="check">&#10003;</span>
+                        <span>Everything in Snapshot</span>
+                    </li>
+                    <li>
+                        <span class="check">&#10003;</span>
+                        <span>Monthly refresh audits</span>
+                    </li>
+                    <li>
+                        <span class="check">&#10003;</span>
+                        <span>Track visibility improvements</span>
+                    </li>
+                    <li>
+                        <span class="check">&#10003;</span>
+                        <span>Updated recommendations</span>
+                    </li>
+                    <li>
+                        <span class="check">&#10003;</span>
+                        <span>Priority support</span>
+                    </li>
+                </ul>
+                
+                <form method="POST" action="/dashboard/business/{{ business.id }}/checkout/ongoing">
+                    <button type="submit" class="plan-cta primary">Start Ongoing</button>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

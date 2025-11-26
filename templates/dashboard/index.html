@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - EkkoScope</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .dashboard-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+        
+        .nav-logo img {
+            width: 36px;
+            height: 36px;
+        }
+        
+        .nav-logo span {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-name {
+            color: var(--text-secondary);
+        }
+        
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        
+        .logout-btn:hover {
+            border-color: var(--brand-teal);
+            color: var(--brand-teal);
+        }
+        
+        .dashboard-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .dashboard-header h1 {
+            font-size: 1.75rem;
+        }
+        
+        .add-business-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .add-business-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 230, 168, 0.25);
+        }
+        
+        .businesses-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .business-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.2s;
+        }
+        
+        .business-card:hover {
+            border-color: var(--brand-teal);
+        }
+        
+        .business-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .business-info .domain {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .business-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .plan-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .plan-badge.snapshot {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--brand-blue);
+        }
+        
+        .plan-badge.ongoing {
+            background: rgba(46, 230, 168, 0.15);
+            color: var(--brand-teal);
+        }
+        
+        .plan-badge.none {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+        }
+        
+        .business-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: transform 0.2s;
+        }
+        
+        .action-btn.primary {
+            background: var(--brand-teal);
+            color: var(--bg-dark);
+        }
+        
+        .action-btn.secondary {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--bg-card);
+            border: 2px dashed var(--border-color);
+            border-radius: 16px;
+        }
+        
+        .empty-state h2 {
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        
+        .plan-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .plan-option {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        
+        .plan-option:hover {
+            border-color: var(--brand-teal);
+            transform: translateY(-2px);
+        }
+        
+        .plan-option h3 {
+            color: var(--brand-teal);
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-option .price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        
+        .plan-option .period {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .plan-option .plan-cta {
+            display: block;
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .plan-option .plan-cta.primary {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+        }
+        
+        .plan-option .plan-cta.secondary {
+            background: transparent;
+            border: 1px solid var(--brand-teal);
+            color: var(--brand-teal);
+        }
+    </style>
+</head>
+<body>
+    <nav class="dashboard-nav">
+        <a href="/dashboard" class="nav-logo">
+            <img src="/static/img/ekkoscope-icon.svg" alt="EkkoScope">
+            <span>Ekko<span class="teal">Scope</span></span>
+        </a>
+        <div class="nav-user">
+            <span class="user-name">{{ user.full_name }}</span>
+            <a href="/auth/logout" class="logout-btn">Log Out</a>
+        </div>
+    </nav>
+
+    <main class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>Your Businesses</h1>
+            <a href="/dashboard/business/new" class="add-business-btn">
+                <span>+</span> Add Business
+            </a>
+        </div>
+        
+        {% if businesses %}
+        <div class="businesses-list">
+            {% for business in businesses %}
+            <div class="business-card">
+                <div class="business-info">
+                    <h3>{{ business.name }}</h3>
+                    <div class="domain">{{ business.primary_domain }}</div>
+                </div>
+                <div class="business-status">
+                    {% if business.subscription_active and business.plan == 'ongoing' %}
+                    <span class="plan-badge ongoing">Ongoing</span>
+                    {% elif business.plan == 'snapshot' %}
+                    <span class="plan-badge snapshot">Snapshot</span>
+                    {% else %}
+                    <span class="plan-badge none">No Plan</span>
+                    {% endif %}
+                    
+                    <div class="business-actions">
+                        {% if business.audits %}
+                        <a href="/dashboard/business/{{ business.id }}/audits" class="action-btn secondary">View Audits</a>
+                        {% endif %}
+                        {% if not business.subscription_active %}
+                        <a href="/dashboard/business/{{ business.id }}/upgrade" class="action-btn primary">Get Audit</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <h2>Welcome to EkkoScope!</h2>
+            <p>Add your first business to discover how AI assistants recommend you.</p>
+            <a href="/dashboard/business/new" class="add-business-btn">
+                <span>+</span> Add Your Business
+            </a>
+        </div>
+        {% endif %}
+        
+        <div class="plan-options">
+            <div class="plan-option">
+                <h3>Snapshot Audit</h3>
+                <div class="price">$497</div>
+                <div class="period">one-time</div>
+                <a href="/snapshot" class="plan-cta secondary">Learn More</a>
+            </div>
+            <div class="plan-option">
+                <h3>Ongoing Monitoring</h3>
+                <div class="price">$99/mo</div>
+                <div class="period">+ $197 setup</div>
+                <a href="/ongoing" class="plan-cta primary">Learn More</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

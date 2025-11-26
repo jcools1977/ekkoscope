@@ -18,9 +18,10 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from services.analysis import run_analysis, MissingAPIKeyError
 from services.reporting import build_ekkoscope_pdf
-from services.database import init_db, get_db_session, Business, Audit
+from services.database import init_db, get_db_session, Business, Audit, User, Purchase
 from services.audit_runner import run_audit_for_business, get_audit_analysis_data
 from services.stripe_client import load_stripe_config, create_checkout_session, create_subscription_checkout_session, verify_webhook_signature, get_stripe_client
+from services.auth import get_current_user, login_user, logout_user, create_user, authenticate_user
 
 app = FastAPI()
 
@@ -73,16 +74,341 @@ def require_auth(request: Request):
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
+    user = get_current_user(request)
+    if user:
+        return RedirectResponse(url="/dashboard", status_code=302)
     return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
-            "tenants": get_tenant_list(),
-            "analysis": None,
-            "selected_tenant_id": None,
-            "error": None
-        }
+        "public/landing.html",
+        {"request": request}
     )
+
+
+@app.get("/auth/login", response_class=HTMLResponse)
+async def auth_login_page(request: Request, next: Optional[str] = None):
+    user = get_current_user(request)
+    if user:
+        return RedirectResponse(url=next or "/dashboard", status_code=302)
+    return templates.TemplateResponse(
+        "auth/login.html",
+        {"request": request, "error": None, "success": None, "email": None, "next": next}
+    )
+
+
+@app.post("/auth/login", response_class=HTMLResponse)
+async def auth_login(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+    next: Optional[str] = Form(None)
+):
+    db = get_db_session()
+    try:
+        user = authenticate_user(db, email, password)
+        if not user:
+            return templates.TemplateResponse(
+                "auth/login.html",
+                {"request": request, "error": "Invalid email or password", "success": None, "email": email, "next": next}
+            )
+        
+        login_user(request, user)
+        return RedirectResponse(url=next or "/dashboard", status_code=302)
+    finally:
+        db.close()
+
+
+@app.get("/auth/signup", response_class=HTMLResponse)
+async def auth_signup_page(request: Request, next: Optional[str] = None):
+    user = get_current_user(request)
+    if user:
+        return RedirectResponse(url=next or "/dashboard", status_code=302)
+    return templates.TemplateResponse(
+        "auth/signup.html",
+        {"request": request, "error": None, "email": None, "first_name": None, "last_name": None, "next": next}
+    )
+
+
+@app.post("/auth/signup", response_class=HTMLResponse)
+async def auth_signup(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+    confirm_password: str = Form(...),
+    first_name: Optional[str] = Form(None),
+    last_name: Optional[str] = Form(None),
+    next: Optional[str] = Form(None)
+):
+    if password != confirm_password:
+        return templates.TemplateResponse(
+            "auth/signup.html",
+            {"request": request, "error": "Passwords do not match", "email": email, "first_name": first_name, "last_name": last_name, "next": next}
+        )
+    
+    if len(password) < 8:
+        return templates.TemplateResponse(
+            "auth/signup.html",
+            {"request": request, "error": "Password must be at least 8 characters", "email": email, "first_name": first_name, "last_name": last_name, "next": next}
+        )
+    
+    db = get_db_session()
+    try:
+        user = create_user(db, email, password, first_name, last_name)
+        login_user(request, user)
+        return RedirectResponse(url=next or "/dashboard", status_code=302)
+    except ValueError as e:
+        return templates.TemplateResponse(
+            "auth/signup.html",
+            {"request": request, "error": str(e), "email": email, "first_name": first_name, "last_name": last_name, "next": next}
+        )
+    finally:
+        db.close()
+
+
+@app.get("/auth/logout")
+async def auth_logout(request: Request):
+    logout_user(request)
+    return RedirectResponse(url="/", status_code=302)
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def user_dashboard(request: Request):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login?next=/dashboard", status_code=302)
+    
+    db = get_db_session()
+    try:
+        businesses = db.query(Business).filter(Business.owner_user_id == user.id).all()
+        
+        return templates.TemplateResponse(
+            "dashboard/index.html",
+            {"request": request, "user": user, "businesses": businesses}
+        )
+    finally:
+        db.close()
+
+
+@app.get("/dashboard/business/new", response_class=HTMLResponse)
+async def dashboard_business_new_page(request: Request):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login?next=/dashboard/business/new", status_code=302)
+    
+    return templates.TemplateResponse(
+        "dashboard/business_new.html",
+        {"request": request, "user": user, "error": None, "form_data": None}
+    )
+
+
+@app.post("/dashboard/business/new", response_class=HTMLResponse)
+async def dashboard_business_new(
+    request: Request,
+    name: str = Form(...),
+    primary_domain: str = Form(...),
+    business_type: str = Form("local_service"),
+    contact_name: Optional[str] = Form(None),
+    contact_email: Optional[str] = Form(None),
+    categories: Optional[str] = Form(None),
+    regions: Optional[str] = Form(None)
+):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    form_data = {
+        "name": name,
+        "primary_domain": primary_domain,
+        "business_type": business_type,
+        "contact_name": contact_name,
+        "contact_email": contact_email,
+        "categories": categories,
+        "regions": regions
+    }
+    
+    primary_domain = primary_domain.lower().strip()
+    primary_domain = primary_domain.replace("http://", "").replace("https://", "").split("/")[0]
+    
+    db = get_db_session()
+    try:
+        business = Business(
+            owner_user_id=user.id,
+            name=name.strip(),
+            primary_domain=primary_domain,
+            business_type=business_type,
+            contact_name=contact_name,
+            contact_email=contact_email or user.email,
+            source="dashboard"
+        )
+        
+        if categories:
+            cats = [c.strip() for c in categories.split(",") if c.strip()]
+            business.set_categories(cats)
+        
+        if regions:
+            regs = [r.strip() for r in regions.split(",") if r.strip()]
+            business.set_regions(regs)
+        
+        db.add(business)
+        db.commit()
+        db.refresh(business)
+        
+        return RedirectResponse(url=f"/dashboard/business/{business.id}/upgrade", status_code=302)
+    except Exception as e:
+        return templates.TemplateResponse(
+            "dashboard/business_new.html",
+            {"request": request, "user": user, "error": str(e), "form_data": form_data}
+        )
+    finally:
+        db.close()
+
+
+@app.get("/dashboard/business/{business_id}/upgrade", response_class=HTMLResponse)
+async def dashboard_business_upgrade(request: Request, business_id: int):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(
+            Business.id == business_id,
+            Business.owner_user_id == user.id
+        ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        return templates.TemplateResponse(
+            "dashboard/upgrade.html",
+            {"request": request, "user": user, "business": business}
+        )
+    finally:
+        db.close()
+
+
+@app.post("/dashboard/business/{business_id}/checkout/snapshot")
+async def dashboard_checkout_snapshot(request: Request, business_id: int):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(
+            Business.id == business_id,
+            Business.owner_user_id == user.id
+        ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        request.session["snapshot_business_id"] = business.id
+        
+        domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
+        if not domain:
+            domain = "localhost:5000"
+        
+        protocol = "https" if "replit" in domain else "http"
+        base_url = f"{protocol}://{domain}"
+        
+        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{base_url}/dashboard/business/{business.id}/upgrade"
+        
+        session = await create_checkout_session(
+            business_id=business.id,
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={"user_id": str(user.id), "plan": "snapshot"}
+        )
+        return RedirectResponse(url=session.url, status_code=303)
+    except Exception as e:
+        return templates.TemplateResponse(
+            "dashboard/upgrade.html",
+            {"request": request, "user": user, "business": business, "error": str(e)}
+        )
+    finally:
+        db.close()
+
+
+@app.post("/dashboard/business/{business_id}/checkout/ongoing")
+async def dashboard_checkout_ongoing(request: Request, business_id: int):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(
+            Business.id == business_id,
+            Business.owner_user_id == user.id
+        ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        request.session["ongoing_business_id"] = business.id
+        
+        domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
+        if not domain:
+            domain = "localhost:5000"
+        
+        protocol = "https" if "replit" in domain else "http"
+        base_url = f"{protocol}://{domain}"
+        
+        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{base_url}/dashboard/business/{business.id}/upgrade"
+        
+        session = await create_subscription_checkout_session(
+            business_id=business.id,
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={"user_id": str(user.id), "plan": "ongoing"}
+        )
+        return RedirectResponse(url=session.url, status_code=302)
+    except Exception as e:
+        return templates.TemplateResponse(
+            "dashboard/upgrade.html",
+            {"request": request, "user": user, "business": business, "error": str(e)}
+        )
+    finally:
+        db.close()
+
+
+@app.get("/dashboard/success", response_class=HTMLResponse)
+async def dashboard_payment_success(request: Request, session_id: Optional[str] = None):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    return templates.TemplateResponse(
+        "dashboard/success.html",
+        {"request": request, "user": user, "session_id": session_id}
+    )
+
+
+@app.get("/dashboard/business/{business_id}/audits", response_class=HTMLResponse)
+async def dashboard_business_audits(request: Request, business_id: int):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(
+            Business.id == business_id,
+            Business.owner_user_id == user.id
+        ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        audits = db.query(Audit).filter(Audit.business_id == business.id).order_by(Audit.created_at.desc()).all()
+        
+        return templates.TemplateResponse(
+            "dashboard/audits.html",
+            {"request": request, "user": user, "business": business, "audits": audits}
+        )
+    finally:
+        db.close()
 
 
 @app.post("/analyze", response_class=HTMLResponse)

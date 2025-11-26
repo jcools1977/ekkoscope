@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Business - EkkoScope</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .dashboard-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+        
+        .nav-logo img {
+            width: 36px;
+            height: 36px;
+        }
+        
+        .nav-logo span {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .back-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.2s;
+        }
+        
+        .back-link:hover {
+            color: var(--brand-teal);
+        }
+        
+        .form-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .form-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+        
+        .form-card h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-card .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--brand-teal);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .help-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            border: none;
+            border-radius: 8px;
+            color: var(--bg-dark);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 1rem;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 230, 168, 0.25);
+        }
+        
+        .error-message {
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            color: #ff5252;
+        }
+    </style>
+</head>
+<body>
+    <nav class="dashboard-nav">
+        <a href="/dashboard" class="nav-logo">
+            <img src="/static/img/ekkoscope-icon.svg" alt="EkkoScope">
+            <span>Ekko<span class="teal">Scope</span></span>
+        </a>
+        <a href="/dashboard" class="back-link">
+            &#8592; Back to Dashboard
+        </a>
+    </nav>
+
+    <main class="form-container">
+        <div class="form-card">
+            <h1>Add Your Business</h1>
+            <p class="subtitle">Tell us about your business so we can analyze your AI visibility</p>
+            
+            {% if error %}
+            <div class="error-message">{{ error }}</div>
+            {% endif %}
+            
+            <form method="POST" action="/dashboard/business/new">
+                <div class="form-group">
+                    <label for="name">Business Name *</label>
+                    <input type="text" id="name" name="name" required placeholder="Acme Services Inc." value="{{ form_data.name if form_data else '' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="primary_domain">Website Domain *</label>
+                    <input type="text" id="primary_domain" name="primary_domain" required placeholder="acmeservices.com" value="{{ form_data.primary_domain if form_data else '' }}">
+                    <p class="help-text">Enter your main website domain without http://</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="business_type">Business Type</label>
+                    <select id="business_type" name="business_type">
+                        <option value="local_service" {% if form_data and form_data.business_type == 'local_service' %}selected{% endif %}>Local Service Provider</option>
+                        <option value="ecom" {% if form_data and form_data.business_type == 'ecom' %}selected{% endif %}>E-commerce / Online Store</option>
+                        <option value="b2b_service" {% if form_data and form_data.business_type == 'b2b_service' %}selected{% endif %}>B2B Service Provider</option>
+                        <option value="saas" {% if form_data and form_data.business_type == 'saas' %}selected{% endif %}>SaaS / Software Company</option>
+                        <option value="other" {% if form_data and form_data.business_type == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="contact_name">Contact Name</label>
+                        <input type="text" id="contact_name" name="contact_name" placeholder="John Smith" value="{{ form_data.contact_name if form_data else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_email">Contact Email</label>
+                        <input type="email" id="contact_email" name="contact_email" placeholder="john@acme.com" value="{{ form_data.contact_email if form_data else '' }}">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="categories">Industry/Categories</label>
+                    <input type="text" id="categories" name="categories" placeholder="plumbing, hvac, home services" value="{{ form_data.categories if form_data else '' }}">
+                    <p class="help-text">Comma-separated list of your service categories</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="regions">Service Areas</label>
+                    <input type="text" id="regions" name="regions" placeholder="Austin, TX, San Antonio, TX" value="{{ form_data.regions if form_data else '' }}">
+                    <p class="help-text">Comma-separated list of cities/regions you serve</p>
+                </div>
+                
+                <button type="submit" class="submit-btn">Add Business</button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

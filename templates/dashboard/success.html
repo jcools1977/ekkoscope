@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - EkkoScope</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .success-container {
+            max-width: 600px;
+            margin: 4rem auto;
+            padding: 0 1rem;
+            text-align: center;
+        }
+        
+        .success-card {
+            background: var(--bg-card);
+            border: 2px solid var(--brand-teal);
+            border-radius: 16px;
+            padding: 3rem;
+        }
+        
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(46, 230, 168, 0.2), rgba(59, 130, 246, 0.2));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .success-card h1 {
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            color: var(--brand-teal);
+        }
+        
+        .success-card p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .next-steps {
+            background: var(--bg-dark);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+        
+        .next-steps h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--brand-teal);
+        }
+        
+        .next-steps ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .next-steps li {
+            padding: 0.5rem 0;
+            display: flex;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        .next-steps .check {
+            color: var(--brand-teal);
+        }
+        
+        .dashboard-btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .dashboard-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 230, 168, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <header class="hero-card">
+        <a href="/dashboard" class="logo-link">
+            <img src="/static/img/ekkoscope-icon.svg" alt="EkkoScope" class="logo-icon">
+            <span class="logo-text">Ekko<span class="teal">Scope</span></span>
+        </a>
+        <p class="hero-subtitle">GEO Engine for AI Visibility</p>
+    </header>
+
+    <main class="success-container">
+        <div class="success-card">
+            <div class="success-icon">&#10003;</div>
+            <h1>Payment Successful!</h1>
+            <p>Thank you for your purchase. Your GEO audit is now being prepared.</p>
+            
+            <div class="next-steps">
+                <h3>What happens next:</h3>
+                <ul>
+                    <li><span class="check">&#10003;</span> We're analyzing how AI assistants see your business</li>
+                    <li><span class="check">&#10003;</span> Running real queries against ChatGPT and other AI</li>
+                    <li><span class="check">&#10003;</span> Generating your personalized recommendations</li>
+                    <li><span class="check">&#10003;</span> Your report will be ready within a few minutes</li>
+                </ul>
+            </div>
+            
+            <a href="/dashboard" class="dashboard-btn">Go to Dashboard</a>
+        </div>
+    </main>
+</body>
+</html>

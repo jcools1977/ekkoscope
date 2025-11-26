@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EkkoScope - GEO Engine for AI Visibility</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .landing-hero {
+            text-align: center;
+            padding: 4rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .landing-hero h1 {
+            font-size: 3rem;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+        
+        .landing-hero h1 .highlight {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .landing-hero .subtitle {
+            font-size: 1.35rem;
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+        
+        .cta-btn {
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .cta-btn.primary {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+        }
+        
+        .cta-btn.secondary {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 230, 168, 0.2);
+        }
+        
+        .trust-badge {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .features-section {
+            padding: 4rem 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        
+        .features-section h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--brand-teal);
+        }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, rgba(46, 230, 168, 0.15), rgba(59, 130, 246, 0.15));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+            font-size: 1.5rem;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            color: var(--brand-teal);
+        }
+        
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        .problem-section {
+            padding: 4rem 2rem;
+            background: linear-gradient(180deg, transparent, rgba(46, 230, 168, 0.03));
+        }
+        
+        .problem-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .problem-content h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .problem-content .lead {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--brand-teal);
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        .how-it-works {
+            padding: 4rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .how-it-works h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .step {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+        }
+        
+        .step-number {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.25rem;
+            color: var(--bg-dark);
+            flex-shrink: 0;
+        }
+        
+        .step-content h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .step-content p {
+            color: var(--text-secondary);
+        }
+        
+        .final-cta {
+            padding: 4rem 2rem;
+            text-align: center;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .final-cta h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .final-cta p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+        
+        .nav-logo img {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .nav-logo span {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover {
+            color: var(--brand-teal);
+        }
+        
+        .nav-btn {
+            padding: 0.6rem 1.25rem;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .landing-hero h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-links {
+                gap: 0.75rem;
+            }
+            
+            .stats-row {
+                gap: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <a href="/" class="nav-logo">
+            <img src="/static/img/ekkoscope-icon.svg" alt="EkkoScope">
+            <span>Ekko<span class="teal">Scope</span></span>
+        </a>
+        <div class="nav-links">
+            <a href="/pricing" class="nav-link">Pricing</a>
+            <a href="/auth/login" class="nav-link">Log In</a>
+            <a href="/auth/signup" class="nav-btn">Get Started</a>
+        </div>
+    </nav>
+
+    <main>
+        <section class="landing-hero">
+            <h1>Discover How <span class="highlight">AI Recommends</span> Your Business</h1>
+            <p class="subtitle">EkkoScope analyzes how AI assistants like ChatGPT see your business, identifies gaps in your visibility, and gives you actionable steps to get recommended more often.</p>
+            
+            <div class="cta-buttons">
+                <a href="/auth/signup" class="cta-btn primary">Start Free Analysis</a>
+                <a href="/pricing" class="cta-btn secondary">View Pricing</a>
+            </div>
+            
+            <p class="trust-badge">Trusted by businesses optimizing for AI-driven discovery</p>
+        </section>
+        
+        <section class="problem-section">
+            <div class="problem-content">
+                <h2>The Future of Search is <span class="teal">AI-Powered</span></h2>
+                <p class="lead">More people are asking ChatGPT and AI assistants for recommendations instead of searching Google. Is your business showing up?</p>
+                
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <div class="stat-number">73%</div>
+                        <div class="stat-label">of users trust AI recommendations</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">2.5x</div>
+                        <div class="stat-label">higher conversion from AI referrals</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">40%</div>
+                        <div class="stat-label">growth in AI search queries</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="features-section">
+            <h2>What EkkoScope Does For You</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">&#x1F50D;</div>
+                    <h3>AI Visibility Score</h3>
+                    <p>See exactly how often AI assistants recommend your business for relevant searches in your industry and location.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">&#x1F465;</div>
+                    <h3>Competitor Analysis</h3>
+                    <p>Discover which competitors are getting recommended instead of you, and understand what makes them visible to AI.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">&#x1F4A1;</div>
+                    <h3>Genius Insights</h3>
+                    <p>Get AI-powered recommendations tailored to your business to improve your visibility in AI responses.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">&#x1F310;</div>
+                    <h3>Real-Time Web Probing</h3>
+                    <p>We probe live AI search engines to see exactly how your business appears in real-time search results.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">&#x1F4CA;</div>
+                    <h3>Professional Reports</h3>
+                    <p>Receive detailed PDF reports you can share with your team, with clear action items and priority rankings.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">&#x1F504;</div>
+                    <h3>Monthly Monitoring</h3>
+                    <p>Track your visibility improvements over time with ongoing monthly audits and trend analysis.</p>
+                </div>
+            </div>
+        </section>
+        
+        <section class="how-it-works">
+            <h2>How It Works</h2>
+            
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Create Your Account</h3>
+                        <p>Sign up for free and tell us about your business - name, website, and the types of services you offer.</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Choose Your Plan</h3>
+                        <p>Select a one-time Snapshot audit or Ongoing monthly monitoring to track your progress over time.</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Get Your Analysis</h3>
+                        <p>We run real queries against AI assistants and analyze how your business appears compared to competitors.</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Implement Recommendations</h3>
+                        <p>Follow our prioritized action items to improve your AI visibility and start getting more recommendations.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="final-cta">
+            <h2>Ready to Get <span class="teal">AI-Visible</span>?</h2>
+            <p>Join businesses that are optimizing for the future of search.</p>
+            <a href="/auth/signup" class="cta-btn primary">Create Free Account</a>
+        </section>
+    </main>
+    
+    <footer style="text-align: center; padding: 2rem; color: var(--text-muted); border-top: 1px solid var(--border-color);">
+        <p>EkkoScope - GEO Engine for AI Visibility</p>
+    </footer>
+</body>
+</html>
