@@ -35,13 +35,9 @@ outputType = "webview"
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 35709
-externalPort = 3000
-
 [userenv]
 
 [userenv.shared]
-STRIPE_PRICE_SNAPSHOT = "price_1SXqdSBB4Ktzr0de7N8wWC3j"
-STRIPE_PRICE_ONGOING_SETUP = "price_1SXqdUBB4Ktzr0decZLTD3an"
-STRIPE_PRICE_ONGOING_MONTHLY = "price_1SXqdUBB4Ktzr0deURXO0X8N"
+STRIPE_PRICE_SNAPSHOT = "price_1SXrky49IDZUQDseBmZoKXMm"
+STRIPE_PRICE_ONGOING_SETUP = "price_1SXrky49IDZUQDseCIr8f7XS"
+STRIPE_PRICE_ONGOING_MONTHLY = "price_1SXrky49IDZUQDsel3bvvUUd"
