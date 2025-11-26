@@ -1,0 +1,310 @@
+You are my senior full-stack developer for an existing app called EchoScope.
+
+EchoScope is already working as a production-quality web app. Your job is to add a professional, downloadable report feature (PDF) without breaking any current behavior.
+
+0. Current App (High-Level)
+
+The app already:
+
+Uses FastAPI with Jinja2 templates.
+
+Has a clean, card-based UI (HTML + CSS) with:
+
+Tenant dropdown (A-D Roofing & Metal Supply, Better Pak / BetterPak Supplies)
+
+“Run GEO Analysis” button
+
+Results page with:
+
+AI visibility summary (0–2 score per query)
+
+Table of per-query results
+
+List of competitors
+
+List of recommendations, grouped by type
+
+Uses OpenAI to:
+
+Ask AI assistants about each tenant’s business based on “money questions”
+
+Parse responses
+
+Assign an AI visibility score per query:
+
+0 = not mentioned
+
+1 = mentioned but not top rec
+
+2 = #1 rec
+
+Has a config-driven tenant system via data/tenants.json (domains, aliases, queries, geo focus, etc.).
+
+Is already wired to my OpenAI API key and running.
+
+Do NOT refactor everything. You may reorganize into small helpers where needed, but keep this a minimal, focused enhancement.
+
+1. Goal
+
+Add a “Download EchoScope Report (PDF)” feature that:
+
+Uses the same analysis data as the on-screen GEO analysis.
+
+Generates a multi-section, professional-looking PDF that I can send to a client or prospect.
+
+Is accessible via a clear button on the existing results UI.
+
+Handles errors gracefully (no app crashes if PDF or OpenAI fails).
+
+The PDF should feel like a legit client deliverable, not a debug dump.
+
+2. Design of the Report
+
+Implement a PDF that includes these sections:
+
+Cover / Header
+
+Title: “EchoScope AI GEO Visibility Report”
+
+Tenant/business name
+
+Date and time of generation (in local time or UTC clearly labeled)
+
+Optional line: “Powered by EchoScope”
+
+AI Visibility Summary
+
+Total number of queries analyzed
+
+Average visibility score (0–2)
+
+Count of queries in each band:
+
+Score 0: “Not recommended”
+
+Score 1: “Mentioned, not top”
+
+Score 2: “Top recommendation”
+
+2–3 bullet summary sentences (e.g., “Your business is top-recommended in X% of GEO queries…”)
+
+Per-Query Details
+
+A table or clearly structured list with, per query:
+
+Query text (the “money question”)
+
+Visibility score (0/1/2)
+
+How/if the business was mentioned (short summary, not full raw answer)
+
+If space is limited, truncate long text, but keep it readable.
+
+Competitor Overview
+
+List top 5 competitors found across queries (by frequency).
+
+For each competitor:
+
+Name / domain
+
+How often they appear vs our tenant (e.g., “Appeared in 7/10 queries; top recommendation in 4.”)
+
+Recommendations Section
+
+Group recommendations by category (e.g., “New Pages”, “Updates”, “FAQs”, “Authority”, “Branding”).
+
+For each category, include 3–5 bullets of concrete suggestions:
+
+Example: “Create a location-specific service page targeting [City + Service] with structured data.”
+
+Footer
+
+Page numbering (e.g., “Page 2 of 5”)
+
+Small footer text: “EchoScope – AI GEO Visibility Scanner”
+
+You can reuse the on-screen recommendation logic / text, but format it nicely for PDF.
+
+3. Implementation Requirements
+3.1. Use a Python PDF Library
+
+Use a pure-Python library that works well in Replit, for example:
+
+fpdf2 (preferred), or
+
+reportlab if you strongly prefer.
+
+Update requirements.txt accordingly (e.g., add fpdf2).
+
+Create a module like:
+
+echoscope/reporting.py or reports.py
+
+with a function:
+
+def build_echoscope_pdf(tenant: dict, analysis: dict) -> bytes:
+    """
+    Given tenant config and analysis results, return PDF bytes.
+    """
+
+
+Where analysis is a dict containing, at minimum:
+
+tenant_name
+
+generated_at
+
+total_queries
+
+average_score
+
+score_counts (e.g., {0: n0, 1: n1, 2: n2})
+
+queries (list of per-query results)
+
+top_competitors (list of dicts with name/domain and frequency)
+
+recommendations (grouped by category)
+
+If those structures don’t exist yet, create a thin normalization helper that takes the existing analysis result and returns this shape, rather than rewriting the whole app.
+
+3.2. Refactor Analysis into a Reusable Helper
+
+If not already present, create a helper function in your main app logic, something like:
+
+def run_geo_analysis_for_tenant(tenant_id: str) -> dict:
+    """
+    Core GEO analysis logic used by both:
+    - the web UI (HTML view)
+    - the PDF report generator.
+
+    Returns a normalized `analysis` dict including everything needed for:
+    - summary metrics
+    - per-query table
+    - competitor stats
+    - recommendations
+    """
+
+
+Then:
+
+Update the existing “Run GEO Analysis” endpoint to call this function and pass the structured result into the Jinja template.
+
+The PDF endpoint will also call this helper to get the same analysis in one call.
+
+It’s acceptable to re-run the analysis for the PDF download (i.e. one extra OpenAI run) for now. Optimize later if needed.
+
+3.3. Add a New FastAPI Endpoint for the PDF
+
+Add a route like:
+
+from fastapi.responses import StreamingResponse
+
+@app.get("/report/{tenant_id}")
+def download_report(tenant_id: str):
+    """
+    Generate and return an EchoScope PDF report for the given tenant.
+    """
+
+
+Behavior:
+
+Validate the tenant ID against data/tenants.json. If invalid:
+
+Return a 404 or a clean error page.
+
+Call run_geo_analysis_for_tenant(tenant_id) to get analysis.
+
+Call build_echoscope_pdf(tenant, analysis) to get PDF bytes.
+
+Return a StreamingResponse with:
+
+media_type="application/pdf"
+
+Content-Disposition header set to attachment; filename="echoscope_report_<tenant_id>.pdf"
+
+Handle exceptions gracefully:
+
+If OpenAI fails or PDF generation fails, show a simple HTML error page or redirect back with a flash message, instead of crashing the server.
+
+4. UI Integration
+
+In the results template (the Jinja2 template that shows analysis for a tenant):
+
+Add a “Download Report (PDF)” button or link only when analysis data is present.
+
+The button should point to the new endpoint, e.g.:
+
+<a href="{{ url_for('download_report', tenant_id=selected_tenant_id) }}" class="btn btn-secondary">
+    Download EchoScope Report (PDF)
+</a>
+
+
+(Adjust names to match your actual FastAPI route naming.)
+
+Keep styling consistent with the existing buttons/cards. Use the same CSS classes or add a minimal new class.
+
+5. Code Quality & Non-Regression
+
+Do not break existing functionality:
+
+Running GEO analysis via the existing button must still work exactly as before.
+
+Existing tenants and their config should remain untouched.
+
+Keep modules small and obvious:
+
+reporting.py or similar for PDF generation.
+
+Helper functions for data normalization, not giant God functions.
+
+Avoid sprinkling business logic across templates; keep most logic in Python, pass clean structures into templates.
+
+Add small comments explaining the new functions (run_geo_analysis_for_tenant, build_echoscope_pdf, etc.).
+
+6. Acceptance Criteria
+
+You are done when:
+
+I can:
+
+Open the app.
+
+Select a tenant (e.g. A-D Roofing or Better Pak).
+
+Click “Run GEO Analysis” and see the same results as before.
+
+After running analysis, I see a Download EchoScope Report (PDF) button.
+
+Clicking the button:
+
+Triggers a PDF download.
+
+The PDF opens in a viewer and contains:
+
+Cover/header with EchoScope branding and tenant name.
+
+AI visibility summary section with counts and average score.
+
+Per-query table/list with score + short summary.
+
+Competitor overview.
+
+Recommendations grouped by category.
+
+If the tenant ID is invalid or something fails with OpenAI, the app handles it gracefully (no stack trace in the browser).
+
+Start by:
+
+Inspecting the current repo structure and main FastAPI app file.
+
+Identifying the existing analysis code path.
+
+Designing a minimal AnalysisResult structure and shared helper.
+
+Implementing build_echoscope_pdf and the new /report/{tenant_id} endpoint.
+
+Wiring the “Download Report (PDF)” button into the results template.
+
+Explain in brief comments where appropriate, but focus on working code.
