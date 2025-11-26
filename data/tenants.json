@@ -1,0 +1,49 @@
+{
+  "ad_roofing": {
+    "id": "ad_roofing",
+    "display_name": "A-D Roofing & Metal Supply",
+    "domains": [
+      "AD_ROOFING_SITE_URL",
+      "AD_METAL_SUPPLY_SITE_URL"
+    ],
+    "brand_aliases": [
+      "A-D Roofing",
+      "AD Roofing",
+      "A-D Metal Supply",
+      "AD Metal Supply"
+    ],
+    "geo_focus": [
+      "Morehead City, NC",
+      "Eastern North Carolina"
+    ],
+    "priority_queries": [
+      "best roofing company in Morehead City, NC",
+      "metal roof installation in Eastern North Carolina",
+      "roof replacement contractor near Morehead City, NC",
+      "metal roofing panel supplier in Eastern North Carolina"
+    ]
+  },
+  "better_pak": {
+    "id": "better_pak",
+    "display_name": "Better Pak / BetterPak Supplies",
+    "domains": [
+      "https://better-pak.com",
+      "https://betterpaksupplies.com"
+    ],
+    "brand_aliases": [
+      "Better Pak",
+      "BetterPak",
+      "BetterPak Supplies",
+      "Better Pak Packaging"
+    ],
+    "geo_focus": [
+      "United States"
+    ],
+    "priority_queries": [
+      "bulk trash can liners supplier in the United States",
+      "poly bags supplier for school districts",
+      "where to buy industrial packaging and janitorial supplies online",
+      "6 mil heavy duty flat poly bags supplier"
+    ]
+  }
+}
