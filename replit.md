@@ -21,15 +21,20 @@ Preferred communication style: Simple, everyday language.
 
 **Branding & Visual Design:**
 - Sci-fi radar logo concept representing "GEO radar for AI echoes"
-- Color palette:
+- Full dark theme matching the logo aesthetic
+- Color palette (CSS variables defined in :root):
   - Primary: #2EE6A8 (neon teal) and #18A3FF (electric blue)
-  - Background: #050B11 (near-black, blue-tinted)
-  - Text: #F5F7FA (soft off-white)
+  - Background: #050B11 (near-black, blue-tinted) with gradient to #0a1628
+  - Cards: #0d1b2a with subtle borders (#1e3a5f)
+  - Text: #F5F7FA (primary), #94a3b8 (secondary), #64748b (muted)
+  - Score colors: Red (#ef4444), Amber (#f59e0b), Teal (#2EE6A8)
 - Logo files in `static/img/`:
   - `echoscope-logo.svg`: Full logo with animated radar and wordmark
   - `echoscope-icon.svg`: Icon-only version
   - `favicon.svg`: Browser tab icon
 - "Echo" in regular weight, "Scope" in semi-bold teal accent
+- Gradient accents, glow effects, and smooth hover transitions throughout
+- Custom scrollbar and text selection styling
 
 **Design Pattern:**
 - Traditional server-rendered HTML approach
