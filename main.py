@@ -1,5 +1,5 @@
 """
-EchoScope - GEO Engine for AI Visibility
+EkkoScope - GEO Engine for AI Visibility
 FastAPI application with admin panel and persistence (Sprint 1)
 """
 
@@ -17,7 +17,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from services.analysis import run_analysis, MissingAPIKeyError
-from services.reporting import build_echoscope_pdf
+from services.reporting import build_ekkoscope_pdf
 from services.database import init_db, get_db_session, Business, Audit
 from services.audit_runner import run_audit_for_business, get_audit_analysis_data
 from services.stripe_client import load_stripe_config, create_checkout_session, create_subscription_checkout_session, verify_webhook_signature, get_stripe_client
@@ -33,9 +33,9 @@ templates = Jinja2Templates(directory="templates")
 TENANTS = {}
 
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "echoscope2024")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "ekkoscope2024")
 
-if ADMIN_PASSWORD == "echoscope2024":
+if ADMIN_PASSWORD == "ekkoscope2024":
     import warnings
     warnings.warn(
         "SECURITY WARNING: Using default admin password. "
@@ -141,7 +141,7 @@ async def analyze(request: Request, tenant_id: str = Form(...)):
 
 @app.get("/report/{tenant_id}")
 async def download_report(request: Request, tenant_id: str):
-    """Generate and download an EchoScope PDF report for the given tenant."""
+    """Generate and download an EkkoScope PDF report for the given tenant."""
     try:
         if tenant_id not in TENANTS:
             return templates.TemplateResponse(
@@ -157,13 +157,13 @@ async def download_report(request: Request, tenant_id: str):
         
         tenant_config = TENANTS[tenant_id]
         analysis = run_analysis(tenant_config)
-        pdf_bytes = build_echoscope_pdf(tenant_config, analysis)
+        pdf_bytes = build_ekkoscope_pdf(tenant_config, analysis)
         
         return StreamingResponse(
             BytesIO(pdf_bytes),
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'attachment; filename="echoscope_report_{tenant_id}.pdf"'
+                "Content-Disposition": f'attachment; filename="ekkoscope_report_{tenant_id}.pdf"'
             }
         )
     
@@ -375,7 +375,7 @@ async def admin_business_detail(request: Request, business_id: int):
 
 @app.post("/admin/business/{business_id}/run")
 async def admin_run_audit(request: Request, business_id: int):
-    """Run an EchoScope audit for a business."""
+    """Run an EkkoScope audit for a business."""
     if not is_authenticated(request):
         return RedirectResponse(url="/admin/login", status_code=302)
     
@@ -1161,13 +1161,13 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
             plan = data_object.get("metadata", {}).get("plan")
             subscription_id = data_object.get("subscription")
             
-            if business_id and product_type in ("echoscope_snapshot", "echoscope_ongoing"):
+            if business_id and product_type in ("echoscope_snapshot", "echoscope_ongoing", "ekkoscope_snapshot", "ekkoscope_ongoing"):
                 db = get_db_session()
                 try:
                     business = db.query(Business).filter(Business.id == int(business_id)).first()
                     
                     if business:
-                        if product_type == "echoscope_ongoing" or plan == "ongoing":
+                        if product_type in ("echoscope_ongoing", "ekkoscope_ongoing") or plan == "ongoing":
                             business.subscription_active = True
                             business.plan = "ongoing"
                             if subscription_id:

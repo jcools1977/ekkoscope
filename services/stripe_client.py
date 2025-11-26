@@ -1,5 +1,5 @@
 """
-Stripe Client for EchoScope
+Stripe Client for EkkoScope
 Fetches credentials from Replit connector API with environment variable fallback.
 """
 
@@ -148,7 +148,7 @@ async def create_checkout_session(
         cancel_url=cancel_url,
         metadata={
             "business_id": str(business_id),
-            "product": "echoscope_snapshot"
+            "product": "ekkoscope_snapshot"
         }
     )
     
@@ -190,7 +190,7 @@ async def create_subscription_checkout_session(
         cancel_url=cancel_url,
         metadata={
             "business_id": str(business_id),
-            "product": "echoscope_ongoing",
+            "product": "ekkoscope_ongoing",
             "plan": "ongoing"
         }
     )

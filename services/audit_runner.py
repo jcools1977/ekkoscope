@@ -1,5 +1,5 @@
 """
-Audit Runner Service for EchoScope Sprint 1.
+Audit Runner Service for EkkoScope Sprint 1.
 Orchestrates the full audit pipeline using existing v0.3 logic.
 """
 
@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from services.database import Business, Audit
 from services.analysis import run_analysis, MissingAPIKeyError
-from services.reporting import build_echoscope_pdf
+from services.reporting import build_ekkoscope_pdf
 
 
 REPORTS_DIR = "reports"
@@ -25,7 +25,7 @@ def ensure_reports_dir():
 
 def run_audit_for_business(business: Business, audit: Audit, db_session: Session) -> Audit:
     """
-    Run a complete EchoScope audit for a business.
+    Run a complete EkkoScope audit for a business.
     
     Uses existing v0.3 logic:
     - Generates queries from the business profile
@@ -80,11 +80,11 @@ def run_audit_for_business(business: Business, audit: Audit, db_session: Session
         
         ensure_reports_dir()
         
-        pdf_bytes = build_echoscope_pdf(tenant_config, analysis)
+        pdf_bytes = build_ekkoscope_pdf(tenant_config, analysis)
         
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         safe_name = "".join(c if c.isalnum() else "_" for c in business.name)
-        pdf_filename = f"echoscope_{safe_name}_{audit.id}_{timestamp}.pdf"
+        pdf_filename = f"ekkoscope_{safe_name}_{audit.id}_{timestamp}.pdf"
         pdf_path = os.path.join(REPORTS_DIR, pdf_filename)
         
         with open(pdf_path, "wb") as f:

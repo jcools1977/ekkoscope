@@ -1,5 +1,5 @@
 """
-Genius Insights Module v2 for EchoScope GEO Visibility Analysis
+Genius Insights Module v2 for EkkoScope GEO Visibility Analysis
 Enhanced with site awareness, impact/effort scoring, and structured JSON output.
 """
 

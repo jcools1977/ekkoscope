@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 60" width="280" height="60">
+  <defs>
+    <linearGradient id="radarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2EE6A8"/>
+      <stop offset="100%" style="stop-color:#18A3FF"/>
+    </linearGradient>
+    <linearGradient id="arcGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2EE6A8;stop-opacity:0.9"/>
+      <stop offset="100%" style="stop-color:#18A3FF;stop-opacity:0.3"/>
+    </linearGradient>
+    <linearGradient id="arcGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2EE6A8;stop-opacity:0.6"/>
+      <stop offset="100%" style="stop-color:#18A3FF;stop-opacity:0.2"/>
+    </linearGradient>
+    <linearGradient id="arcGrad3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2EE6A8;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#18A3FF;stop-opacity:0.1"/>
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#F5F7FA"/>
+      <stop offset="50%" style="stop-color:#E2E8F0"/>
+      <stop offset="100%" style="stop-color:#F5F7FA"/>
+    </linearGradient>
+  </defs>
+  
+  <g transform="translate(30, 30)">
+    <circle cx="0" cy="0" r="24" fill="none" stroke="url(#radarGrad)" stroke-width="2" opacity="0.3"/>
+    <circle cx="0" cy="0" r="16" fill="none" stroke="url(#radarGrad)" stroke-width="1.5" opacity="0.4"/>
+    <circle cx="0" cy="0" r="8" fill="none" stroke="url(#radarGrad)" stroke-width="1" opacity="0.5"/>
+    
+    <line x1="-24" y1="0" x2="24" y2="0" stroke="url(#radarGrad)" stroke-width="0.5" opacity="0.3"/>
+    <line x1="0" y1="-24" x2="0" y2="24" stroke="url(#radarGrad)" stroke-width="0.5" opacity="0.3"/>
+    
+    <path d="M 0 0 L 20 -12 A 24 24 0 0 1 20 12 Z" fill="url(#radarGrad)" opacity="0.15"/>
+    
+    <path d="M 8 -4 A 9 9 0 0 1 8 4" fill="none" stroke="url(#arcGrad1)" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M 14 -7 A 16 16 0 0 1 14 7" fill="none" stroke="url(#arcGrad2)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 20 -10 A 23 23 0 0 1 20 10" fill="none" stroke="url(#arcGrad3)" stroke-width="1.5" stroke-linecap="round"/>
+    
+    <circle cx="0" cy="0" r="3" fill="url(#radarGrad)"/>
+    <circle cx="0" cy="0" r="5" fill="none" stroke="#2EE6A8" stroke-width="1" opacity="0.6">
+      <animate attributeName="r" values="3;8;3" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;0;0.8" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <g transform="translate(70, 38)">
+    <text font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="26" fill="#F5F7FA" letter-spacing="1">
+      <tspan font-weight="400">Ekko</tspan><tspan font-weight="600" fill="#2EE6A8">Scope</tspan>
+    </text>
+  </g>
+</svg>

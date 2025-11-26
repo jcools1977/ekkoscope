@@ -1,5 +1,5 @@
 """
-Seed script to create EchoScope Snapshot product and price in Stripe.
+Seed script to create EkkoScope Snapshot product and price in Stripe.
 Run this script once to set up the product:
   python scripts/seed_stripe_product.py
 """
@@ -13,13 +13,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from services.stripe_client import load_stripe_config, get_stripe_client
 
 async def create_snapshot_product():
-    """Create the EchoScope Snapshot product and price in Stripe."""
+    """Create the EkkoScope Snapshot product and price in Stripe."""
     try:
         await load_stripe_config()
         stripe = get_stripe_client()
         
-        print("Checking for existing EchoScope Snapshot product...")
-        products = stripe.Product.search(query="name:'EchoScope Snapshot Audit'")
+        print("Checking for existing EkkoScope Snapshot product...")
+        products = stripe.Product.search(query="name:'EkkoScope Snapshot Audit'")
         
         if products.data:
             product = products.data[0]
@@ -27,10 +27,10 @@ async def create_snapshot_product():
         else:
             print("Creating new product...")
             product = stripe.Product.create(
-                name="EchoScope Snapshot Audit",
+                name="EkkoScope Snapshot Audit",
                 description="One-time GEO (Generative Engine Optimization) audit to analyze how AI assistants like ChatGPT recommend your business.",
                 metadata={
-                    "type": "echoscope_snapshot",
+                    "type": "ekkoscope_snapshot",
                     "audit_type": "one_time"
                 }
             )
@@ -39,20 +39,26 @@ async def create_snapshot_product():
         print("Checking for existing price...")
         prices = stripe.Price.list(product=product.id, active=True)
         
-        if prices.data:
-            price = prices.data[0]
-            print(f"Found existing price: {price.id} (${price.unit_amount / 100})")
+        existing_price = None
+        for price in prices.data:
+            if price.unit_amount == 49700:
+                existing_price = price
+                break
+        
+        if existing_price:
+            print(f"Found existing price: {existing_price.id} (${existing_price.unit_amount / 100})")
+            price = existing_price
         else:
-            print("Creating new price...")
+            print("Creating new price ($497)...")
             price = stripe.Price.create(
                 product=product.id,
-                unit_amount=4900,
+                unit_amount=49700,
                 currency="usd",
                 metadata={
-                    "type": "echoscope_snapshot"
+                    "type": "ekkoscope_snapshot"
                 }
             )
-            print(f"Created price: {price.id} ($49.00)")
+            print(f"Created price: {price.id} ($497.00)")
         
         print("\n" + "=" * 60)
         print("STRIPE SETUP COMPLETE")

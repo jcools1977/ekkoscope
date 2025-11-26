@@ -1,5 +1,5 @@
 """
-PDF Report Generation for EchoScope GEO Visibility Analysis v0.3
+PDF Report Generation for EkkoScope GEO Visibility Analysis v0.3
 Uses fpdf2 to create professional, client-ready PDF reports.
 Print-friendly design with brand accent colors.
 Includes Executive Summary, Impact/Effort scoring, and Next 30 Days Focus.
@@ -20,8 +20,8 @@ LIGHT_TEXT = (100, 116, 139)
 ACCENT_BG = (241, 245, 249)
 
 
-class EchoScopePDF(FPDF):
-    """Custom PDF class with EchoScope branding and automatic page numbering."""
+class EkkoScopePDF(FPDF):
+    """Custom PDF class with EkkoScope branding and automatic page numbering."""
     
     def __init__(self, tenant_name: str):
         super().__init__()
@@ -63,7 +63,7 @@ class EchoScopePDF(FPDF):
         self.set_font("Helvetica", "", 8)
         self.set_text_color(*LIGHT_TEXT)
         self.set_y(-15)
-        self.cell(95, 10, "EchoScope - GEO Engine for AI Visibility", align="L")
+        self.cell(95, 10, "EkkoScope - GEO Engine for AI Visibility", align="L")
         self.cell(95, 10, f"Page {self.page_no()} of {{nb}}", align="R")
 
 
@@ -111,7 +111,7 @@ def normalize_analysis_data(analysis: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def build_echoscope_pdf(tenant: Dict[str, Any], analysis: Dict[str, Any]) -> bytes:
+def build_ekkoscope_pdf(tenant: Dict[str, Any], analysis: Dict[str, Any]) -> bytes:
     """
     Generate a professional PDF report from tenant config and analysis results.
     
@@ -125,7 +125,7 @@ def build_echoscope_pdf(tenant: Dict[str, Any], analysis: Dict[str, Any]) -> byt
     data = normalize_analysis_data(analysis)
     tenant_name = data["tenant_name"]
     
-    pdf = EchoScopePDF(tenant_name)
+    pdf = EkkoScopePDF(tenant_name)
     pdf.alias_nb_pages()
     
     _add_cover_page(pdf, data)
@@ -139,7 +139,7 @@ def build_echoscope_pdf(tenant: Dict[str, Any], analysis: Dict[str, Any]) -> byt
     return pdf.output()
 
 
-def _draw_cover_logo(pdf: EchoScopePDF):
+def _draw_cover_logo(pdf: EkkoScopePDF):
     """Draw a large radar logo for the cover page."""
     cx, cy = 105, 60
     
@@ -169,7 +169,7 @@ def _draw_cover_logo(pdf: EchoScopePDF):
     pdf.line(cx+20, cy-10, cx+20, cy+10)
 
 
-def _add_cover_page(pdf: EchoScopePDF, data: Dict[str, Any]):
+def _add_cover_page(pdf: EkkoScopePDF, data: Dict[str, Any]):
     """Add cover page with branding and tenant info."""
     pdf.add_page()
     
@@ -179,7 +179,7 @@ def _add_cover_page(pdf: EchoScopePDF, data: Dict[str, Any]):
     
     pdf.set_font("Helvetica", "", 36)
     pdf.set_text_color(*DARK_TEXT)
-    pdf.cell(0, 15, "Echo", align="R", new_x="LEFT")
+    pdf.cell(0, 15, "Ekko", align="R", new_x="LEFT")
     pdf.set_x(pdf.get_x() + 85)
     pdf.set_font("Helvetica", "B", 36)
     pdf.set_text_color(*BRAND_TEAL)
@@ -218,7 +218,7 @@ def _add_cover_page(pdf: EchoScopePDF, data: Dict[str, Any]):
     pdf.cell(0, 8, f"Generated: {formatted_date}", align="C")
 
 
-def _add_summary_section(pdf: EchoScopePDF, data: Dict[str, Any]):
+def _add_summary_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
     """Add AI visibility summary section with modern styling."""
     pdf.add_page()
     
@@ -310,7 +310,7 @@ def _add_summary_section(pdf: EchoScopePDF, data: Dict[str, Any]):
         pdf.multi_cell(178, 5, data["visibility_summary"][:500])
 
 
-def _add_executive_summary_section(pdf: EchoScopePDF, data: Dict[str, Any], analysis: Dict[str, Any]):
+def _add_executive_summary_section(pdf: EkkoScopePDF, data: Dict[str, Any], analysis: Dict[str, Any]):
     """Add Executive Summary section with 3-5 key bullets grounded in data."""
     genius = data.get("genius_insights")
     
@@ -354,7 +354,7 @@ def _add_executive_summary_section(pdf: EchoScopePDF, data: Dict[str, Any], anal
         pdf.ln(2)
 
 
-def _add_query_details_section(pdf: EchoScopePDF, data: Dict[str, Any]):
+def _add_query_details_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
     """Add per-query analysis table with modern styling."""
     pdf.add_page()
     
@@ -425,7 +425,7 @@ def _add_query_details_section(pdf: EchoScopePDF, data: Dict[str, Any]):
         row_fill = not row_fill
 
 
-def _add_competitor_section(pdf: EchoScopePDF, data: Dict[str, Any]):
+def _add_competitor_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
     """Add competitor overview section."""
     top_competitors = data.get("top_competitors", [])
     
@@ -477,7 +477,7 @@ def _add_competitor_section(pdf: EchoScopePDF, data: Dict[str, Any]):
         row_fill = not row_fill
 
 
-def _add_genius_insights_section_v2(pdf: EchoScopePDF, data: Dict[str, Any]):
+def _add_genius_insights_section_v2(pdf: EkkoScopePDF, data: Dict[str, Any]):
     """Add Genius Insights v2 with Impact/Effort scoring and Next 30 Days Focus."""
     genius = data.get("genius_insights")
     
@@ -756,7 +756,7 @@ def _add_genius_insights_section_v2(pdf: EchoScopePDF, data: Dict[str, Any]):
             pdf.ln(8)
 
 
-def _add_recommendations_section(pdf: EchoScopePDF, data: Dict[str, Any]):
+def _add_recommendations_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
     """Add grouped recommendations section."""
     recommendations = data.get("recommendations", {})
     

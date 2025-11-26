@@ -1,8 +1,8 @@
-# EchoScope - GEO Engine for AI Visibility
+# EkkoScope - GEO Engine for AI Visibility
 
 ## Overview
 
-EchoScope is a web application that analyzes "AI visibility" for businesses by testing how frequently they are recommended by AI assistants like ChatGPT. The system runs predefined queries against the OpenAI API to determine if a business is mentioned, how prominently it's featured compared to competitors, and provides actionable content recommendations to improve visibility.
+EkkoScope is a web application that analyzes "AI visibility" for businesses by testing how frequently they are recommended by AI assistants like ChatGPT. The system runs predefined queries against the OpenAI API to determine if a business is mentioned, how prominently it's featured compared to competitors, and provides actionable content recommendations to improve visibility.
 
 **Sprint 1 Update:** The application now includes a persistence layer with SQLite, admin panel with authentication, and public business submission form. Businesses and audit results are stored in the database, allowing for historical tracking and management.
 
@@ -219,7 +219,7 @@ Using OpenAI's structured outputs ensures consistent, parseable responses. The t
 ### Stripe Integration (Sprint 2)
 
 **Stripe Checkout Flow:**
-- One-time payment for EchoScope Snapshot Audit ($49)
+- One-time payment for EkkoScope Snapshot Audit ($497)
 - Stripe credentials fetched from Replit connector API
 - Environment variable `STRIPE_PRICE_SNAPSHOT` stores the price ID
 
@@ -245,8 +245,8 @@ Using OpenAI's structured outputs ensures consistent, parseable responses. The t
 
 ### Stripe Integration (Sprint 3 - Ongoing Subscriptions)
 
-**EchoScope Ongoing Plan:**
-- Monthly subscription ($29/month) with optional setup fee ($49)
+**EkkoScope Ongoing Plan:**
+- Monthly subscription ($99/month) with setup fee ($197)
 - Environment variables: `STRIPE_PRICE_ONGOING_SETUP`, `STRIPE_PRICE_ONGOING_MONTHLY`
 - Subscription mode Stripe Checkout with recurring billing
 

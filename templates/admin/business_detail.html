@@ -1,6 +1,6 @@
 {% extends "admin/base.html" %}
 
-{% block title %}{{ business.name }} - EchoScope Admin{% endblock %}
+{% block title %}{{ business.name }} - EkkoScope Admin{% endblock %}
 
 {% block content %}
 <style>
@@ -105,7 +105,7 @@
     
     <div class="actions">
         <form method="POST" action="/admin/business/{{ business.id }}/run" style="display: inline;">
-            <button type="submit" class="btn btn-primary">Run EchoScope Audit (Admin)</button>
+            <button type="submit" class="btn btn-primary">Run EkkoScope Audit (Admin)</button>
         </form>
         {% if business.subscription_active and (business.plan == 'ongoing') %}
         <form method="POST" action="/admin/business/{{ business.id }}/refresh" style="display: inline;">

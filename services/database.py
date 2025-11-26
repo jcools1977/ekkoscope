@@ -1,5 +1,5 @@
 """
-Database configuration and models for EchoScope Sprint 1.
+Database configuration and models for EkkoScope Sprint 1.
 Uses SQLite with SQLAlchemy for persistence.
 """
 
@@ -11,7 +11,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, Session
 
-SQLITE_DATABASE_PATH = "echoscope.db"
+SQLITE_DATABASE_PATH = "ekkoscope.db"
 DATABASE_URL = f"sqlite:///./{SQLITE_DATABASE_PATH}"
 
 engine = create_engine(

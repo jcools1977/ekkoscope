@@ -16,10 +16,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "EchoScope Server"
+args = "EkkoScope Server"
 
 [[workflows.workflow]]
-name = "EchoScope Server"
+name = "EkkoScope Server"
 author = "agent"
 
 [[workflows.workflow.tasks]]
@@ -34,13 +34,9 @@ outputType = "webview"
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 45933
-externalPort = 3000
-
 [userenv]
 
 [userenv.shared]
-STRIPE_PRICE_SNAPSHOT = "price_1SXqAxBB4Ktzr0dekmYdYQpb"
-STRIPE_PRICE_ONGOING_SETUP = "price_1SXqOKBB4Ktzr0deEm6857Lf"
-STRIPE_PRICE_ONGOING_MONTHLY = "price_1SXqOKBB4Ktzr0deEFftevA0"
+STRIPE_PRICE_SNAPSHOT = "price_1SXqdSBB4Ktzr0de7N8wWC3j"
+STRIPE_PRICE_ONGOING_SETUP = "price_1SXqdUBB4Ktzr0decZLTD3an"
+STRIPE_PRICE_ONGOING_MONTHLY = "price_1SXqdUBB4Ktzr0deURXO0X8N"

@@ -1,5 +1,5 @@
 """
-Site Inspector Module for EchoScope v0.3
+Site Inspector Module for EkkoScope v0.3
 Fetches and summarizes key pages from tenant websites for Genius Mode site awareness.
 """
 
@@ -88,7 +88,7 @@ def _fetch_single_page(client: httpx.Client, url: str) -> Dict[str, Any] | None:
     """
     try:
         headers = {
-            "User-Agent": "Mozilla/5.0 (compatible; EchoScope/1.0; +https://echoscope.ai)"
+            "User-Agent": "Mozilla/5.0 (compatible; EkkoScope/1.0; +https://ekkoscope.ai)"
         }
         response = client.get(url, headers=headers)
         
