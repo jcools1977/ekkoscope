@@ -1,5 +1,5 @@
 """
-Database configuration and models for EkkoScope Sprint 1.
+Database configuration and models for EkkoScope.
 Uses SQLite with SQLAlchemy for persistence.
 """
 
@@ -10,6 +10,7 @@ from typing import Optional, List
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Text, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, Session
+from passlib.hash import bcrypt
 
 SQLITE_DATABASE_PATH = "ekkoscope.db"
 DATABASE_URL = f"sqlite:///./{SQLITE_DATABASE_PATH}"
@@ -23,10 +24,64 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
+class User(Base):
+    """User accounts for authentication and ownership."""
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    first_name = Column(String(100), nullable=True)
+    last_name = Column(String(100), nullable=True)
+    is_admin = Column(Boolean, default=False)
+    email_verified = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_login_at = Column(DateTime, nullable=True)
+    follow_up_sent_at = Column(DateTime, nullable=True)
+    
+    businesses = relationship("Business", back_populates="owner")
+    purchases = relationship("Purchase", back_populates="user")
+    
+    def set_password(self, password: str):
+        """Hash and store password."""
+        self.password_hash = bcrypt.hash(password)
+    
+    def verify_password(self, password: str) -> bool:
+        """Verify password against stored hash."""
+        return bcrypt.verify(password, self.password_hash)
+    
+    @property
+    def full_name(self) -> str:
+        """Return user's full name or email."""
+        if self.first_name or self.last_name:
+            return f"{self.first_name or ''} {self.last_name or ''}".strip()
+        return self.email.split('@')[0]
+
+
+class Purchase(Base):
+    """Track user purchases and entitlements."""
+    __tablename__ = "purchases"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    business_id = Column(Integer, ForeignKey("businesses.id"), nullable=False)
+    kind = Column(String(20), nullable=False)
+    status = Column(String(20), default="pending")
+    stripe_checkout_session_id = Column(String(255), nullable=True)
+    stripe_payment_intent_id = Column(String(255), nullable=True)
+    used = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+    
+    user = relationship("User", back_populates="purchases")
+    business = relationship("Business", back_populates="purchases")
+
+
 class Business(Base):
     __tablename__ = "businesses"
     
     id = Column(Integer, primary_key=True, index=True)
+    owner_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     name = Column(String(255), nullable=False)
     primary_domain = Column(String(255), nullable=False)
     extra_domains = Column(Text, default="[]")
@@ -41,7 +96,9 @@ class Business(Base):
     plan = Column(String(20), default="snapshot")
     created_at = Column(DateTime, default=datetime.utcnow)
     
+    owner = relationship("User", back_populates="businesses")
     audits = relationship("Audit", back_populates="business", order_by="desc(Audit.created_at)")
+    purchases = relationship("Purchase", back_populates="business")
     
     def get_extra_domains(self) -> List[str]:
         try:
@@ -203,6 +260,11 @@ def migrate_db():
             conn.execute(text("ALTER TABLE businesses ADD COLUMN stripe_subscription_id VARCHAR(255)"))
             conn.commit()
             print("Migration: Added 'stripe_subscription_id' column to businesses table")
+        
+        if "owner_user_id" not in columns:
+            conn.execute(text("ALTER TABLE businesses ADD COLUMN owner_user_id INTEGER REFERENCES users(id)"))
+            conn.commit()
+            print("Migration: Added 'owner_user_id' column to businesses table")
 
 
 def init_db():

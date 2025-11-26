@@ -17,3 +17,5 @@ sqlalchemy
 itsdangerous
 starlette
 stripe
+bcrypt
+passlib
