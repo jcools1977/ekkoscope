@@ -1,13 +1,15 @@
 """
 Genius Insights Module v2 for EkkoScope GEO Visibility Analysis
 Enhanced with site awareness, impact/effort scoring, and structured JSON output.
+Now includes Perplexity web-grounded visibility data for enhanced insights.
 """
 
 import os
 import json
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from openai import OpenAI
 from services.site_inspector import summarize_site_content
+from services.perplexity_visibility import format_perplexity_visibility_for_genius
 
 
 class GeniusInsightError(Exception):
@@ -26,10 +28,11 @@ def get_openai_client() -> OpenAI:
 def generate_genius_insights(
     tenant: Dict[str, Any],
     analysis: Dict[str, Any],
-    site_snapshot: Dict[str, Any] | None = None
+    site_snapshot: Dict[str, Any] | None = None,
+    perplexity_visibility: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """
-    Use OpenAI to turn raw analysis + site snapshot into actionable genius insights:
+    Use OpenAI to turn raw analysis + site snapshot + Perplexity visibility into actionable genius insights:
     - Patterns in AI visibility with evidence
     - Prioritized opportunities with impact/effort scoring
     - Quick wins for next 30 days
@@ -39,6 +42,7 @@ def generate_genius_insights(
         tenant: Tenant configuration (name, domains, aliases, geo, etc.)
         analysis: Normalized analysis result (queries, scores, competitors, etc.)
         site_snapshot: Optional site content snapshot from site_inspector
+        perplexity_visibility: Optional Perplexity visibility probe results
     
     Returns:
         JSON-serializable dict with enhanced genius insights
@@ -83,6 +87,9 @@ def generate_genius_insights(
         
         site_note_instruction = "Analysis of existing content: what's missing in headings, geo terms, or CTA" if site_available else "Site content not available for detailed page analysis"
         
+        perplexity_summary = format_perplexity_visibility_for_genius(perplexity_visibility)
+        perplexity_available = perplexity_visibility and perplexity_visibility.get("enabled", False)
+        
         context_json = json.dumps({
             "tenant_name": tenant_name,
             "domains": [d for d in domains if not d.startswith("AD_") and "_SITE_URL" not in d],
@@ -104,6 +111,7 @@ INPUTS PROVIDED:
 1. Tenant info: name, domains, geo focus, brand aliases
 2. Query analysis: each query tested, its score (0-2), and competitors that appeared
 3. {"Current site content: actual headings, meta descriptions, and text from their website" if site_available else "Site content: NOT AVAILABLE for this analysis"}
+4. {"PERPLEXITY WEB-GROUNDED VISIBILITY: Real-time web search results showing who currently appears for each query" if perplexity_available else "Perplexity visibility data: NOT AVAILABLE"}
 
 YOUR TASK: Generate SPECIFIC, ACTIONABLE insights grounded in the actual data.
 
@@ -116,6 +124,7 @@ CRITICAL RULES:
 6. Quick wins MUST be completable in 30 days with specific actions
 7. NO generic advice like "improve SEO" - everything must be specific to THIS business
 {"8. Use the site content to identify missing phrases, weak headings, and content gaps" if site_available else "8. Note that site content review was not possible for this run"}
+{"9. IMPORTANT: Cross-reference the Perplexity web search results with the OpenAI visibility analysis - note where they agree/disagree on who is recommended" if perplexity_available else ""}
 
 Output ONLY valid JSON matching this exact structure:
 
@@ -180,12 +189,15 @@ Generate 2-3 patterns, 2-3 priority opportunities with full page blueprints, 3-5
 {"=== CURRENT SITE CONTENT ===" if site_available else "=== SITE CONTENT ==="}
 {site_content_summary if site_available else "Site content could not be retrieved. Focus insights on the query analysis and competitor data."}
 
+{perplexity_summary}
+
 === REQUIREMENTS ===
 - {tenant_name} operates in: {', '.join(geo_focus) if geo_focus else 'their local area'}
 - Their domains: {', '.join([d for d in domains if not d.startswith('AD_') and '_SITE_URL' not in d]) if domains else 'not specified'}
 - Reference the ACTUAL queries, scores, and competitors from the data above
 - Make every recommendation specific to THIS business
-- {"Identify content gaps based on what the site currently says vs what AI recommends" if site_available else "Note that site content analysis was not possible"}"""
+- {"Identify content gaps based on what the site currently says vs what AI recommends" if site_available else "Note that site content analysis was not possible"}
+- {"Cross-reference Perplexity's real-time web visibility with OpenAI's simulated recommendations to find patterns" if perplexity_available else "Perplexity data was not available for this run"}"""
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -208,7 +220,8 @@ Generate 2-3 patterns, 2-3 priority opportunities with full page blueprints, 3-5
             "priority_opportunities": insights.get("priority_opportunities", []),
             "quick_wins": insights.get("quick_wins", []),
             "future_ai_answers": insights.get("future_ai_answers", []),
-            "site_analyzed": site_available
+            "site_analyzed": site_available,
+            "perplexity_used": perplexity_available
         }
     
     except Exception as e:
@@ -223,7 +236,8 @@ def _empty_genius_insights() -> Dict[str, Any]:
         "priority_opportunities": [],
         "quick_wins": [],
         "future_ai_answers": [],
-        "site_analyzed": False
+        "site_analyzed": False,
+        "perplexity_used": False
     }
 
 

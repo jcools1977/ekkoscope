@@ -1,0 +1,393 @@
+You are Replit AI working inside my AN2B Ekkoscope (EchoScope) FastAPI app.
+
+CONTEXT
+
+- The app already uses OpenAI to:
+  - Run GEO / AI visibility analysis for a business
+  - Ask LLMs visibility questions based on queries / services
+  - Run a “Genius Mode” that turns results into patterns + prioritized opportunities
+  - Generate a PDF report (executive summary, impact/effort, Next 30 Days Focus, etc.)
+
+- I now want to ADD **Perplexity’s API** as a second LLM provider, so that:
+  - Perplexity (e.g. sonar-pro) does **web-grounded, real-time search** (what’s out there right now).
+  - OpenAI does the **reasoning/synthesis** on top (patterns, 30-day plan, language tailored to the business).
+  - For each GEO query, the audit can use BOTH signals to get the “smartest” result.
+
+Use Perplexity’s official chat completions endpoint:
+- Base URL: https://api.perplexity.ai/chat/completions
+- OpenAI-compatible format (we can use the OpenAI client library with base_url="https://api.perplexity.ai" and model="sonar-pro" by default).
+
+GOALS FOR THIS CHANGE
+
+1) Add Perplexity config + client.
+2) Add a small “Perplexity visibility probe” service that:
+   - Takes a Business + list of GEO queries.
+   - For each query, asks Perplexity to check current web results and respond in a structured way.
+3) Modify the audit pipeline so that:
+   - It calls Perplexity first to get a grounded visibility snapshot.
+   - Then calls OpenAI Genius Mode, passing both:
+     - Site/tenant context (existing behavior),
+     - AND Perplexity’s visibility snapshot, so OpenAI can synthesize a better plan.
+4) Make this optional + robust:
+   - If PERPLEXITY_API_KEY is missing or Perplexity errors, log a warning and fall back to pure OpenAI behavior.
+   - Do NOT break existing OpenAI-only runs.
+
+IMPLEMENTATION DETAILS
+
+### 1. Environment + config
+
+Add new env variables (e.g. in settings/config module and any .env example):
+
+- PERPLEXITY_API_KEY       (string, optional)
+- PERPLEXITY_MODEL         (default: "sonar-pro")
+- PERPLEXITY_ENABLED       (bool-like, default: True if key present)
+
+In the config module, add helpers like:
+
+```python
+PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
+PERPLEXITY_MODEL = os.getenv("PERPLEXITY_MODEL", "sonar-pro")
+PERPLEXITY_ENABLED = bool(PERPLEXITY_API_KEY)
+2. Perplexity client module
+Create a new module, e.g. services/perplexity_client.py with something like:
+
+If the repo is using the new OpenAI client style:
+
+python
+Copy code
+# services/perplexity_client.py
+from typing import List, Dict, Optional
+import logging
+import json
+from openai import OpenAI
+from .config import PERPLEXITY_API_KEY, PERPLEXITY_MODEL, PERPLEXITY_ENABLED
+
+logger = logging.getLogger(__name__)
+
+def get_perplexity_client() -> Optional[OpenAI]:
+    if not PERPLEXITY_ENABLED:
+        return None
+    return OpenAI(
+        api_key=PERPLEXITY_API_KEY,
+        base_url="https://api.perplexity.ai"
+    )
+
+def call_perplexity_chat(
+    messages: List[Dict[str, str]],
+    model: Optional[str] = None,
+    **kwargs
+) -> Optional[str]:
+    """
+    Call Perplexity chat completions and return the assistant's message content.
+    Returns None on any error or if PERPLEXITY is disabled.
+    """
+    if not PERPLEXITY_ENABLED:
+        logger.info("Perplexity is disabled (no API key). Skipping call.")
+        return None
+
+    client = get_perplexity_client()
+    if client is None:
+        return None
+
+    try:
+        resp = client.chat.completions.create(
+            model=model or PERPLEXITY_MODEL,
+            messages=messages,
+            **kwargs
+        )
+        choice = resp.choices[0]
+        return choice.message.content if choice and choice.message else None
+    except Exception as e:
+        logger.warning("Perplexity call failed: %s", e, exc_info=True)
+        return None
+If the repo is still using the old openai style, adapt accordingly:
+
+Set openai.api_base = "https://api.perplexity.ai"
+
+Use openai.ChatCompletion.create(...)
+
+Keep the same call_perplexity_chat interface.
+
+Make sure this module imports configuration from wherever you keep app settings (adjust import path from .config if needed).
+
+3. Perplexity visibility probe service
+Create a module like services/perplexity_visibility.py that defines:
+
+python
+Copy code
+from typing import List, Dict, Any
+import json
+import logging
+from .perplexity_client import call_perplexity_chat
+from .models import Business  # or wherever Business lives
+
+logger = logging.getLogger(__name__)
+
+def build_perplexity_visibility_prompt(business: Business, query: str) -> List[Dict[str, str]]:
+    """
+    Build a messages array for Perplexity that:
+    - Explains that it should perform real-time web search.
+    - Asks it to answer in **strict JSON** describing which businesses appear and why.
+    """
+    system_msg = {
+        "role": "system",
+        "content": (
+            "You are an AI visibility analyst. Use real-time web search to see "
+            "which businesses/websites are recommended for the user's query. "
+            "Answer in STRICT JSON with keys: "
+            '{"recommended_brands": [{"name": str, "url": str, "reason": str}], '
+            '"summary": str}. No extra commentary."
+        )
+    }
+
+    # You can include region + domain in the user content
+    user_content = (
+        f"Business we are analyzing: {business.name} "
+        f"(website: {business.primary_domain}). "
+        f"Business regions: {business.regions or 'unknown'}. "
+        f"User query: {query}.\n\n"
+        "Question: Based on your real-time search, which businesses are most often "
+        "recommended or visible for this query? Include the target business if it appears."
+    )
+
+    user_msg = {"role": "user", "content": user_content}
+    return [system_msg, user_msg]
+
+
+def run_perplexity_visibility_probe(
+    business: Business,
+    queries: List[str],
+) -> Dict[str, Any]:
+    """
+    For each query, call Perplexity and try to parse the JSON result.
+    Returns a dict like:
+    {
+      "queries": [
+        {
+          "query": "...",
+          "raw_answer": "...",
+          "data": {
+            "recommended_brands": [...],
+            "summary": "..."
+          }
+        },
+        ...
+      ]
+    }
+    """
+    results: List[Dict[str, Any]] = []
+
+    for q in queries:
+        messages = build_perplexity_visibility_prompt(business, q)
+        raw = call_perplexity_chat(messages)
+        if raw is None:
+            results.append({
+                "query": q,
+                "raw_answer": None,
+                "data": None,
+            })
+            continue
+
+        parsed = None
+        try:
+            parsed = json.loads(raw)
+        except Exception:
+            logger.warning("Could not parse Perplexity JSON for query %r: %r", q, raw)
+        results.append({
+            "query": q,
+            "raw_answer": raw,
+            "data": parsed,
+        })
+
+    return {"queries": results}
+This is the “Perplexity side” of the brain: it just tells us who’s showing up in AI/web answers and why.
+
+4. Integrate Perplexity into the audit pipeline
+Find the core audit runner (earlier we named it something like services/audit_runner.py with a run_audit_for_business(business, audit, db_session) function).
+
+Modify it to:
+
+Identify the list of GEO queries it already uses for visibility (e.g. queries like:
+
+“best roofer in {city}”
+
+“metal roofing supplier near me”
+
+etc.)
+
+Before calling the OpenAI/Genius stuff, invoke the Perplexity probe.
+
+Example shape (adapt names to your actual code):
+
+python
+Copy code
+# services/audit_runner.py (or equivalent)
+from typing import List
+from .perplexity_visibility import run_perplexity_visibility_probe
+from .config import PERPLEXITY_ENABLED
+
+def run_audit_for_business(business: Business, audit: Audit, db_session):
+    # existing: build query set for this business
+    queries: List[str] = build_geo_queries_for_business(business)  # adjust to your real fn name
+
+    perplexity_visibility = None
+    if PERPLEXITY_ENABLED:
+        perplexity_visibility = run_perplexity_visibility_probe(business, queries)
+        # Option: attach to audit if your model has a field for it
+        # audit.perplexity_visibility_json = json.dumps(perplexity_visibility)
+        # db_session.commit()
+
+    # existing: run OpenAI-based visibility + genius mode
+    # MODIFY the genius-mode call so that it receives `perplexity_visibility` as extra context.
+
+    visibility_summary, genius_suggestions = run_openai_visibility_and_genius(
+        business=business,
+        queries=queries,
+        perplexity_visibility=perplexity_visibility,  # NEW param
+    )
+
+    # Then continue filling audit fields as before:
+    # audit.visibility_summary_json = json.dumps(visibility_summary)
+    # audit.suggestions_json = json.dumps(genius_suggestions)
+    # audit.site_inspector_used = True/False depending on your logic
+    # audit.status = "done"
+    # audit.completed_at = now
+    # db_session.commit()
+    # return audit
+If your visibility/genius code is split into multiple modules (e.g. visibility_engine.py, genius_mode.py), refactor them so that:
+
+There is a single function (or small group) responsible for calling OpenAI.
+
+That function now accepts an optional perplexity_visibility dict.
+
+5. Use Perplexity output inside OpenAI Genius Mode
+Wherever you call OpenAI to produce patterns & 30-day plan (your Genius Mode v2), modify the prompt so it can consume Perplexity’s snapshot.
+
+Pseudo-shape:
+
+python
+Copy code
+def run_openai_visibility_and_genius(
+    business: Business,
+    queries: List[str],
+    perplexity_visibility: Optional[Dict[str, Any]] = None,
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """
+    Wraps existing OpenAI calls. If perplexity_visibility is provided,
+    include it in the system or user prompt as 'web-grounded visibility evidence'.
+    """
+    # Build site context as you already do (titles, meta, headings, etc.)
+    site_context = build_site_context(business)
+
+    # Build a combined context for the system message:
+    system_content = (
+        "You are an AI GEO/visibility strategist. You will see:\n"
+        "1) A summary of this business's own website content.\n"
+        "2) Optionally, a web-grounded visibility snapshot from another AI (Perplexity).\n"
+        "Use BOTH to produce a structured visibility summary and a 30-day prioritized plan.\n"
+        "Focus on clear, concrete actions (pages, FAQs, content clusters, etc.)."
+    )
+
+    system_msg = {"role": "system", "content": system_content}
+
+    user_parts = [
+        f"BUSINESS: {business.name}",
+        f"WEBSITE: {business.primary_domain}",
+        f"REGIONS: {business.regions}",
+        f"SITE_CONTEXT:\n{site_context}",
+        f"GEO_QUERIES: {queries}",
+    ]
+
+    if perplexity_visibility is not None:
+        user_parts.append(
+            "PERPLEXITY_VISIBILITY_SNAPSHOT (raw JSON-ish structure):\n"
+            + json.dumps(perplexity_visibility, ensure_ascii=False)
+        )
+
+    user_content = "\n\n".join(user_parts)
+
+    user_msg = {
+        "role": "user",
+        "content": (
+            user_content
+            + "\n\nTask: 1) Summarize how visible this business currently is across these GEO queries, "
+              "2) Identify patterns/gaps, and 3) Output a 30-day prioritized action plan suitable for the PDF report."
+        ),
+    }
+
+    messages = [system_msg, user_msg]
+
+    # Here reuse your existing OpenAI client / parameters
+    # (model name, temperature, etc.)
+    # and unpack the response into:
+    # - visibility_summary_json
+    # - genius_suggestions_json
+
+    # Example pseudo-code:
+    # resp = openai_client.chat.completions.create(
+    #     model=OPENAI_MODEL,
+    #     messages=messages,
+    #     temperature=...
+    # )
+    # content = resp.choices[0].message.content
+    # ...parse/split content into summary vs suggestions...
+
+    return visibility_summary, genius_suggestions
+Key idea:
+
+Perplexity gives you “who shows up where + why”.
+
+OpenAI gets both the site context and the Perplexity snapshot and turns that into a better, prioritized plan.
+
+6. Robustness & fallback
+Make sure:
+
+All Perplexity usage is guarded by:
+
+if PERPLEXITY_ENABLED:
+
+call_perplexity_chat catching exceptions and returning None on failure.
+
+If perplexity_visibility is None, the rest of the audit pipeline behaves exactly as before:
+
+Genius Mode just uses site context and queries, like v0.3.
+
+No crashes or missing fields.
+
+Log helpful messages, not stack traces, at INFO/WARNING level.
+
+7. Optional: expose Perplexity usage in the PDF
+If the PDF generator currently notes “Site content analysis used,” extend it to:
+
+Indicate when Perplexity was used:
+
+Add a small line in the Executive Summary or a footer:
+
+“Data sources: site content, OpenAI analysis, Perplexity Sonar web-grounded visibility probe.”
+
+Only do this if PERPLEXITY_ENABLED and we actually got a non-None perplexity_visibility.
+
+CONSTRAINTS
+
+Do NOT break existing OpenAI-only flows. If Perplexity is disabled, the app should behave exactly as before.
+
+Keep Perplexity integration modular: all HTTP details live in services/perplexity_client.py and services/perplexity_visibility.py.
+
+Reuse the existing OpenAI client pattern in this repo; don’t introduce a completely different style unless necessary.
+
+After you’re done, I should be able to:
+
+Set PERPLEXITY_API_KEY in the environment.
+
+Run an audit for a business.
+
+See that:
+
+The pipeline first calls Perplexity to get web-grounded visibility per query.
+
+Then calls OpenAI Genius Mode with both site context and Perplexity snapshot.
+
+The resulting PDF / JSON reflects richer, more grounded recommendations.
+
+yaml
+Copy code

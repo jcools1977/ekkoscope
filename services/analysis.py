@@ -1,10 +1,15 @@
 import os
 import json
+import logging
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 from openai import OpenAI
 from services.genius import generate_genius_insights
 from services.site_inspector import fetch_site_snapshot
+from services.perplexity_visibility import run_perplexity_visibility_probe
+from services.config import PERPLEXITY_ENABLED
+
+logger = logging.getLogger(__name__)
 
 
 class MissingAPIKeyError(Exception):
@@ -182,6 +187,29 @@ def run_analysis(tenant_config: Dict[str, Any]) -> Dict[str, Any]:
     tenant_name = tenant_config["display_name"]
     brand_aliases = tenant_config["brand_aliases"]
     queries = tenant_config["priority_queries"]
+    domains = tenant_config.get("domains", [])
+    geo_focus = tenant_config.get("geo_focus", [])
+    
+    primary_domain = domains[0] if domains else ""
+    
+    perplexity_visibility = None
+    if PERPLEXITY_ENABLED:
+        logger.info("Running Perplexity visibility probe for %s", tenant_name)
+        try:
+            perplexity_visibility = run_perplexity_visibility_probe(
+                business_name=tenant_name,
+                primary_domain=primary_domain,
+                regions=geo_focus,
+                queries=queries
+            )
+            summary = (perplexity_visibility or {}).get("summary") or {}
+            successful = summary.get("successful_probes", 0)
+            logger.info("Perplexity probe complete: %d/%d queries successful", successful, len(queries))
+        except Exception as e:
+            logger.warning("Perplexity visibility probe failed (non-fatal): %s", e)
+            perplexity_visibility = {"enabled": False, "queries": [], "summary": None}
+    else:
+        logger.info("Perplexity not enabled, skipping visibility probe")
     
     results = []
     
@@ -215,7 +243,8 @@ def run_analysis(tenant_config: Dict[str, Any]) -> Dict[str, Any]:
         "mentioned_count": mentioned_count,
         "primary_count": primary_count,
         "avg_score": round(avg_score, 2),
-        "results": results
+        "results": results,
+        "perplexity_visibility": perplexity_visibility
     }
     
     suggestions_data = generate_suggestions(tenant_config, summary)
@@ -226,15 +255,20 @@ def run_analysis(tenant_config: Dict[str, Any]) -> Dict[str, Any]:
         site_snapshot = fetch_site_snapshot(tenant_config)
         summary["site_snapshot"] = site_snapshot
     except Exception as e:
-        print(f"Error fetching site snapshot (non-fatal): {e}")
+        logger.warning("Error fetching site snapshot (non-fatal): %s", e)
         site_snapshot = {"pages": [], "fetch_status": "error"}
         summary["site_snapshot"] = site_snapshot
     
     try:
-        genius_data = generate_genius_insights(tenant_config, summary, site_snapshot)
+        genius_data = generate_genius_insights(
+            tenant_config, 
+            summary, 
+            site_snapshot,
+            perplexity_visibility=perplexity_visibility
+        )
         summary["genius_insights"] = genius_data
     except Exception as e:
-        print(f"Error generating genius insights (non-fatal): {e}")
+        logger.warning("Error generating genius insights (non-fatal): %s", e)
         summary["genius_insights"] = None
     
     return summary
