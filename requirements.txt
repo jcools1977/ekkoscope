@@ -10,3 +10,5 @@ python-dotenv
 uvicorn[standard]
 python-multipart
 fpdf2
+beautifulsoup4
+httpx

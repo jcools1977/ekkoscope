@@ -1,0 +1,398 @@
+You are my senior engineer and strategist for EchoScope, an AI GEO visibility scanner with a “Genius Mode” analysis + PDF reports.
+
+The app already:
+
+Runs GEO analysis for a selected tenant (A-D Roofing, BetterPak, etc.).
+
+Produces:
+
+Per-query scores (0/1/2),
+
+Competitor mentions,
+
+Genius Mode insights (patterns, priority opportunities, quick wins, future AI answers),
+
+PDF reports with all sections.
+
+The current Genius Mode is good but too generic. Your job for v0.3 is to:
+
+Make Genius Mode site-aware by actually looking at the tenant’s website content.
+
+Add impact/effort scoring and stronger structure to the insights.
+
+Upgrade the PDF layout to surface an Executive Summary and clearer prioritization.
+
+Do this as an incremental upgrade—do not break existing workflows.
+
+0. Overview of Changes
+
+Implement the following:
+
+Site Inspector module
+
+Fetch and summarize key pages from the tenant’s website.
+
+Provide this summary to Genius Mode.
+
+Genius Mode v2
+
+New JSON structure (patterns, opportunities, quick_wins, future_ai_answers) with:
+
+impact_score and effort per opportunity.
+
+Stronger requirements to reference actual queries, competitors, and geo.
+
+Use site content to call out gaps (missing phrases, weak headers, etc.).
+
+PDF upgrades
+
+Add a 3–5 bullet Executive Summary under the Visibility Summary.
+
+In the Genius section, display Impact/Effort and “Next 30 Days Focus” clearly.
+
+Keep everything graceful if Genius or site fetch fails.
+
+1. Site Inspector: make Genius Mode aware of the real site
+
+Create a new module, e.g.:
+
+echoscope/site_inspector.py (or similar path)
+
+Implement:
+
+from typing import Dict, Any, List
+
+def fetch_site_snapshot(tenant: Dict[str, Any], timeout: float = 5.0) -> Dict[str, Any]:
+    """
+    Best-effort snapshot of the tenant's web presence.
+
+    - Uses domains / website URL from tenant config.
+    - Fetches 1-3 key pages (e.g., homepage + one or two obvious service URLs if available).
+    - Returns a dict like:
+      {
+        "pages": [
+          {
+            "url": "https://example.com/",
+            "status": 200,
+            "title": "Page <title>",
+            "text_excerpt": "Cleaned visible text, truncated to N characters..."
+          },
+          ...
+        ]
+      }
+
+    If anything fails (network, parsing, etc.), return a structure with an empty `pages` list.
+    Never raise exceptions to the caller.
+    """
+
+
+Implementation details:
+
+Use a simple HTTP client (httpx or requests). Add to requirements.txt if not already present.
+
+Tenant config likely has something like domains or website. Do:
+
+If there is a full website_url, use that.
+
+Else, if there is a bare domain like "betterpaksupplies.com", build https://betterpaksupplies.com/.
+
+Fetch at least the homepage.
+
+Optional: If tenant config includes a list like important_paths (you can add this), fetch those too:
+
+e.g. /services/roofing, /products/trash-liners.
+
+Strip scripts/styles and compress whitespace; truncate each text excerpt to a reasonable size (e.g. 2000–4000 chars total across all pages) so the OpenAI prompt stays manageable.
+
+Return a dict that Genius Mode can consume. Never let a failed HTTP call crash the main flow.
+
+2. Genius Mode v2: stronger structure + site grounding
+
+Update or replace your existing Genius module (e.g. genius.py or genius_insights.py) to:
+
+from typing import Dict, Any
+
+def generate_genius_insights(
+    tenant: Dict[str, Any],
+    analysis: Dict[str, Any],
+    site_snapshot: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Use OpenAI to turn the raw analysis + site snapshot into:
+    - Patterns in AI visibility
+    - Prioritized opportunities with impact/effort
+    - Concrete quick wins (next 30 days)
+    - Future AI answer previews
+
+    Returns a JSON-serializable dict.
+    """
+
+2.1. System prompt requirements
+
+Use the same OpenAI client pattern as the rest of the app. In the system prompt, enforce:
+
+You are an AI GEO visibility strategist for this specific tenant.
+
+Inputs:
+
+tenant (name, geo, services/domain info),
+
+analysis (queries, scores, competitors),
+
+site_snapshot.pages (current actual content snippets).
+
+Output: valid JSON with this shape:
+
+{
+  "patterns": [
+    {
+      "summary": "Short one-line description of the pattern.",
+      "evidence": [
+        "Concrete evidence citing at least one query and competitor.",
+        "Example: 'In all queries containing \"metal roof\", score=0 while East Coast Roofing appears as top recommendation.'"
+      ],
+      "implication": "What this means for the tenant's marketing / funnel."
+    }
+  ],
+  "priority_opportunities": [
+    {
+      "query": "Exact money query or cluster label.",
+      "current_score": 0,
+      "top_competitors": ["Competitor A", "Competitor B"],
+      "intent_type": "emergency | high-ticket | maintenance | informational",
+      "intent_value": 1,
+      "impact_score": 1,
+      "effort": "low | medium | high",
+      "money_reason": "Why this is financially important for this tenant.",
+      "recommended_page": {
+        "slug": "/example-url-slug",
+        "seo_title": "SEO title including service + geo + brand",
+        "h1": "Clear H1 for the page",
+        "outline": [
+          "Section bullet 1...",
+          "Section bullet 2..."
+        ],
+        "internal_links": [
+          "Suggestions referencing existing or likely URLs on this tenant's site."
+        ],
+        "note_on_current_site": "Does a related page already exist? What is missing in headings, geo terms, or CTA?"
+      }
+    }
+  ],
+  "quick_wins": [
+    "3-5 items, each a concrete action that a small team could complete in 30 days, grounded in the actual site content and analysis."
+  ],
+  "future_ai_answers": [
+    {
+      "query": "Exact query string.",
+      "example_answer": "Realistic short ChatGPT-style answer that explicitly recommends this tenant in their geo."
+    }
+  ]
+}
+
+
+Additional constraints in the system prompt:
+
+Patterns:
+
+Must reference at least one query string from the analysis.
+
+Must reference at least one competitor name where relevant.
+
+Should mention the tenant’s geo (e.g. Morehead City, Eastern North Carolina) when appropriate.
+
+Impact/Effort:
+
+impact_score must be 1–10 (integer).
+
+effort must be "low", "medium", or "high".
+
+Use the tenant’s business model to justify money importance in money_reason.
+
+Quick Wins:
+
+Max 5.
+
+All phrased as doable in 30 days.
+
+No vague “do better SEO” or “improve content quality”; each must reference:
+
+a specific page (e.g. homepage or an inferred URL), or
+
+a specific asset (e.g. Google Business Profile), or
+
+a specific piece of content to add/edit.
+
+Site awareness:
+
+Use site_snapshot.pages to:
+
+Identify missing phrases (“metal roof installation”, city names),
+
+Identify weak headers/sections,
+
+Decide whether to create new pages or improve existing ones.
+
+Explicitly comment in note_on_current_site when a relevant page seems to exist but lacks the right terms or structure.
+
+If site_snapshot.pages is empty, still produce insights, but note that content review was not possible.
+
+2.2. Wiring Genius Mode into the pipeline
+
+In your core analysis function (e.g. run_geo_analysis_for_tenant or equivalent):
+
+Once tenant and analysis are ready, call:
+
+from echoscope.site_inspector import fetch_site_snapshot
+from echoscope.genius import generate_genius_insights
+
+site_snapshot = fetch_site_snapshot(tenant)
+genius_insights = generate_genius_insights(tenant, analysis, site_snapshot)
+analysis["genius_insights"] = genius_insights
+analysis["site_snapshot"] = site_snapshot  # optional, for debugging
+
+
+Wrap generate_genius_insights in a try/except:
+
+On any OpenAI error or JSON parsing error, log it and omit genius_insights rather than crashing.
+
+Pass analysis (now including genius_insights) through to:
+
+The HTML template (even if unused),
+
+The PDF building function.
+
+3. PDF v0.3: Executive Summary + Impact/Effort
+
+Update your PDF generator (e.g. reporting.py) to:
+
+3.1. Executive Summary under AI Visibility
+
+Right after the AI Visibility Summary (total queries, average score, score distribution), add a section:
+
+“Executive Summary”
+
+Use genius_insights.patterns and genius_insights.quick_wins to build 3–5 bullets, e.g.:
+
+“You are not recommended in any of the 4 high-intent local queries tested; five competitors appear instead.”
+
+“Metal roof and ‘best roofing company’ style queries are completely dominated by X and Y.”
+
+“In the next 30 days, focus on: [Quick Win #1], [Quick Win #2].”
+
+If genius_insights is missing, show a small line: “Genius Mode insights unavailable for this run.”
+
+3.2. Genius Insights section: show Impact/Effort and intent
+
+In your existing “Genius Insights & Opportunity Map” section:
+
+For each priority_opportunities item, render something like:
+
+Title: the query or opportunity label.
+
+Line with key metadata:
+
+Impact: 9/10 · Effort: Medium · Intent: High-ticket
+
+1 short sentence from money_reason.
+
+Then the page blueprint:
+
+URL slug
+
+SEO title
+
+H1
+
+Outline bullets
+
+Internal links
+
+Note on current site (if any)
+
+This should look like a mini content brief.
+
+3.3. “Next 30 Days Focus” box
+
+After listing priority opportunities and before Quick Wins, add a callout:
+
+“Next 30 Days Focus”
+
+Use the first 3 items in quick_wins (or fewer if not available).
+
+Render them as a numbered list (1–3).
+
+Keep wording exactly as given from Genius Mode.
+
+If no Quick Wins, hide this box.
+
+3.4. Preserve everything else
+
+Keep existing:
+
+Cover
+
+Visibility Summary
+
+Per-query table
+
+Competitor overview
+
+Older recommendations section
+
+Future AI answers
+
+Just insert/extend the content as described. No layout explosions.
+
+4. Error handling and non-regression
+
+Do not break:
+
+Tenant selection,
+
+Run GEO Analysis flow,
+
+Existing PDF download endpoint.
+
+If:
+
+Site fetch fails, or
+
+Genius OpenAI call fails, or
+
+Genius JSON cannot be parsed,
+then:
+
+Log an error server-side,
+
+Skip the Genius-specific pieces (Executive Summary bullets & Genius section),
+
+Still generate a valid PDF with the baseline sections.
+
+Add minimal comments next to new modules/functions so I can find them later.
+
+5. Done when
+
+You are finished when:
+
+Running GEO Analysis for an existing tenant still works as before.
+
+PDF includes:
+
+AI Visibility Summary,
+
+Executive Summary bullet list grounded in the tenant’s actual queries/competitors,
+
+Genius Insights section with Impact/Effort/Intent for each priority opportunity,
+
+“Next 30 Days Focus” list of 3 concrete quick wins.
+
+The new Genius Mode clearly references:
+
+Real queries,
+
+Real competitor names,
+
+Tenant’s geo and actual site content (e.g., calling out missing phrases or weak pages).
+
+Use this prompt to make all necessary code and prompt updates for EchoScope v0.3.

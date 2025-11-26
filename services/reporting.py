@@ -1,7 +1,8 @@
 """
-PDF Report Generation for EchoScope GEO Visibility Analysis
+PDF Report Generation for EchoScope GEO Visibility Analysis v0.3
 Uses fpdf2 to create professional, client-ready PDF reports.
 Print-friendly design with brand accent colors.
+Includes Executive Summary, Impact/Effort scoring, and Next 30 Days Focus.
 """
 
 from datetime import datetime
@@ -9,6 +10,7 @@ from typing import Dict, Any, List
 from fpdf import FPDF
 from collections import Counter
 import os
+from services.genius import generate_executive_summary
 
 BRAND_TEAL = (46, 230, 168)
 BRAND_BLUE = (24, 163, 255)
@@ -128,9 +130,10 @@ def build_echoscope_pdf(tenant: Dict[str, Any], analysis: Dict[str, Any]) -> byt
     
     _add_cover_page(pdf, data)
     _add_summary_section(pdf, data)
+    _add_executive_summary_section(pdf, data, analysis)
     _add_query_details_section(pdf, data)
     _add_competitor_section(pdf, data)
-    _add_genius_insights_section(pdf, data)
+    _add_genius_insights_section_v2(pdf, data)
     _add_recommendations_section(pdf, data)
     
     return pdf.output()
@@ -307,6 +310,50 @@ def _add_summary_section(pdf: EchoScopePDF, data: Dict[str, Any]):
         pdf.multi_cell(178, 5, data["visibility_summary"][:500])
 
 
+def _add_executive_summary_section(pdf: EchoScopePDF, data: Dict[str, Any], analysis: Dict[str, Any]):
+    """Add Executive Summary section with 3-5 key bullets grounded in data."""
+    genius = data.get("genius_insights")
+    
+    if pdf.get_y() > 220:
+        pdf.add_page()
+    else:
+        pdf.ln(12)
+    
+    pdf.set_fill_color(241, 245, 249)
+    pdf.set_draw_color(*BRAND_TEAL)
+    pdf.set_line_width(0.8)
+    
+    summary_start_y = pdf.get_y()
+    
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.set_text_color(*BRAND_TEAL)
+    pdf.cell(0, 8, "Executive Summary", align="L")
+    pdf.ln(10)
+    
+    try:
+        bullets = generate_executive_summary(genius, analysis)
+    except Exception:
+        bullets = ["Genius Mode insights unavailable for this run."]
+    
+    if not bullets:
+        bullets = ["Genius Mode insights unavailable for this run."]
+    
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(*DARK_TEXT)
+    
+    for bullet in bullets[:5]:
+        if pdf.get_y() > 270:
+            break
+        
+        pdf.set_text_color(*BRAND_TEAL)
+        pdf.cell(6, 6, ">", align="L")
+        pdf.set_text_color(*DARK_TEXT)
+        
+        bullet_text = str(bullet)[:200]
+        pdf.multi_cell(180, 5, bullet_text)
+        pdf.ln(2)
+
+
 def _add_query_details_section(pdf: EchoScopePDF, data: Dict[str, Any]):
     """Add per-query analysis table with modern styling."""
     pdf.add_page()
@@ -430,8 +477,8 @@ def _add_competitor_section(pdf: EchoScopePDF, data: Dict[str, Any]):
         row_fill = not row_fill
 
 
-def _add_genius_insights_section(pdf: EchoScopePDF, data: Dict[str, Any]):
-    """Add Genius Insights & Opportunity Map section to PDF."""
+def _add_genius_insights_section_v2(pdf: EchoScopePDF, data: Dict[str, Any]):
+    """Add Genius Insights v2 with Impact/Effort scoring and Next 30 Days Focus."""
     genius = data.get("genius_insights")
     
     if not genius or not isinstance(genius, dict):
@@ -463,7 +510,8 @@ def _add_genius_insights_section(pdf: EchoScopePDF, data: Dict[str, Any]):
     
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(*MEDIUM_TEXT)
-    pdf.multi_cell(0, 5, "Deep strategic analysis powered by AI to uncover hidden patterns and high-value opportunities.")
+    site_note = " (with site content analysis)" if genius.get("site_analyzed") else ""
+    pdf.multi_cell(0, 5, f"Deep strategic analysis powered by AI{site_note} to uncover hidden patterns and high-value opportunities.")
     pdf.ln(10)
     
     if patterns:
@@ -472,75 +520,97 @@ def _add_genius_insights_section(pdf: EchoScopePDF, data: Dict[str, Any]):
         pdf.cell(0, 10, "Patterns in AI Visibility", align="L")
         pdf.ln(8)
         
-        pdf.set_font("Helvetica", "", 10)
-        pdf.set_text_color(*DARK_TEXT)
-        
-        for pattern in patterns[:5]:
-            if pdf.get_y() > 260:
+        for pattern in patterns[:3]:
+            if pdf.get_y() > 250:
                 pdf.add_page()
             
             if isinstance(pattern, dict):
-                pattern_text = pattern.get("observation", str(pattern))
+                summary = pattern.get("summary", "")
+                evidence = pattern.get("evidence", [])
+                implication = pattern.get("implication", "")
+                
+                pdf.set_font("Helvetica", "B", 10)
+                pdf.set_text_color(*DARK_TEXT)
+                pdf.set_x(12)
+                pdf.multi_cell(178, 5, summary[:150])
+                
+                if evidence and isinstance(evidence, list):
+                    pdf.set_font("Helvetica", "", 9)
+                    pdf.set_text_color(*MEDIUM_TEXT)
+                    for ev in evidence[:2]:
+                        pdf.set_x(16)
+                        pdf.multi_cell(174, 4, f"- {str(ev)[:120]}")
+                
+                if implication:
+                    pdf.set_font("Helvetica", "I", 9)
+                    pdf.set_text_color(*LIGHT_TEXT)
+                    pdf.set_x(12)
+                    pdf.multi_cell(178, 4, f"Implication: {implication[:150]}")
             else:
-                pattern_text = str(pattern)
+                pdf.set_font("Helvetica", "", 10)
+                pdf.set_text_color(*DARK_TEXT)
+                pdf.set_x(12)
+                pdf.multi_cell(178, 5, str(pattern)[:200])
             
-            if len(pattern_text) > 200:
-                pattern_text = pattern_text[:197] + "..."
-            
-            pdf.set_fill_color(*ACCENT_BG)
-            pdf.set_x(12)
-            pdf.set_text_color(*BRAND_TEAL)
-            pdf.cell(4, 6, ">", align="L")
-            pdf.set_text_color(*DARK_TEXT)
-            pdf.multi_cell(175, 5, pattern_text)
-            pdf.ln(3)
+            pdf.ln(5)
         
-        pdf.ln(8)
+        pdf.ln(5)
     
     if opportunities:
-        if pdf.get_y() > 200:
+        if pdf.get_y() > 180:
             pdf.add_page()
         
         pdf.set_font("Helvetica", "B", 14)
         pdf.set_text_color(34, 197, 94)
-        pdf.cell(0, 10, "Top Priority Opportunities", align="L")
-        pdf.ln(8)
+        pdf.cell(0, 10, "Priority Opportunities (with Impact/Effort)", align="L")
+        pdf.ln(10)
         
         for idx, opp in enumerate(opportunities[:3], 1):
-            if pdf.get_y() > 220:
+            if pdf.get_y() > 200:
                 pdf.add_page()
             
             if not isinstance(opp, dict):
                 continue
             
             query = opp.get("query", "")
-            reason = opp.get("reason", "")
+            impact = opp.get("impact_score", opp.get("intent_value", 5))
+            effort = opp.get("effort", opp.get("difficulty", "medium"))
+            intent_type = opp.get("intent_type", "")
+            money_reason = opp.get("money_reason", opp.get("reason", ""))
             recommended_page = opp.get("recommended_page", {})
+            note_on_site = ""
+            if isinstance(recommended_page, dict):
+                note_on_site = recommended_page.get("note_on_current_site", "")
             
             pdf.set_fill_color(236, 253, 245)
             pdf.set_draw_color(34, 197, 94)
-            pdf.rect(10, pdf.get_y(), 190, 8, style="FD")
+            pdf.rect(10, pdf.get_y(), 190, 10, style="FD")
             
             pdf.set_font("Helvetica", "B", 11)
             pdf.set_text_color(34, 197, 94)
             pdf.set_x(12)
-            if len(query) > 70:
-                query = query[:67] + "..."
-            pdf.cell(0, 8, f"{idx}. {query}", align="L")
-            pdf.ln(10)
+            query_display = query[:55] + "..." if len(query) > 55 else query
+            pdf.cell(0, 10, f"{idx}. {query_display}", align="L")
+            pdf.ln(12)
             
-            if reason:
+            pdf.set_font("Helvetica", "B", 9)
+            pdf.set_text_color(*BRAND_BLUE)
+            pdf.set_x(15)
+            effort_str = str(effort).capitalize() if effort else "Medium"
+            intent_str = f" | Intent: {intent_type.replace('_', ' ').title()}" if intent_type else ""
+            pdf.cell(0, 5, f"Impact: {impact}/10  |  Effort: {effort_str}{intent_str}", align="L")
+            pdf.ln(6)
+            
+            if money_reason:
                 pdf.set_font("Helvetica", "", 9)
                 pdf.set_text_color(*MEDIUM_TEXT)
                 pdf.set_x(15)
-                if len(reason) > 150:
-                    reason = reason[:147] + "..."
-                pdf.multi_cell(175, 4, f"Why: {reason}")
+                pdf.multi_cell(175, 4, money_reason[:180])
                 pdf.ln(2)
             
             if recommended_page and isinstance(recommended_page, dict):
                 pdf.set_font("Helvetica", "B", 9)
-                pdf.set_text_color(*BRAND_BLUE)
+                pdf.set_text_color(*BRAND_TEAL)
                 pdf.set_x(15)
                 pdf.cell(0, 5, "Page Blueprint:", align="L")
                 pdf.ln(5)
@@ -552,6 +622,7 @@ def _add_genius_insights_section(pdf: EchoScopePDF, data: Dict[str, Any]):
                 seo_title = str(recommended_page.get("seo_title", "") or "")
                 h1 = str(recommended_page.get("h1", "") or "")
                 outline = recommended_page.get("outline", [])
+                internal_links = recommended_page.get("internal_links", [])
                 if not isinstance(outline, list):
                     outline = []
                 
@@ -562,49 +633,87 @@ def _add_genius_insights_section(pdf: EchoScopePDF, data: Dict[str, Any]):
                 
                 if seo_title:
                     pdf.set_x(18)
-                    if len(seo_title) > 70:
-                        seo_title = seo_title[:67] + "..."
-                    pdf.cell(0, 4, f"Title: {seo_title}", align="L")
+                    pdf.cell(0, 4, f"SEO Title: {seo_title[:65]}", align="L")
+                    pdf.ln(4)
+                
+                if h1:
+                    pdf.set_x(18)
+                    pdf.cell(0, 4, f"H1: {h1[:65]}", align="L")
                     pdf.ln(4)
                 
                 if outline:
                     pdf.set_x(18)
-                    pdf.cell(0, 4, "Sections:", align="L")
+                    pdf.cell(0, 4, "Outline:", align="L")
                     pdf.ln(4)
-                    for item in outline[:4]:
+                    for item in outline[:5]:
                         pdf.set_x(22)
-                        if len(str(item)) > 60:
-                            item = str(item)[:57] + "..."
-                        pdf.cell(0, 4, f"- {item}", align="L")
+                        pdf.cell(0, 4, f"- {str(item)[:55]}", align="L")
                         pdf.ln(4)
+                
+                if note_on_site:
+                    pdf.set_font("Helvetica", "I", 8)
+                    pdf.set_text_color(245, 158, 11)
+                    pdf.set_x(18)
+                    pdf.multi_cell(172, 4, f"Site note: {note_on_site[:150]}")
             
-            pdf.ln(6)
+            pdf.ln(8)
     
-    if quick_wins:
+    if quick_wins and len(quick_wins) >= 1:
         if pdf.get_y() > 200:
             pdf.add_page()
         
-        pdf.set_font("Helvetica", "B", 14)
+        pdf.set_fill_color(255, 251, 235)
+        pdf.set_draw_color(245, 158, 11)
+        pdf.set_line_width(1)
+        
+        box_y = pdf.get_y()
+        pdf.rect(10, box_y, 190, 8, style="FD")
+        
+        pdf.set_font("Helvetica", "B", 12)
         pdf.set_text_color(245, 158, 11)
-        pdf.cell(0, 10, "Quick Wins (Next 30 Days)", align="L")
-        pdf.ln(8)
+        pdf.set_xy(15, box_y + 1)
+        pdf.cell(0, 6, "Next 30 Days Focus", align="L")
+        pdf.ln(12)
         
         pdf.set_font("Helvetica", "", 10)
         pdf.set_text_color(*DARK_TEXT)
         
-        for idx, win in enumerate(quick_wins[:5], 1):
-            if pdf.get_y() > 265:
-                pdf.add_page()
+        for idx, win in enumerate(quick_wins[:3], 1):
+            if pdf.get_y() > 270:
+                break
             
             pdf.set_font("Helvetica", "B", 10)
             pdf.set_text_color(245, 158, 11)
-            pdf.cell(8, 6, f"{idx}.", align="L")
+            pdf.cell(10, 6, f"{idx}.", align="L")
             pdf.set_font("Helvetica", "", 9)
             pdf.set_text_color(*DARK_TEXT)
             
-            if len(str(win)) > 140:
-                win = str(win)[:137] + "..."
-            pdf.multi_cell(170, 5, str(win))
+            win_text = str(win)[:200]
+            pdf.multi_cell(170, 5, win_text)
+            pdf.ln(3)
+        
+        pdf.ln(8)
+    
+    if quick_wins and len(quick_wins) > 3:
+        if pdf.get_y() > 220:
+            pdf.add_page()
+        
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.set_text_color(245, 158, 11)
+        pdf.cell(0, 8, "Additional Quick Wins", align="L")
+        pdf.ln(8)
+        
+        pdf.set_font("Helvetica", "", 9)
+        pdf.set_text_color(*DARK_TEXT)
+        
+        for idx, win in enumerate(quick_wins[3:5], 4):
+            if pdf.get_y() > 270:
+                break
+            
+            pdf.set_text_color(245, 158, 11)
+            pdf.cell(8, 5, f"{idx}.", align="L")
+            pdf.set_text_color(*DARK_TEXT)
+            pdf.multi_cell(172, 5, str(win)[:180])
             pdf.ln(2)
         
         pdf.ln(5)
@@ -635,20 +744,15 @@ def _add_genius_insights_section(pdf: EchoScopePDF, data: Dict[str, Any]):
             
             pdf.set_font("Helvetica", "B", 10)
             pdf.set_text_color(*DARK_TEXT)
-            if len(query) > 75:
-                query = query[:72] + "..."
-            pdf.multi_cell(0, 5, f"Q: {query}")
+            pdf.multi_cell(0, 5, f"Q: {query[:75]}")
             pdf.ln(2)
             
             pdf.set_fill_color(*ACCENT_BG)
             pdf.set_font("Helvetica", "I", 9)
             pdf.set_text_color(*MEDIUM_TEXT)
             
-            if len(example) > 350:
-                example = example[:347] + "..."
-            
             pdf.set_x(12)
-            pdf.multi_cell(178, 5, example, fill=True)
+            pdf.multi_cell(178, 5, example[:350], fill=True)
             pdf.ln(8)
 
 

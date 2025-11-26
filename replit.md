@@ -95,14 +95,21 @@ The `/report/{tenant_id}` endpoint generates a client-ready PDF containing:
 - Grouped recommendations (new pages, updates, FAQs, authority, branding)
 - Professional footer with page numbering
 
-**Genius Mode Insights:**
-The `generate_genius_insights()` function in `services/genius.py` produces deeper, non-obvious insights:
-- **Patterns**: Identifies visibility patterns across queries with specific evidence
-- **Priority Opportunities**: High-value queries with full page blueprints (slug, title, H1, outline)
-- **Quick Wins**: Concrete actions for the next 30 days
-- **Future AI Answers**: Preview of how AI would recommend the business once visibility improves
+**Site Inspector (v0.3):**
+The `services/site_inspector.py` module fetches and analyzes actual tenant website content:
+- Retrieves homepage and configured important paths
+- Extracts titles, meta descriptions, headings, and text content
+- Provides site snapshot to Genius Mode for content gap analysis
+- Graceful error handling if site fetch fails
 
-All insights reference the actual tenant name, geo, queries, and competitors from the analysis.
+**Genius Mode v2 Insights (v0.3):**
+The `generate_genius_insights()` function in `services/genius.py` produces site-aware, structured insights:
+- **Patterns**: Visibility patterns with summary, evidence array, and implications
+- **Priority Opportunities**: Enhanced with impact_score (1-10), effort (low/medium/high), intent_type, money_reason, and note_on_current_site for gap analysis
+- **Quick Wins**: 3-5 concrete 30-day actions referencing specific pages or assets
+- **Future AI Answers**: Preview of ideal AI recommendations
+
+All insights are grounded in actual queries, competitors, geo, and site content analysis.
 
 **Scoring Logic:**
 - **Score 0**: Business not mentioned in AI response

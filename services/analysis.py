@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 from openai import OpenAI
 from services.genius import generate_genius_insights
+from services.site_inspector import fetch_site_snapshot
 
 
 class MissingAPIKeyError(Exception):
@@ -222,7 +223,15 @@ def run_analysis(tenant_config: Dict[str, Any]) -> Dict[str, Any]:
     summary["suggestions"] = suggestions_data.get("suggestions", [])
     
     try:
-        genius_data = generate_genius_insights(tenant_config, summary)
+        site_snapshot = fetch_site_snapshot(tenant_config)
+        summary["site_snapshot"] = site_snapshot
+    except Exception as e:
+        print(f"Error fetching site snapshot (non-fatal): {e}")
+        site_snapshot = {"pages": [], "fetch_status": "error"}
+        summary["site_snapshot"] = site_snapshot
+    
+    try:
+        genius_data = generate_genius_insights(tenant_config, summary, site_snapshot)
         summary["genius_insights"] = genius_data
     except Exception as e:
         print(f"Error generating genius insights (non-fatal): {e}")
