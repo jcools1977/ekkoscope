@@ -1,0 +1,191 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Audit #{{ audit.id }} - EchoScope Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Audit #{{ audit.id }}</h1>
+    <p>{% if business %}Business: <a href="/admin/business/{{ business.id }}">{{ business.name }}</a>{% endif %}</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Audit Details</h2>
+        <span class="status-badge status-{{ audit.status }}">{{ audit.status }}</span>
+    </div>
+    
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="label">Channel</div>
+            <div class="value">{{ audit.channel }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Site Inspector</div>
+            <div class="value">{% if audit.site_inspector_used %}Used{% else %}Not Used{% endif %}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Created</div>
+            <div class="value">{{ audit.created_at.strftime('%Y-%m-%d %H:%M') if audit.created_at else '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Completed</div>
+            <div class="value">{{ audit.completed_at.strftime('%Y-%m-%d %H:%M') if audit.completed_at else '-' }}</div>
+        </div>
+    </div>
+    
+    {% if audit.has_pdf %}
+    <div class="actions">
+        <a href="/admin/audit/{{ audit.id }}/download" class="btn btn-primary">Download PDF Report</a>
+    </div>
+    {% endif %}
+</div>
+
+{% if visibility %}
+<div class="card">
+    <div class="card-header">
+        <h2>Visibility Summary</h2>
+    </div>
+    
+    {% if visibility.error %}
+    <div class="alert alert-error">
+        Error: {{ visibility.error }}
+    </div>
+    {% else %}
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="label">Total Queries</div>
+            <div class="value">{{ visibility.total_queries or 0 }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Mentioned Count</div>
+            <div class="value">{{ visibility.mentioned_count or 0 }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Primary Count</div>
+            <div class="value">{{ visibility.primary_count or 0 }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Average Score</div>
+            <div class="value">{{ visibility.avg_score or 0 }}</div>
+        </div>
+    </div>
+    
+    {% if visibility.visibility_summary %}
+    <div style="margin-top: 20px;">
+        <div class="label" style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; margin-bottom: 10px;">Summary</div>
+        <p style="color: var(--text-secondary); line-height: 1.6;">{{ visibility.visibility_summary }}</p>
+    </div>
+    {% endif %}
+    
+    {% if visibility.results %}
+    <div style="margin-top: 25px;">
+        <div class="label" style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; margin-bottom: 10px;">Query Results</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Query</th>
+                    <th>Score</th>
+                    <th>Mentioned</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in visibility.results %}
+                <tr>
+                    <td>{{ result.query[:60] }}{% if result.query|length > 60 %}...{% endif %}</td>
+                    <td>
+                        <span class="status-badge {% if result.score == 2 %}status-done{% elif result.score == 1 %}status-pending{% else %}status-error{% endif %}">
+                            {{ result.score }}
+                        </span>
+                    </td>
+                    <td>{% if result.mentioned %}Yes{% else %}No{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+{% endif %}
+
+{% if suggestions and suggestions.suggestions %}
+<div class="card">
+    <div class="card-header">
+        <h2>Suggestions</h2>
+    </div>
+    
+    {% for suggestion in suggestions.suggestions[:5] %}
+    <div style="padding: 15px 0; border-bottom: 1px solid var(--border-color);">
+        <div style="font-weight: 600; color: var(--brand-teal);">{{ suggestion.title }}</div>
+        <div style="color: var(--text-muted); font-size: 12px; margin: 5px 0;">{{ suggestion.type }}</div>
+        <div style="color: var(--text-secondary); font-size: 14px; line-height: 1.5;">{{ suggestion.details }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if suggestions and suggestions.genius_insights %}
+<div class="card">
+    <div class="card-header">
+        <h2>Genius Insights</h2>
+    </div>
+    
+    {% set genius = suggestions.genius_insights %}
+    
+    {% if genius.patterns %}
+    <div style="margin-bottom: 20px;">
+        <div class="label" style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; margin-bottom: 10px;">Patterns</div>
+        {% for pattern in genius.patterns[:3] %}
+        <div style="padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+            {% if pattern is mapping %}
+            <div style="font-weight: 500; color: var(--text-primary);">{{ pattern.summary }}</div>
+            {% if pattern.implication %}
+            <div style="color: var(--text-secondary); font-size: 13px; margin-top: 5px;">{{ pattern.implication }}</div>
+            {% endif %}
+            {% else %}
+            <div style="color: var(--text-secondary);">{{ pattern }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if genius.priority_opportunities %}
+    <div style="margin-bottom: 20px;">
+        <div class="label" style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; margin-bottom: 10px;">Priority Opportunities</div>
+        {% for opp in genius.priority_opportunities[:3] %}
+        <div style="padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+            {% if opp is mapping %}
+            <div style="font-weight: 500; color: var(--brand-teal);">{{ opp.query }}</div>
+            <div style="color: var(--brand-blue); font-size: 12px; margin-top: 3px;">
+                Impact: {{ opp.impact_score or 5 }}/10 | Effort: {{ opp.effort or 'medium' }}
+            </div>
+            {% if opp.money_reason %}
+            <div style="color: var(--text-secondary); font-size: 13px; margin-top: 5px;">{{ opp.money_reason }}</div>
+            {% endif %}
+            {% else %}
+            <div style="color: var(--text-secondary);">{{ opp }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if genius.quick_wins %}
+    <div>
+        <div class="label" style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; margin-bottom: 10px;">Quick Wins</div>
+        {% for win in genius.quick_wins[:3] %}
+        <div style="padding: 8px 0; color: var(--text-secondary);">
+            <span style="color: var(--brand-teal);">></span> {{ win }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="actions" style="margin-top: 20px;">
+    <a href="/admin/business/{{ business.id }}" class="btn btn-secondary">Back to Business</a>
+    <a href="/admin" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+{% endblock %}

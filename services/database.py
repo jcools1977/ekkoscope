@@ -1,0 +1,204 @@
+"""
+Database configuration and models for EchoScope Sprint 1.
+Uses SQLite with SQLAlchemy for persistence.
+"""
+
+import os
+import json
+from datetime import datetime
+from typing import Optional, List
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship, Session
+
+SQLITE_DATABASE_PATH = "echoscope.db"
+DATABASE_URL = f"sqlite:///./{SQLITE_DATABASE_PATH}"
+
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False}
+)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+
+class Business(Base):
+    __tablename__ = "businesses"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    primary_domain = Column(String(255), nullable=False)
+    extra_domains = Column(Text, default="[]")
+    business_type = Column(String(50), default="local_service")
+    regions = Column(Text, default="[]")
+    categories = Column(Text, default="[]")
+    contact_name = Column(String(255), nullable=True)
+    contact_email = Column(String(255), nullable=True)
+    source = Column(String(20), default="public")
+    subscription_active = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    audits = relationship("Audit", back_populates="business", order_by="desc(Audit.created_at)")
+    
+    def get_extra_domains(self) -> List[str]:
+        try:
+            return json.loads(self.extra_domains or "[]")
+        except:
+            return []
+    
+    def set_extra_domains(self, domains: List[str]):
+        self.extra_domains = json.dumps(domains)
+    
+    def get_regions(self) -> List[str]:
+        try:
+            return json.loads(self.regions or "[]")
+        except:
+            return []
+    
+    def set_regions(self, regions: List[str]):
+        self.regions = json.dumps(regions)
+    
+    def get_categories(self) -> List[str]:
+        try:
+            return json.loads(self.categories or "[]")
+        except:
+            return []
+    
+    def set_categories(self, categories: List[str]):
+        self.categories = json.dumps(categories)
+    
+    def get_all_domains(self) -> List[str]:
+        domains = [self.primary_domain]
+        domains.extend(self.get_extra_domains())
+        return [d for d in domains if d]
+    
+    def to_tenant_config(self) -> dict:
+        """Convert Business to tenant_config format for existing analysis logic."""
+        regions = self.get_regions()
+        categories = self.get_categories()
+        
+        brand_aliases = [self.name]
+        name_parts = self.name.split()
+        if len(name_parts) > 1:
+            brand_aliases.append(name_parts[0])
+        
+        geo_focus = regions if regions else ["United States"]
+        
+        queries = generate_default_queries(
+            name=self.name,
+            categories=categories,
+            regions=regions,
+            business_type=self.business_type
+        )
+        
+        return {
+            "id": f"business_{self.id}",
+            "display_name": self.name,
+            "domains": self.get_all_domains(),
+            "brand_aliases": brand_aliases,
+            "geo_focus": geo_focus,
+            "priority_queries": queries
+        }
+
+
+class Audit(Base):
+    __tablename__ = "audits"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    business_id = Column(Integer, ForeignKey("businesses.id"), nullable=False)
+    channel = Column(String(20), default="self_serve")
+    status = Column(String(20), default="pending")
+    visibility_summary_json = Column(Text, nullable=True)
+    suggestions_json = Column(Text, nullable=True)
+    site_inspector_used = Column(Boolean, default=False)
+    pdf_path = Column(String(500), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+    
+    business = relationship("Business", back_populates="audits")
+    
+    def get_visibility_summary(self) -> Optional[dict]:
+        if not self.visibility_summary_json:
+            return None
+        try:
+            return json.loads(self.visibility_summary_json)
+        except:
+            return None
+    
+    def set_visibility_summary(self, data: dict):
+        self.visibility_summary_json = json.dumps(data)
+    
+    def get_suggestions(self) -> Optional[dict]:
+        if not self.suggestions_json:
+            return None
+        try:
+            return json.loads(self.suggestions_json)
+        except:
+            return None
+    
+    def set_suggestions(self, data: dict):
+        self.suggestions_json = json.dumps(data)
+
+
+def generate_default_queries(
+    name: str,
+    categories: List[str],
+    regions: List[str],
+    business_type: str
+) -> List[str]:
+    """Generate default search queries based on business profile."""
+    queries = []
+    
+    primary_region = regions[0] if regions else "United States"
+    primary_category = categories[0] if categories else "services"
+    
+    if business_type == "local_service":
+        queries = [
+            f"best {primary_category} in {primary_region}",
+            f"{primary_category} contractor near {primary_region}",
+            f"top rated {primary_category} company in {primary_region}",
+            f"where to find {primary_category} services in {primary_region}",
+        ]
+    elif business_type == "ecom":
+        queries = [
+            f"best place to buy {primary_category} online",
+            f"bulk {primary_category} supplier in {primary_region}",
+            f"wholesale {primary_category} for businesses",
+            f"where to order {primary_category} online",
+        ]
+    elif business_type == "b2b_service":
+        queries = [
+            f"best {primary_category} company for businesses",
+            f"top {primary_category} service providers in {primary_region}",
+            f"enterprise {primary_category} solutions",
+            f"professional {primary_category} services for companies",
+        ]
+    else:
+        queries = [
+            f"best {primary_category} in {primary_region}",
+            f"top {primary_category} provider",
+            f"where to find {primary_category} services",
+            f"recommended {primary_category} company",
+        ]
+    
+    return queries[:4]
+
+
+def init_db():
+    """Create all tables if they don't exist."""
+    Base.metadata.create_all(bind=engine)
+
+
+def get_db():
+    """Get database session - use as dependency or context manager."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def get_db_session() -> Session:
+    """Get a new database session directly."""
+    return SessionLocal()

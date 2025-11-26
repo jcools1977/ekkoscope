@@ -4,7 +4,7 @@
 
 EchoScope is a web application that analyzes "AI visibility" for businesses by testing how frequently they are recommended by AI assistants like ChatGPT. The system runs predefined queries against the OpenAI API to determine if a business is mentioned, how prominently it's featured compared to competitors, and provides actionable content recommendations to improve visibility.
 
-The application is designed for V1 simplicity: no authentication, no database persistence, and no scheduled jobs. It focuses on immediate analysis and reporting for configured business tenants.
+**Sprint 1 Update:** The application now includes a persistence layer with SQLite, admin panel with authentication, and public business submission form. Businesses and audit results are stored in the database, allowing for historical tracking and management.
 
 ## User Preferences
 
@@ -70,10 +70,27 @@ services/
   analysis.py        # Core business logic for AI visibility analysis
   genius.py          # Genius Mode insights generation (patterns, opportunities, quick wins)
   reporting.py       # PDF report generation using fpdf2
+  site_inspector.py  # Website content fetching and analysis
+  database.py        # SQLAlchemy models (Business, Audit) and SQLite config
+  audit_runner.py    # Orchestrates audit pipeline using existing v0.3 logic
 data/
-  tenants.json       # Tenant configuration (queries, brand aliases, geo focus)
-templates/           # Jinja2 HTML templates
+  tenants.json       # Legacy tenant configuration (queries, brand aliases, geo focus)
+templates/
+  index.html         # Main public GEO analysis page
+  admin/             # Admin panel templates
+    base.html        # Admin layout with sidebar
+    login.html       # Admin login page
+    dashboard.html   # Admin dashboard with stats
+    businesses.html  # Business listing
+    business_detail.html  # Business profile and audit history
+    business_new.html     # Admin business creation form
+    audit_detail.html     # Audit results display
+    error.html       # Error page
+  public/
+    business_new.html  # Public business submission form
 static/              # CSS styling
+reports/             # Generated PDF reports storage
+echoscope.db         # SQLite database file
 ```
 
 **Request Flow:**

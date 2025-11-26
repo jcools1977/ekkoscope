@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Error - EchoScope Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Error</h1>
+</div>
+
+<div class="card">
+    <div class="alert alert-error">
+        {{ error }}
+    </div>
+    
+    <div class="actions">
+        <a href="/admin" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

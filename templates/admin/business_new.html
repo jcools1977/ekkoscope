@@ -1,0 +1,72 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Add Business - EchoScope Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Add New Business</h1>
+    <p>Create a new business for EchoScope analysis</p>
+</div>
+
+<div class="card">
+    {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+    
+    <form method="POST" action="/admin/business/new">
+        <div class="detail-grid">
+            <div class="form-group">
+                <label for="name">Business Name *</label>
+                <input type="text" id="name" name="name" required placeholder="Acme Company">
+            </div>
+            
+            <div class="form-group">
+                <label for="primary_domain">Primary Domain *</label>
+                <input type="url" id="primary_domain" name="primary_domain" required placeholder="https://example.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="extra_domains">Extra Domains</label>
+                <input type="text" id="extra_domains" name="extra_domains" placeholder="https://shop.example.com, https://blog.example.com">
+                <small>Comma-separated list of additional domains</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="business_type">Business Type</label>
+                <select id="business_type" name="business_type">
+                    <option value="local_service">Local Service</option>
+                    <option value="ecom">E-commerce</option>
+                    <option value="b2b_service">B2B Service</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="regions">Regions</label>
+                <input type="text" id="regions" name="regions" placeholder="New York, NY, Los Angeles, CA">
+                <small>Comma-separated list of geographic areas</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="categories">Categories</label>
+                <input type="text" id="categories" name="categories" placeholder="roofing, construction, home improvement">
+                <small>Comma-separated list of business categories</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="contact_name">Contact Name</label>
+                <input type="text" id="contact_name" name="contact_name" placeholder="John Doe">
+            </div>
+            
+            <div class="form-group">
+                <label for="contact_email">Contact Email</label>
+                <input type="email" id="contact_email" name="contact_email" placeholder="john@example.com">
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button type="submit" class="btn btn-primary">Create Business</button>
+            <a href="/admin/businesses" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

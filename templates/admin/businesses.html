@@ -1,0 +1,51 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Businesses - EchoScope Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Businesses</h1>
+    <p>Manage all businesses in EchoScope</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>All Businesses</h2>
+        <a href="/admin/business/new" class="btn btn-primary">Add Business</a>
+    </div>
+    
+    {% if businesses %}
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Domain</th>
+                <th>Type</th>
+                <th>Source</th>
+                <th>Audits</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for biz in businesses %}
+            <tr>
+                <td><a href="/admin/business/{{ biz.id }}">{{ biz.name }}</a></td>
+                <td>{{ biz.primary_domain }}</td>
+                <td>{{ biz.business_type }}</td>
+                <td><span class="status-badge {% if biz.source == 'admin' %}status-done{% else %}status-pending{% endif %}">{{ biz.source }}</span></td>
+                <td>{{ biz.audit_count }}</td>
+                <td>{{ biz.created_at.strftime('%Y-%m-%d') if biz.created_at else '-' }}</td>
+                <td><a href="/admin/business/{{ biz.id }}">View</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <p>No businesses yet.</p>
+        <a href="/admin/business/new" class="btn btn-primary">Add Business</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

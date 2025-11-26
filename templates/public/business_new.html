@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Your Business - EchoScope</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .form-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 40px;
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-header h1 {
+            font-size: 28px;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+        
+        .form-header p {
+            color: var(--text-secondary);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 15px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-teal);
+        }
+        
+        .form-group small {
+            display: block;
+            color: var(--text-muted);
+            margin-top: 5px;
+            font-size: 12px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 16px 24px;
+            background: var(--accent-teal);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .btn-submit:hover {
+            background: #25c991;
+        }
+        
+        .alert {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+        
+        .alert-success {
+            background: rgba(46, 230, 168, 0.2);
+            border: 1px solid var(--accent-teal);
+            color: var(--accent-teal);
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .back-link a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+        
+        .back-link a:hover {
+            color: var(--accent-teal);
+        }
+        
+        .success-content {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .success-content h2 {
+            color: var(--accent-teal);
+            margin-bottom: 15px;
+        }
+        
+        .success-content p {
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="hero-header">
+            <div class="logo-container">
+                <a href="/">
+                    <img src="/static/img/echoscope-logo.svg" alt="EchoScope" class="logo">
+                </a>
+            </div>
+        </header>
+        
+        <div class="form-container">
+            <div class="form-card">
+                {% if success %}
+                <div class="success-content">
+                    <h2>Thank You!</h2>
+                    <p>Your business has been submitted successfully. Our team will review your submission and reach out soon.</p>
+                    <a href="/" class="btn-submit" style="display: inline-block; width: auto; padding: 14px 30px;">Back to EchoScope</a>
+                </div>
+                {% else %}
+                <div class="form-header">
+                    <h1>Submit Your Business</h1>
+                    <p>Get your AI visibility analyzed by EchoScope</p>
+                </div>
+                
+                {% if error %}
+                <div class="alert alert-error">{{ error }}</div>
+                {% endif %}
+                
+                <form method="POST" action="/business/new">
+                    <div class="form-group">
+                        <label for="name">Business Name *</label>
+                        <input type="text" id="name" name="name" required placeholder="Your Business Name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="primary_domain">Website URL *</label>
+                        <input type="url" id="primary_domain" name="primary_domain" required placeholder="https://yourbusiness.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="extra_domains">Additional Websites</label>
+                        <input type="text" id="extra_domains" name="extra_domains" placeholder="https://shop.yourbusiness.com">
+                        <small>Comma-separated if you have multiple sites</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="business_type">Business Type</label>
+                        <select id="business_type" name="business_type">
+                            <option value="local_service">Local Service Provider</option>
+                            <option value="ecom">E-commerce / Online Store</option>
+                            <option value="b2b_service">B2B Service</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regions">Geographic Focus</label>
+                        <input type="text" id="regions" name="regions" placeholder="New York, NY">
+                        <small>Cities, states, or regions you serve</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="categories">Business Categories</label>
+                        <input type="text" id="categories" name="categories" placeholder="roofing, home improvement">
+                        <small>What services or products do you offer?</small>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="contact_name">Your Name</label>
+                            <input type="text" id="contact_name" name="contact_name" placeholder="John Doe">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="contact_email">Your Email</label>
+                            <input type="email" id="contact_email" name="contact_email" placeholder="john@yourbusiness.com">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-submit">Submit Business</button>
+                </form>
+                
+                <div class="back-link">
+                    <a href="/">Back to EchoScope</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

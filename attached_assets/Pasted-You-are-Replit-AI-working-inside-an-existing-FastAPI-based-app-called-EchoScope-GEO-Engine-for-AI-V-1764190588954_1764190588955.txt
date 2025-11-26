@@ -1,0 +1,223 @@
+You are Replit AI working inside an existing FastAPI-based app called EchoScope (GEO Engine for AI Visibility).
+
+CONTEXT
+
+EchoScope v0.3 already exists and is working. It has:
+
+- A FastAPI app (main.py or similar) with routes to:
+  - Run a GEO analysis for a selected tenant
+  - Use Site Inspector to fetch/analyze site content
+  - Use Genius Mode v2 to generate patterns + priority opportunities
+  - Generate a PDF report for an analysis (with executive summary, impact/effort, Next 30 Days Focus, and a “site content analysis used” note)
+
+- The OpenAI integration for:
+  - Visibility checks (LLM recommendations)
+  - Genius Mode recommendations
+- A PDF generator module for the report
+- Templates and static files for the UI
+
+ASSUMPTION: Do NOT destroy or rewrite these features. Only refactor enough to reuse them with a new data model.
+
+GOAL OF THIS TASK (SPRINT 1)
+
+Introduce a simple persistence layer (e.g. SQLite via SQLAlchemy or SQLModel) and create:
+
+1) A **Business** model:
+   - id (int, primary key)
+   - name (str)
+   - primary_domain (str)
+   - extra_domains (JSON/text)
+   - business_type (str: "local_service", "ecom", "b2b_service")
+   - regions (JSON/text)
+   - categories (JSON/text)
+   - contact_name (str)
+   - contact_email (str)
+   - source (str: "public" or "admin")
+   - subscription_active (bool, default False)
+   - created_at (datetime)
+
+2) An **Audit** model:
+   - id (int, primary key)
+   - business_id (foreign key to Business)
+   - channel (str: "self_serve" or "admin_run")
+   - status (str: "pending", "running", "done", "error")
+   - visibility_summary_json (JSON/text)
+   - suggestions_json (JSON/text)
+   - site_inspector_used (bool)
+   - pdf_path (str or nullable)
+   - created_at (datetime)
+   - completed_at (datetime or nullable)
+
+AUTO-MIGRATION IS NOT REQUIRED FOR THIS TASK.
+Just:
+- Configure a SQLite DB file (e.g. echoscope.db)
+- Create tables on startup if they do not exist.
+
+REFACTORING THE PIPELINE
+
+Create a dedicated service module (for example `services/audit_runner.py`) that exposes a function like:
+
+```python
+def run_audit_for_business(business: Business, audit: Audit, db_session) -> Audit:
+    """
+    - Uses existing EchoScope v0.3 logic:
+      * Generates or uses queries for the business
+      * Calls the visibility engine (OpenAI) with those queries
+      * Calls Site Inspector to fetch/analyze site content
+      * Calls Genius Mode v2 to generate patterns and priority opportunities
+      * Generates the PDF report
+    - Fills in:
+      * audit.visibility_summary_json
+      * audit.suggestions_json
+      * audit.site_inspector_used
+      * audit.pdf_path
+      * audit.status = "done"
+      * audit.completed_at = now
+    - Commits the changes via db_session and returns the updated audit.
+    """
+This function SHOULD:
+
+Reuse the existing analysis logic and PDF generation as much as possible.
+
+Take in a Business instead of assuming a hard-coded tenant config.
+
+If you currently have tenant-based query lists, adjust so we can either:
+
+Generate queries from Business profile, or
+
+Use a simple default query set for now (we can improve later).
+
+ROUTES TO ADD
+
+Admin login (simple auth, reuse existing login if it already exists).
+
+If you already have login, keep it and extend it.
+
+Mark all /admin/* routes as authenticated-only.
+
+Admin dashboard: GET /admin
+
+Show:
+
+Count of businesses
+
+Count of audits
+
+Table of latest audits (business name, channel, status, created_at, link to view)
+
+Admin: list businesses: GET /admin/businesses
+
+Table of all businesses:
+
+name, source (public/admin), created_at
+
+link to /admin/business/{id}
+
+Admin: business detail: GET /admin/business/{id}
+
+Shows:
+
+Business profile fields
+
+List of audits:
+
+id, channel, status, created_at, completed_at
+
+link to /admin/audit/{id}
+
+Buttons:
+
+“Run EchoScope Audit (Admin)”:
+
+POST to /admin/business/{id}/run
+
+Creates a new Audit with:
+
+channel = "admin_run"
+
+status = "pending"
+
+Immediately calls run_audit_for_business in the same request for now (synchronous).
+
+Redirect to /admin/audit/{new_audit_id}.
+
+Admin: audit detail: GET /admin/audit/{id}
+
+Loads an Audit and its Business.
+
+Displays:
+
+Business name
+
+status, channel, timestamps
+
+A parsed view of visibility_summary_json and suggestions_json (basic HTML).
+
+Link to download PDF if pdf_path is set.
+
+PUBLIC SIDE (for now, simple)
+
+For this sprint, also create a basic public form:
+
+Route: GET /business/new – shows a simple “Create Business” form with the fields:
+
+name
+
+primary_domain
+
+extra_domains
+
+business_type
+
+regions
+
+categories
+
+contact_name
+
+contact_email
+
+Route: POST /business/new:
+
+Creates a Business with source="public".
+
+Redirects to a “Thank you” page or to /admin for now.
+
+UI / TEMPLATES
+
+Create minimal Jinja templates under templates/admin/ for:
+
+admin_dashboard.html
+
+admin_businesses.html
+
+admin_business_detail.html
+
+admin_audit_detail.html
+
+Keep your existing front-end look & feel simple:
+
+Use your current base styles or a new admin.css if needed.
+
+Don’t worry about perfect design; focus on clarity and working behavior.
+
+CONSTRAINTS
+
+Do NOT remove or break existing EchoScope v0.3 analysis capabilities.
+
+Prefer extending and refactoring existing logic into reusable functions.
+
+Keep changes reasonably modular (services for DB + audit runner).
+
+After you’re done, I should be able to:
+
+Go to /admin, login as owner.
+
+Create a business (admin or via /business/new).
+
+Click “Run EchoScope Audit (Admin)” for that business.
+
+See the audit and download the PDF from /admin/audit/{id}.
+
+csharp
+Copy code

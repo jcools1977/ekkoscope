@@ -12,3 +12,7 @@ python-multipart
 fpdf2
 beautifulsoup4
 httpx
+python-multipart
+sqlalchemy
+itsdangerous
+starlette

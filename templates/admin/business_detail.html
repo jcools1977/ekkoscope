@@ -1,0 +1,100 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ business.name }} - EchoScope Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ business.name }}</h1>
+    <p>Business details and audit history</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Business Profile</h2>
+        <span class="status-badge {% if business.source == 'admin' %}status-done{% else %}status-pending{% endif %}">{{ business.source }}</span>
+    </div>
+    
+    <div class="detail-grid">
+        <div class="detail-item">
+            <div class="label">Primary Domain</div>
+            <div class="value">{{ business.primary_domain }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Business Type</div>
+            <div class="value">{{ business.business_type }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Extra Domains</div>
+            <div class="value">{{ business.extra_domains | join(', ') if business.extra_domains else '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Regions</div>
+            <div class="value">{{ business.regions | join(', ') if business.regions else '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Categories</div>
+            <div class="value">{{ business.categories | join(', ') if business.categories else '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Contact</div>
+            <div class="value">{{ business.contact_name or '-' }} {% if business.contact_email %}({{ business.contact_email }}){% endif %}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Created</div>
+            <div class="value">{{ business.created_at.strftime('%Y-%m-%d %H:%M') if business.created_at else '-' }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="label">Subscription</div>
+            <div class="value">{% if business.subscription_active %}Active{% else %}Inactive{% endif %}</div>
+        </div>
+    </div>
+    
+    <div class="actions">
+        <form method="POST" action="/admin/business/{{ business.id }}/run" style="display: inline;">
+            <button type="submit" class="btn btn-primary">Run EchoScope Audit (Admin)</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Audit History</h2>
+    </div>
+    
+    {% if audits %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Channel</th>
+                <th>Status</th>
+                <th>Site Inspector</th>
+                <th>Created</th>
+                <th>Completed</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for audit in audits %}
+            <tr>
+                <td>#{{ audit.id }}</td>
+                <td>{{ audit.channel }}</td>
+                <td><span class="status-badge status-{{ audit.status }}">{{ audit.status }}</span></td>
+                <td>{% if audit.site_inspector_used %}Yes{% else %}No{% endif %}</td>
+                <td>{{ audit.created_at.strftime('%Y-%m-%d %H:%M') if audit.created_at else '-' }}</td>
+                <td>{{ audit.completed_at.strftime('%Y-%m-%d %H:%M') if audit.completed_at else '-' }}</td>
+                <td>
+                    <a href="/admin/audit/{{ audit.id }}">View</a>
+                    {% if audit.has_pdf %} | <a href="/admin/audit/{{ audit.id }}/download">PDF</a>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <p>No audits for this business yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
