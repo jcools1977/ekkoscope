@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your GEO Audit - EchoScope</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .audit-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .audit-header {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .audit-header h1 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .audit-header .business-name {
+            color: var(--brand-teal);
+            font-size: 1.5rem;
+        }
+        
+        .audit-header .audit-date {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .score-card {
+            background: linear-gradient(135deg, rgba(46, 230, 168, 0.1), rgba(24, 163, 255, 0.1));
+            border: 1px solid var(--brand-teal);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .score-value {
+            font-size: 4rem;
+            font-weight: bold;
+            color: var(--brand-teal);
+            line-height: 1;
+        }
+        
+        .score-label {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+        
+        .score-breakdown {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .score-item {
+            text-align: center;
+        }
+        
+        .score-item .count {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .score-item .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        .score-item.green .count { color: var(--brand-teal); }
+        .score-item.amber .count { color: #f59e0b; }
+        .score-item.red .count { color: #ef4444; }
+        
+        .section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-card h2 {
+            color: var(--brand-teal);
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+        
+        .opportunities-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .opportunity-item {
+            padding: 1rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+        
+        .opportunity-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .opportunity-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .impact-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .impact-high {
+            background: rgba(46, 230, 168, 0.2);
+            color: var(--brand-teal);
+        }
+        
+        .impact-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+        
+        .impact-low {
+            background: rgba(100, 116, 139, 0.2);
+            color: #94a3b8;
+        }
+        
+        .effort-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: rgba(24, 163, 255, 0.2);
+            color: var(--brand-blue);
+        }
+        
+        .opportunity-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .opportunity-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .quick-wins {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .quick-win-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .quick-win-item:last-child {
+            border-bottom: none;
+        }
+        
+        .quick-win-number {
+            width: 24px;
+            height: 24px;
+            background: var(--brand-teal);
+            color: var(--bg-dark);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .download-section {
+            text-align: center;
+            padding: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+        
+        .download-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+            font-weight: 600;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .download-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 230, 168, 0.3);
+        }
+        
+        .competitors-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.75rem;
+        }
+        
+        .competitor-item {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .competitor-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .competitor-count {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="hero-card">
+        <a href="/" class="logo-link">
+            <img src="/static/img/echoscope-icon.svg" alt="EchoScope" class="logo-icon">
+            <span class="logo-text">Echo<span class="teal">Scope</span></span>
+        </a>
+        <p class="hero-subtitle">GEO Engine for AI Visibility</p>
+    </header>
+
+    <main class="audit-container">
+        <div class="audit-header">
+            <h1>Your GEO Audit Results</h1>
+            <p class="business-name">{{ business.name }}</p>
+            <p class="audit-date">Completed {{ audit.completed_at.strftime('%B %d, %Y') if audit.completed_at else 'Recently' }}</p>
+        </div>
+        
+        {% if visibility %}
+        <div class="score-card">
+            <div class="score-value">{{ visibility.average_score | default(0) | round(1) }}</div>
+            <div class="score-label">Average Visibility Score (0-2 scale)</div>
+            
+            <div class="score-breakdown">
+                <div class="score-item green">
+                    <div class="count">{{ visibility.score_2_count | default(0) }}</div>
+                    <div class="label">Primary Mentions</div>
+                </div>
+                <div class="score-item amber">
+                    <div class="count">{{ visibility.score_1_count | default(0) }}</div>
+                    <div class="label">Secondary Mentions</div>
+                </div>
+                <div class="score-item red">
+                    <div class="count">{{ visibility.score_0_count | default(0) }}</div>
+                    <div class="label">Not Mentioned</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if suggestions and suggestions.priority_opportunities %}
+        <div class="section-card">
+            <h2>Top Opportunities</h2>
+            <ul class="opportunities-list">
+                {% for opp in suggestions.priority_opportunities[:5] %}
+                <li class="opportunity-item">
+                    <div class="opportunity-header">
+                        {% if opp.impact_score and opp.impact_score >= 7 %}
+                        <span class="impact-badge impact-high">High Impact</span>
+                        {% elif opp.impact_score and opp.impact_score >= 4 %}
+                        <span class="impact-badge impact-medium">Medium Impact</span>
+                        {% else %}
+                        <span class="impact-badge impact-low">Lower Impact</span>
+                        {% endif %}
+                        
+                        {% if opp.effort %}
+                        <span class="effort-badge">{{ opp.effort | capitalize }} Effort</span>
+                        {% endif %}
+                    </div>
+                    <div class="opportunity-title">{{ opp.title | default(opp.opportunity | default('Opportunity')) }}</div>
+                    {% if opp.description or opp.note_on_current_site %}
+                    <div class="opportunity-desc">{{ opp.description | default(opp.note_on_current_site) }}</div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        {% if suggestions and suggestions.quick_wins %}
+        <div class="section-card">
+            <h2>Quick Wins (30-Day Actions)</h2>
+            <ul class="quick-wins">
+                {% for win in suggestions.quick_wins[:5] %}
+                <li class="quick-win-item">
+                    <span class="quick-win-number">{{ loop.index }}</span>
+                    <span>{{ win if win is string else win.action | default(win) }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        {% if visibility and visibility.competitors %}
+        <div class="section-card">
+            <h2>Top Competitors in AI Responses</h2>
+            <div class="competitors-list">
+                {% for comp in visibility.competitors[:6] %}
+                <div class="competitor-item">
+                    <span class="competitor-name">{{ comp.name }}</span>
+                    <span class="competitor-count">{{ comp.count }}x</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if audit.has_pdf %}
+        <div class="download-section">
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                Get the complete analysis with all details, recommendations, and executive summary.
+            </p>
+            <a href="/snapshot/audit/{{ audit.id }}/download" class="download-button">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download Full PDF Report
+            </a>
+        </div>
+        {% endif %}
+    </main>
+    
+    <footer style="text-align: center; padding: 2rem; color: var(--text-muted);">
+        <p>Powered by EchoScope • GEO Engine for AI Visibility</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - EchoScope Snapshot</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .success-container {
+            max-width: 600px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+            text-align: center;
+        }
+        
+        .success-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+        }
+        
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+        
+        .success-icon svg {
+            width: 40px;
+            height: 40px;
+            stroke: var(--bg-dark);
+            stroke-width: 3;
+        }
+        
+        .success-card h1 {
+            color: var(--brand-teal);
+            margin-bottom: 1rem;
+        }
+        
+        .success-card .message {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .status-box {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .status-box h3 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        
+        .status-indicator.pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+        
+        .status-indicator.running {
+            background: rgba(24, 163, 255, 0.1);
+            color: var(--brand-blue);
+        }
+        
+        .status-indicator.done {
+            background: rgba(46, 230, 168, 0.1);
+            color: var(--brand-teal);
+        }
+        
+        .status-indicator.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+        
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid currentColor;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+            font-weight: 600;
+            padding: 0.875rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 230, 168, 0.3);
+        }
+        
+        .action-button.secondary {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        .business-info {
+            text-align: left;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .business-info h4 {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .business-info p {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+    </style>
+    {% if audit and audit.status == 'pending' %}
+    <meta http-equiv="refresh" content="10">
+    {% endif %}
+</head>
+<body>
+    <header class="hero-card">
+        <a href="/" class="logo-link">
+            <img src="/static/img/echoscope-icon.svg" alt="EchoScope" class="logo-icon">
+            <span class="logo-text">Echo<span class="teal">Scope</span></span>
+        </a>
+        <p class="hero-subtitle">GEO Engine for AI Visibility</p>
+    </header>
+
+    <main class="success-container">
+        <div class="success-card">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            
+            <h1>Payment Successful!</h1>
+            <p class="message">
+                Thank you for your purchase! We're now running your EchoScope GEO Audit.
+            </p>
+            
+            {% if business %}
+            <div class="business-info">
+                <h4>Business</h4>
+                <p>{{ business.name }}</p>
+            </div>
+            {% endif %}
+            
+            <div class="status-box">
+                <h3>Audit Status</h3>
+                {% if audit %}
+                    {% if audit.status == 'pending' %}
+                    <div class="status-indicator pending">
+                        <span class="spinner"></span>
+                        Running your audit...
+                    </div>
+                    <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">
+                        This page will refresh automatically. Your audit typically takes 1-2 minutes.
+                    </p>
+                    {% elif audit.status == 'done' %}
+                    <div class="status-indicator done">
+                        ✓ Audit Complete
+                    </div>
+                    <a href="/snapshot/audit/{{ audit.id }}" class="action-button">View Your Results</a>
+                    {% elif audit.status == 'error' %}
+                    <div class="status-indicator error">
+                        ⚠ There was an issue
+                    </div>
+                    <p style="color: var(--text-muted); margin-top: 1rem;">
+                        We encountered a problem running your audit. Our team has been notified and will reach out shortly.
+                    </p>
+                    {% endif %}
+                {% else %}
+                <div class="status-indicator pending">
+                    <span class="spinner"></span>
+                    Processing payment...
+                </div>
+                <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">
+                    Your audit will start shortly. This page will update automatically.
+                </p>
+                {% endif %}
+            </div>
+            
+            <a href="/" class="action-button secondary">Back to EchoScope</a>
+        </div>
+    </main>
+</body>
+</html>

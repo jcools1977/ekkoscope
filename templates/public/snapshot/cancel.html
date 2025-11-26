@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Cancelled - EchoScope Snapshot</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .cancel-container {
+            max-width: 500px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+            text-align: center;
+        }
+        
+        .cancel-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+        }
+        
+        .cancel-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(100, 116, 139, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+        
+        .cancel-icon svg {
+            width: 40px;
+            height: 40px;
+            stroke: var(--text-muted);
+            stroke-width: 2;
+        }
+        
+        .cancel-card h1 {
+            margin-bottom: 1rem;
+        }
+        
+        .cancel-card .message {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+            font-weight: 600;
+            padding: 0.875rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            margin: 0.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 230, 168, 0.3);
+        }
+        
+        .action-button.secondary {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <header class="hero-card">
+        <a href="/" class="logo-link">
+            <img src="/static/img/echoscope-icon.svg" alt="EchoScope" class="logo-icon">
+            <span class="logo-text">Echo<span class="teal">Scope</span></span>
+        </a>
+        <p class="hero-subtitle">GEO Engine for AI Visibility</p>
+    </header>
+
+    <main class="cancel-container">
+        <div class="cancel-card">
+            <div class="cancel-icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
+            
+            <h1>Payment Cancelled</h1>
+            <p class="message">
+                No worries! Your payment was not processed. If you'd like to try again or have questions, we're here to help.
+            </p>
+            
+            <div>
+                <a href="/snapshot" class="action-button">Try Again</a>
+                <a href="/" class="action-button secondary">Back to Home</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

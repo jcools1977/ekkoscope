@@ -1,7 +1,7 @@
 modules = ["python-3.11"]
 [agent]
 expertMode = true
-integrations = ["python_openai:1.0.0"]
+integrations = ["python_openai:1.0.0", "stripe:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
@@ -33,3 +33,7 @@ outputType = "webview"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 34523
+externalPort = 3000

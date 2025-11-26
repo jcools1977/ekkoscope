@@ -10,8 +10,8 @@ from datetime import datetime
 from io import BytesIO
 from typing import Optional
 
-from fastapi import FastAPI, Request, Form, Depends, HTTPException, Cookie
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse, FileResponse
+from fastapi import FastAPI, Request, Form, Depends, HTTPException, Cookie, BackgroundTasks
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
@@ -20,6 +20,7 @@ from services.analysis import run_analysis, MissingAPIKeyError
 from services.reporting import build_echoscope_pdf
 from services.database import init_db, get_db_session, Business, Audit
 from services.audit_runner import run_audit_for_business, get_audit_analysis_data
+from services.stripe_client import load_stripe_config, create_checkout_session, verify_webhook_signature, get_stripe_client
 
 app = FastAPI()
 
@@ -586,3 +587,319 @@ async def admin_business_create(
         )
     finally:
         db.close()
+
+
+# =============================================================================
+# SNAPSHOT PUBLIC PAID FLOW (SPRINT 2)
+# =============================================================================
+
+@app.get("/snapshot", response_class=HTMLResponse)
+async def snapshot_landing(request: Request):
+    """Show Snapshot marketing/landing page."""
+    return templates.TemplateResponse(
+        "public/snapshot/landing.html",
+        {"request": request}
+    )
+
+
+@app.get("/snapshot/business", response_class=HTMLResponse)
+async def snapshot_business_form(request: Request):
+    """Show business info form for Snapshot purchase."""
+    return templates.TemplateResponse(
+        "public/snapshot/business_form.html",
+        {"request": request, "error": None, "form_data": None}
+    )
+
+
+@app.post("/snapshot/business")
+async def snapshot_business_submit(
+    request: Request,
+    name: str = Form(...),
+    primary_domain: str = Form(...),
+    extra_domains: str = Form(""),
+    business_type: str = Form(...),
+    regions: str = Form(""),
+    categories: str = Form(""),
+    contact_name: str = Form(...),
+    contact_email: str = Form(...)
+):
+    """Create business and redirect to Stripe Checkout."""
+    db = get_db_session()
+    try:
+        extra_domains_list = [d.strip() for d in extra_domains.split("\n") if d.strip()]
+        regions_list = [r.strip() for r in regions.split(",") if r.strip()]
+        categories_list = [c.strip() for c in categories.split(",") if c.strip()]
+        
+        business = Business(
+            name=name,
+            primary_domain=primary_domain,
+            business_type=business_type,
+            contact_name=contact_name,
+            contact_email=contact_email,
+            source="public",
+            subscription_active=False
+        )
+        business.set_extra_domains(extra_domains_list)
+        business.set_regions(regions_list)
+        business.set_categories(categories_list)
+        
+        db.add(business)
+        db.commit()
+        db.refresh(business)
+        
+        request.session["snapshot_business_id"] = business.id
+        
+        return RedirectResponse(url=f"/snapshot/checkout?business_id={business.id}", status_code=302)
+    except Exception as e:
+        form_data = {
+            "name": name,
+            "primary_domain": primary_domain,
+            "extra_domains": extra_domains,
+            "business_type": business_type,
+            "regions": regions,
+            "categories": categories,
+            "contact_name": contact_name,
+            "contact_email": contact_email
+        }
+        return templates.TemplateResponse(
+            "public/snapshot/business_form.html",
+            {"request": request, "error": f"Error: {str(e)}", "form_data": form_data}
+        )
+    finally:
+        db.close()
+
+
+@app.get("/snapshot/checkout")
+async def snapshot_checkout(request: Request, business_id: int):
+    """Create Stripe Checkout session and redirect."""
+    session_business_id = request.session.get("snapshot_business_id")
+    if session_business_id != business_id:
+        return RedirectResponse(url="/snapshot/business", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return RedirectResponse(url="/snapshot/business", status_code=302)
+        
+        domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
+        if not domain:
+            domain = "localhost:5000"
+        
+        protocol = "https" if "replit" in domain else "http"
+        base_url = f"{protocol}://{domain}"
+        
+        success_url = f"{base_url}/snapshot/success?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{base_url}/snapshot/cancel"
+        
+        try:
+            session = await create_checkout_session(
+                business_id=business.id,
+                success_url=success_url,
+                cancel_url=cancel_url
+            )
+            return RedirectResponse(url=session.url, status_code=303)
+        except ValueError as e:
+            return templates.TemplateResponse(
+                "public/snapshot/business_form.html",
+                {"request": request, "error": f"Stripe configuration error: {str(e)}", "form_data": None}
+            )
+        except Exception as e:
+            return templates.TemplateResponse(
+                "public/snapshot/business_form.html",
+                {"request": request, "error": f"Payment error: {str(e)}", "form_data": None}
+            )
+    finally:
+        db.close()
+
+
+@app.get("/snapshot/success", response_class=HTMLResponse)
+async def snapshot_success(request: Request, session_id: Optional[str] = None):
+    """Show success page after payment."""
+    db = get_db_session()
+    try:
+        business = None
+        audit = None
+        
+        if session_id:
+            try:
+                await load_stripe_config()
+                stripe = get_stripe_client()
+                session = stripe.checkout.Session.retrieve(session_id)
+                
+                business_id = session.metadata.get("business_id")
+                if business_id:
+                    business = db.query(Business).filter(Business.id == int(business_id)).first()
+                    if business:
+                        audit = (
+                            db.query(Audit)
+                            .filter(Audit.business_id == business.id)
+                            .filter(Audit.channel == "self_serve")
+                            .order_by(Audit.created_at.desc())
+                            .first()
+                        )
+            except Exception as e:
+                print(f"Error retrieving Stripe session: {e}")
+        
+        return templates.TemplateResponse(
+            "public/snapshot/success.html",
+            {"request": request, "business": business, "audit": audit}
+        )
+    finally:
+        db.close()
+
+
+@app.get("/snapshot/cancel", response_class=HTMLResponse)
+async def snapshot_cancel(request: Request):
+    """Show cancel page."""
+    return templates.TemplateResponse(
+        "public/snapshot/cancel.html",
+        {"request": request}
+    )
+
+
+@app.get("/snapshot/audit/{audit_id}", response_class=HTMLResponse)
+async def snapshot_audit_view(request: Request, audit_id: int):
+    """Public view of a self-serve audit."""
+    db = get_db_session()
+    try:
+        audit = db.query(Audit).filter(Audit.id == audit_id).first()
+        
+        if not audit or audit.channel != "self_serve":
+            return templates.TemplateResponse(
+                "admin/error.html",
+                {"request": request, "error": "Audit not found"}
+            )
+        
+        business = audit.business
+        visibility = audit.get_visibility_summary() or {}
+        suggestions = audit.get_suggestions() or {}
+        
+        return templates.TemplateResponse(
+            "public/snapshot/audit_view.html",
+            {
+                "request": request,
+                "audit": {
+                    "id": audit.id,
+                    "status": audit.status,
+                    "completed_at": audit.completed_at,
+                    "has_pdf": bool(audit.pdf_path)
+                },
+                "business": {
+                    "id": business.id,
+                    "name": business.name
+                } if business else None,
+                "visibility": visibility,
+                "suggestions": suggestions
+            }
+        )
+    finally:
+        db.close()
+
+
+@app.get("/snapshot/audit/{audit_id}/download")
+async def snapshot_audit_download(request: Request, audit_id: int):
+    """Download PDF for a self-serve audit."""
+    db = get_db_session()
+    try:
+        audit = db.query(Audit).filter(Audit.id == audit_id).first()
+        
+        if not audit or audit.channel != "self_serve":
+            return RedirectResponse(url="/snapshot", status_code=302)
+        
+        if not audit.pdf_path or not os.path.exists(audit.pdf_path):
+            return RedirectResponse(url=f"/snapshot/audit/{audit_id}", status_code=302)
+        
+        filename = os.path.basename(audit.pdf_path)
+        return FileResponse(
+            audit.pdf_path,
+            media_type="application/pdf",
+            filename=filename
+        )
+    finally:
+        db.close()
+
+
+def run_audit_background(business_id: int, audit_id: int):
+    """Background task to run an audit."""
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        audit = db.query(Audit).filter(Audit.id == audit_id).first()
+        
+        if business and audit:
+            try:
+                run_audit_for_business(business, audit, db)
+            except Exception as e:
+                audit.status = "error"
+                audit.set_visibility_summary({"error": str(e)})
+                db.commit()
+                print(f"Audit {audit_id} failed: {e}")
+    finally:
+        db.close()
+
+
+@app.post("/webhooks/stripe")
+async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
+    """Handle Stripe webhook events."""
+    try:
+        payload = await request.body()
+        sig_header = request.headers.get("stripe-signature")
+        
+        if not sig_header:
+            return Response(content="Missing signature", status_code=400)
+        
+        config = await load_stripe_config()
+        
+        if not config.webhook_secret:
+            print("Warning: STRIPE_WEBHOOK_SECRET not configured, skipping verification")
+            import json as json_module
+            event_data = json_module.loads(payload)
+            event_type = event_data.get("type")
+            data_object = event_data.get("data", {}).get("object", {})
+        else:
+            try:
+                event = verify_webhook_signature(payload, sig_header, config.webhook_secret)
+                event_type = event.type
+                data_object = event.data.object
+            except Exception as e:
+                print(f"Webhook signature verification failed: {e}")
+                return Response(content="Invalid signature", status_code=400)
+        
+        if event_type == "checkout.session.completed":
+            business_id = data_object.get("metadata", {}).get("business_id")
+            product_type = data_object.get("metadata", {}).get("product")
+            
+            if business_id and product_type == "echoscope_snapshot":
+                db = get_db_session()
+                try:
+                    business = db.query(Business).filter(Business.id == int(business_id)).first()
+                    
+                    if business:
+                        existing_audit = (
+                            db.query(Audit)
+                            .filter(Audit.business_id == business.id)
+                            .filter(Audit.channel == "self_serve")
+                            .filter(Audit.status.in_(["pending", "done"]))
+                            .first()
+                        )
+                        
+                        if not existing_audit:
+                            audit = Audit(
+                                business_id=business.id,
+                                channel="self_serve",
+                                status="pending"
+                            )
+                            db.add(audit)
+                            db.commit()
+                            db.refresh(audit)
+                            
+                            background_tasks.add_task(run_audit_background, business.id, audit.id)
+                            print(f"Created self_serve audit {audit.id} for business {business.id}")
+                finally:
+                    db.close()
+        
+        return Response(content="OK", status_code=200)
+    except Exception as e:
+        print(f"Webhook error: {e}")
+        return Response(content="Webhook error", status_code=500)
