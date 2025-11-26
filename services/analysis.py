@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 from openai import OpenAI
+from services.genius import generate_genius_insights
 
 
 class MissingAPIKeyError(Exception):
@@ -219,5 +220,12 @@ def run_analysis(tenant_config: Dict[str, Any]) -> Dict[str, Any]:
     suggestions_data = generate_suggestions(tenant_config, summary)
     summary["visibility_summary"] = suggestions_data.get("visibility_summary", "")
     summary["suggestions"] = suggestions_data.get("suggestions", [])
+    
+    try:
+        genius_data = generate_genius_insights(tenant_config, summary)
+        summary["genius_insights"] = genius_data
+    except Exception as e:
+        print(f"Error generating genius insights (non-fatal): {e}")
+        summary["genius_insights"] = None
     
     return summary

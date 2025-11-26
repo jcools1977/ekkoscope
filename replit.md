@@ -40,6 +40,7 @@ Simple, stateless UI that doesn't require complex client-side state management. 
 main.py              # FastAPI application and route handlers
 services/
   analysis.py        # Core business logic for AI visibility analysis
+  genius.py          # Genius Mode insights generation (patterns, opportunities, quick wins)
   reporting.py       # PDF report generation using fpdf2
 data/
   tenants.json       # Tenant configuration (queries, brand aliases, geo focus)
@@ -62,8 +63,18 @@ The `/report/{tenant_id}` endpoint generates a client-ready PDF containing:
 - AI visibility summary with score distribution
 - Per-query details table showing each query and its score
 - Competitor overview showing top 5 competitors by frequency
+- Genius Insights & Opportunity Map (see below)
 - Grouped recommendations (new pages, updates, FAQs, authority, branding)
 - Professional footer with page numbering
+
+**Genius Mode Insights:**
+The `generate_genius_insights()` function in `services/genius.py` produces deeper, non-obvious insights:
+- **Patterns**: Identifies visibility patterns across queries with specific evidence
+- **Priority Opportunities**: High-value queries with full page blueprints (slug, title, H1, outline)
+- **Quick Wins**: Concrete actions for the next 30 days
+- **Future AI Answers**: Preview of how AI would recommend the business once visibility improves
+
+All insights reference the actual tenant name, geo, queries, and competitors from the analysis.
 
 **Scoring Logic:**
 - **Score 0**: Business not mentioned in AI response

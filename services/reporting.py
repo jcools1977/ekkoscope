@@ -71,7 +71,8 @@ def normalize_analysis_data(analysis: Dict[str, Any]) -> Dict[str, Any]:
         "queries": results,
         "top_competitors": top_competitors,
         "recommendations": grouped_recommendations,
-        "visibility_summary": analysis.get("visibility_summary", "")
+        "visibility_summary": analysis.get("visibility_summary", ""),
+        "genius_insights": analysis.get("genius_insights", None)
     }
 
 
@@ -96,6 +97,7 @@ def build_echoscope_pdf(tenant: Dict[str, Any], analysis: Dict[str, Any]) -> byt
     _add_summary_section(pdf, data)
     _add_query_details_section(pdf, data)
     _add_competitor_section(pdf, data)
+    _add_genius_insights_section(pdf, data)
     _add_recommendations_section(pdf, data)
     
     return pdf.output()
@@ -328,6 +330,241 @@ def _add_competitor_section(pdf: EchoScopePDF, data: Dict[str, Any]):
         pdf.cell(col_widths[0], 10, name, border=1, align="L", fill=fill)
         pdf.cell(col_widths[1], 10, f"{freq} of {total_queries} queries", border=1, align="C", fill=fill)
         pdf.ln()
+
+
+def _add_genius_insights_section(pdf: EchoScopePDF, data: Dict[str, Any]):
+    """Add Genius Insights & Opportunity Map section to PDF."""
+    genius = data.get("genius_insights")
+    
+    if not genius or not isinstance(genius, dict):
+        return
+    
+    patterns = genius.get("patterns", []) or []
+    opportunities = genius.get("priority_opportunities", []) or []
+    quick_wins = genius.get("quick_wins", []) or []
+    future_answers = genius.get("future_ai_answers", []) or []
+    
+    if not isinstance(patterns, list):
+        patterns = []
+    if not isinstance(opportunities, list):
+        opportunities = []
+    if not isinstance(quick_wins, list):
+        quick_wins = []
+    if not isinstance(future_answers, list):
+        future_answers = []
+    
+    if not any([patterns, opportunities, quick_wins, future_answers]):
+        return
+    
+    pdf.add_page()
+    
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.set_text_color(56, 102, 220)
+    pdf.cell(0, 12, "Genius Insights & Opportunity Map", align="L")
+    pdf.ln(15)
+    
+    pdf.set_draw_color(56, 102, 220)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(10)
+    
+    if patterns:
+        pdf.set_font("Helvetica", "B", 14)
+        pdf.set_text_color(111, 66, 193)
+        pdf.cell(0, 10, "Patterns in AI Visibility", align="L")
+        pdf.ln(8)
+        
+        for pattern in patterns[:3]:
+            if pdf.get_y() > 250:
+                pdf.add_page()
+            
+            summary = pattern.get("summary", "")
+            evidence = pattern.get("evidence", [])
+            implication = pattern.get("implication", "")
+            
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(40, 40, 40)
+            pdf.multi_cell(0, 5, summary)
+            pdf.ln(2)
+            
+            if evidence:
+                pdf.set_font("Helvetica", "I", 9)
+                pdf.set_text_color(80, 80, 80)
+                pdf.cell(0, 5, "Evidence:", align="L")
+                pdf.ln(5)
+                for ev in evidence[:2]:
+                    pdf.set_x(15)
+                    if len(ev) > 120:
+                        ev = ev[:117] + "..."
+                    pdf.multi_cell(180, 4, f"- {ev}")
+            
+            if implication:
+                pdf.set_font("Helvetica", "", 9)
+                pdf.set_text_color(60, 60, 60)
+                pdf.cell(0, 5, f"Implication: {implication}", align="L")
+                pdf.ln(8)
+        
+        pdf.ln(5)
+    
+    if opportunities:
+        if pdf.get_y() > 200:
+            pdf.add_page()
+        
+        pdf.set_font("Helvetica", "B", 14)
+        pdf.set_text_color(40, 167, 69)
+        pdf.cell(0, 10, "Top Priority Opportunities", align="L")
+        pdf.ln(8)
+        
+        for opp in opportunities[:3]:
+            if pdf.get_y() > 220:
+                pdf.add_page()
+            
+            query = opp.get("query", "")
+            current_score = opp.get("current_score", 0)
+            top_competitors = opp.get("top_competitors", [])
+            intent_value = opp.get("intent_value", 0)
+            difficulty = opp.get("difficulty", "medium")
+            reason = opp.get("reason", "")
+            recommended_page = opp.get("recommended_page", {})
+            
+            pdf.set_fill_color(240, 255, 240)
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(40, 40, 40)
+            
+            if len(query) > 70:
+                query = query[:67] + "..."
+            pdf.multi_cell(0, 6, f"Query: {query}")
+            
+            pdf.set_font("Helvetica", "", 9)
+            pdf.set_text_color(60, 60, 60)
+            
+            competitors_str = ", ".join(top_competitors[:3]) if top_competitors else "N/A"
+            if len(competitors_str) > 60:
+                competitors_str = competitors_str[:57] + "..."
+            
+            pdf.cell(0, 5, f"Current Score: {current_score} | Intent Value: {intent_value}/10 | Difficulty: {difficulty}", align="L")
+            pdf.ln(5)
+            pdf.cell(0, 5, f"Top Competitors: {competitors_str}", align="L")
+            pdf.ln(5)
+            
+            if reason:
+                pdf.set_font("Helvetica", "I", 9)
+                if len(reason) > 150:
+                    reason = reason[:147] + "..."
+                pdf.multi_cell(0, 4, f"Why: {reason}")
+            
+            if recommended_page and isinstance(recommended_page, dict):
+                pdf.ln(3)
+                pdf.set_font("Helvetica", "B", 9)
+                pdf.set_text_color(0, 123, 255)
+                pdf.cell(0, 5, "Recommended Page Blueprint:", align="L")
+                pdf.ln(5)
+                
+                pdf.set_font("Helvetica", "", 8)
+                pdf.set_text_color(60, 60, 60)
+                
+                slug = str(recommended_page.get("slug", "") or "")
+                seo_title = str(recommended_page.get("seo_title", "") or "")
+                h1 = str(recommended_page.get("h1", "") or "")
+                outline = recommended_page.get("outline", [])
+                if not isinstance(outline, list):
+                    outline = []
+                
+                pdf.set_x(15)
+                pdf.cell(0, 4, f"Slug: {slug}", align="L")
+                pdf.ln(4)
+                
+                if seo_title:
+                    pdf.set_x(15)
+                    if len(seo_title) > 80:
+                        seo_title = seo_title[:77] + "..."
+                    pdf.cell(0, 4, f"SEO Title: {seo_title}", align="L")
+                    pdf.ln(4)
+                
+                if h1:
+                    pdf.set_x(15)
+                    pdf.cell(0, 4, f"H1: {h1}", align="L")
+                    pdf.ln(4)
+                
+                if outline:
+                    pdf.set_x(15)
+                    pdf.cell(0, 4, "Outline:", align="L")
+                    pdf.ln(4)
+                    for item in outline[:5]:
+                        pdf.set_x(20)
+                        if len(item) > 70:
+                            item = item[:67] + "..."
+                        pdf.cell(0, 4, f"- {item}", align="L")
+                        pdf.ln(4)
+            
+            pdf.ln(6)
+        
+        pdf.ln(3)
+    
+    if quick_wins:
+        if pdf.get_y() > 220:
+            pdf.add_page()
+        
+        pdf.set_font("Helvetica", "B", 14)
+        pdf.set_text_color(253, 126, 20)
+        pdf.cell(0, 10, "Quick Wins (Next 30 Days)", align="L")
+        pdf.ln(8)
+        
+        pdf.set_font("Helvetica", "", 10)
+        pdf.set_text_color(40, 40, 40)
+        
+        for idx, win in enumerate(quick_wins[:5], 1):
+            if pdf.get_y() > 270:
+                pdf.add_page()
+            
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.cell(8, 6, f"{idx}.", align="L")
+            pdf.set_font("Helvetica", "", 10)
+            
+            if len(win) > 150:
+                win = win[:147] + "..."
+            pdf.multi_cell(180, 5, win)
+            pdf.ln(2)
+        
+        pdf.ln(5)
+    
+    if future_answers:
+        if pdf.get_y() > 200:
+            pdf.add_page()
+        
+        pdf.set_font("Helvetica", "B", 14)
+        pdf.set_text_color(56, 102, 220)
+        pdf.cell(0, 10, "Future AI Answers (Preview)", align="L")
+        pdf.ln(8)
+        
+        pdf.set_font("Helvetica", "", 9)
+        pdf.set_text_color(60, 60, 60)
+        pdf.multi_cell(0, 5, "These are examples of how AI assistants could respond once your visibility improves:")
+        pdf.ln(5)
+        
+        for answer in future_answers[:2]:
+            if pdf.get_y() > 240:
+                pdf.add_page()
+            
+            query = answer.get("query", "")
+            example = answer.get("example_answer", "")
+            
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(40, 40, 40)
+            if len(query) > 80:
+                query = query[:77] + "..."
+            pdf.multi_cell(0, 5, f"Q: {query}")
+            pdf.ln(2)
+            
+            pdf.set_fill_color(245, 247, 250)
+            pdf.set_font("Helvetica", "I", 9)
+            pdf.set_text_color(60, 60, 60)
+            
+            if len(example) > 400:
+                example = example[:397] + "..."
+            
+            pdf.set_x(15)
+            pdf.multi_cell(175, 5, example, fill=True)
+            pdf.ln(8)
 
 
 def _add_recommendations_section(pdf: EchoScopePDF, data: Dict[str, Any]):

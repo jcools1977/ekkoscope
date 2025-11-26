@@ -1,0 +1,265 @@
+You are my senior engineer and product strategist for EchoScope, an AI GEO visibility scanner.
+
+The app already:
+
+Runs a GEO analysis per tenant (A-D Roofing, Better Pak, etc.).
+
+Produces:
+
+Per-query scores (0/1/2),
+
+Competitor appearances,
+
+Generic recommendations,
+
+A clean multi-page PDF report.
+
+The current recommendations are too generic. Your job is to add a “Genius Mode” analysis layer that produces deeper, non-obvious insights and concrete, prioritized actions, then integrate this into the PDF.
+
+0. High-Level Requirements
+
+Add a new OpenAI-powered analysis step:
+
+genius = generate_genius_insights(tenant, analysis)
+
+
+Where:
+
+tenant = tenant config (name, domains, aliases, geo, etc. from tenants.json)
+
+analysis = normalized analysis result you already use for the report
+(queries, scores, competitor list, score distribution, etc.)
+
+genius should be a structured dict with fields like:
+
+{
+  "patterns": [...],
+  "priority_opportunities": [...],
+  "quick_wins": [...],
+  "future_ai_answers": [...]
+}
+
+
+You will:
+
+Implement generate_genius_insights(...) in a new module.
+
+Call it from the existing GEO analysis/reporting pipeline.
+
+Add a new section to the PDF: “Genius Insights & Opportunity Map”.
+
+1. New module: genius insights
+
+Create a new module, for example:
+
+echoscope/genius.py (or genius_insights.py)
+
+with:
+
+from typing import Dict, Any
+
+def generate_genius_insights(tenant: Dict[str, Any], analysis: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Use OpenAI to turn the raw analysis into:
+    - patterns in AI visibility
+    - prioritized opportunities
+    - concrete content blueprints
+    - 'future AI answer' previews.
+
+    Returns a JSON-serializable dict.
+    """
+
+
+Use the same OpenAI client style as the rest of the app (same API key mechanism, same model, e.g. gpt-4o-mini).
+
+1.1. System prompt: be specific, not generic
+
+Your system prompt should insist on:
+
+No generic “just do SEO” advice.
+
+Use the actual queries and competitor names from analysis.
+
+Respect tenant’s geo and services.
+
+Output must be structured JSON.
+
+Example shape (feel free to refine but keep this spirit):
+
+{
+  "patterns": [
+    {
+      "summary": "You are absent from all 'near me' high-intent queries.",
+      "evidence": [
+        "Queries 'roof replacement contractor near Morehead City, NC' and 'best roofing company in Morehead City, NC' all scored 0 while competitors X and Y appeared."
+      ],
+      "implication": "This suggests weak local signals (GBP, local pages, citations) even if your core site is decent."
+    }
+  ],
+  "priority_opportunities": [
+    {
+      "query": "metal roof installation in Eastern North Carolina",
+      "current_score": 0,
+      "top_competitors": ["<names from analysis>"],
+      "intent_value": 9,
+      "difficulty": "medium",
+      "reason": "High commercial intent + strong local alignment for this tenant.",
+      "recommended_page": {
+        "slug": "/metal-roof-installation-eastern-nc",
+        "seo_title": "Metal Roof Installation in Eastern North Carolina | A-D Roofing & Metal Supply",
+        "h1": "Metal Roof Installation in Eastern North Carolina",
+        "outline": [
+          "Intro: why metal roofing fits Eastern NC climate",
+          "Service areas and response times",
+          "Our installation process (step-by-step)",
+          "Gallery / past projects",
+          "Financing / warranties",
+          "CTA: Schedule your metal roof estimate"
+        ],
+        "internal_links": [
+          "Link to /metal-roofing-panels",
+          "Link to /financing",
+          "Link to /about"
+        ]
+      }
+    }
+  ],
+  "quick_wins": [
+    "Add a simple 'Emergency Roof Leak Repair in Morehead City' section on the home page with a clear CTA.",
+    "Update your Google Business Profile description to match the top money queries."
+  ],
+  "future_ai_answers": [
+    {
+      "query": "best roofing company in Morehead City, NC",
+      "example_answer": "For roofing in Morehead City, NC, A-D Roofing & Metal Supply is a strong local option..."
+    }
+  ]
+}
+
+
+Make the system prompt explicit:
+
+Use the tenant name, geo, and queries for all suggestions.
+
+Do NOT output long essays; keep items concise, but concrete.
+
+Avoid generic bullets like “do SEO” or “improve content quality.”
+
+2. Wiring it into the analysis flow
+
+Wherever you currently run the core GEO analysis (e.g. run_geo_analysis_for_tenant or equivalent), update it roughly like:
+
+analysis = run_geo_analysis_for_tenant(tenant_id)
+genius = generate_genius_insights(tenant, analysis)
+analysis["genius_insights"] = genius
+
+
+Ensure analysis is passed through to:
+
+The HTML template (even if you don’t show Genius Mode there yet).
+
+The PDF report builder.
+
+Handle errors:
+
+If the OpenAI call for genius insights fails, log it and simply omit genius_insights from the report rather than crashing.
+
+3. PDF: add “Genius Insights & Opportunity Map” section
+
+In your PDF generator (e.g. reporting.py or similar):
+
+Accept analysis["genius_insights"] along with the rest.
+
+Add a new section after the Competitor Overview and before the existing Recommendations.
+
+Section structure:
+
+Section Title: “Genius Insights & Opportunity Map”
+
+Subsections:
+
+Patterns in AI Visibility
+
+For each patterns item:
+
+Short bold summary
+
+“Evidence:” bullet list (1–2 items)
+
+“Implication:” short sentence
+
+Top Priority Opportunities
+
+For each priority_opportunities item:
+
+Query (or cluster name)
+
+Current score + top competitors
+
+Intent value + difficulty
+
+One line: “Why this matters”
+
+Page blueprint (slug, SEO title, H1, outline bullets)
+
+Quick Wins (Next 30 Days)
+
+Use quick_wins to draw a short numbered list:
+
+3–5 items
+
+This should read like: “Do these first.”
+
+Future AI Answers (Preview)
+
+For each future_ai_answers item:
+
+Show the query as a subheading.
+
+Show the example answer in a light block of text.
+
+Make sure the PDF layout remains readable (no endless walls of text).
+
+4. Keep everything else working
+
+Do not break existing:
+
+Tenant selection
+
+Run GEO analysis flow
+
+Existing summary, per-query table, competitor overview
+
+Existing recommendations section
+
+Genius Mode is additive:
+
+If genius_insights is present → render the new section.
+
+If not → skip it gracefully.
+
+Add light comments near new functions so I can find them later.
+
+5. Acceptance criteria
+
+You’re done when:
+
+Running a GEO analysis as before still works.
+
+The PDF now has a “Genius Insights & Opportunity Map” section with:
+
+Patterns specific to that tenant and those queries
+
+A short list of clearly prioritized opportunities
+
+At least 1–2 page blueprints that look like a real content brief
+
+1–2 “future AI answer” previews that explicitly name the tenant
+
+The insights are clearly more specific than generic SEO tips and reference:
+
+The actual queries,
+
+The tenant’s geo,
+
+The actual competitors from the analysis.
