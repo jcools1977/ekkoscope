@@ -22,6 +22,7 @@ from services.database import init_db, get_db_session, Business, Audit, User, Pu
 from services.audit_runner import run_audit_for_business, get_audit_analysis_data
 from services.stripe_client import load_stripe_config, create_checkout_session, create_subscription_checkout_session, verify_webhook_signature, get_stripe_client
 from services.auth import get_current_user, login_user, logout_user, create_user, authenticate_user
+from services.email_service import send_welcome_email, send_followup_email, send_audit_complete_email
 
 app = FastAPI()
 
@@ -130,6 +131,7 @@ async def auth_signup_page(request: Request, next: Optional[str] = None):
 @app.post("/auth/signup", response_class=HTMLResponse)
 async def auth_signup(
     request: Request,
+    background_tasks: BackgroundTasks,
     email: str = Form(...),
     password: str = Form(...),
     confirm_password: str = Form(...),
@@ -153,6 +155,9 @@ async def auth_signup(
     try:
         user = create_user(db, email, password, first_name, last_name)
         login_user(request, user)
+        
+        background_tasks.add_task(send_welcome_email, email, first_name or "there")
+        
         return RedirectResponse(url=next or "/dashboard", status_code=302)
     except ValueError as e:
         return templates.TemplateResponse(
@@ -553,6 +558,73 @@ async def admin_logout(request: Request):
     """Log out admin user."""
     request.session.clear()
     return RedirectResponse(url="/admin/login", status_code=302)
+
+
+@app.get("/admin/followups", response_class=HTMLResponse)
+async def admin_followups(request: Request):
+    """View users who need follow-up emails."""
+    if not is_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    from datetime import timedelta
+    db = get_db_session()
+    try:
+        cutoff_24h = datetime.utcnow() - timedelta(hours=24)
+        cutoff_72h = datetime.utcnow() - timedelta(hours=72)
+        
+        users_needing_followup = db.query(User).filter(
+            User.created_at < cutoff_24h,
+            User.created_at > cutoff_72h,
+            User.follow_up_sent_at == None
+        ).all()
+        
+        non_purchasers = []
+        for user in users_needing_followup:
+            if len(user.purchases) == 0:
+                hours_since = int((datetime.utcnow() - user.created_at).total_seconds() / 3600)
+                non_purchasers.append({
+                    "user": user,
+                    "hours_since_signup": hours_since
+                })
+        
+        return templates.TemplateResponse(
+            "admin/followups.html",
+            {"request": request, "non_purchasers": non_purchasers}
+        )
+    finally:
+        db.close()
+
+
+@app.post("/admin/followups/send")
+async def admin_send_followups(request: Request, background_tasks: BackgroundTasks):
+    """Send follow-up emails to non-purchasers."""
+    if not is_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    from datetime import timedelta
+    db = get_db_session()
+    try:
+        cutoff_24h = datetime.utcnow() - timedelta(hours=24)
+        cutoff_72h = datetime.utcnow() - timedelta(hours=72)
+        
+        users_needing_followup = db.query(User).filter(
+            User.created_at < cutoff_24h,
+            User.created_at > cutoff_72h,
+            User.follow_up_sent_at == None
+        ).all()
+        
+        sent_count = 0
+        for user in users_needing_followup:
+            if len(user.purchases) == 0:
+                hours_since = int((datetime.utcnow() - user.created_at).total_seconds() / 3600)
+                background_tasks.add_task(send_followup_email, user.email, user.first_name or "there", hours_since)
+                user.follow_up_sent_at = datetime.utcnow()
+                sent_count += 1
+        
+        db.commit()
+        return RedirectResponse(url=f"/admin/followups?sent={sent_count}", status_code=302)
+    finally:
+        db.close()
 
 
 @app.get("/admin", response_class=HTMLResponse)

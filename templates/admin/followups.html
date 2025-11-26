@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Follow-up Emails - EkkoScope Admin</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .back-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            color: var(--brand-teal);
+        }
+        
+        .stats-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stats-info h2 {
+            margin-bottom: 0.25rem;
+        }
+        
+        .stats-info p {
+            color: var(--text-secondary);
+        }
+        
+        .send-btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .send-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .users-table {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .users-table th,
+        .users-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .users-table th {
+            background: var(--bg-dark);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+        
+        .users-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .hours-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .hours-badge.urgent {
+            background: rgba(255, 82, 82, 0.15);
+            color: #ff5252;
+        }
+        
+        .hours-badge.normal {
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .success-banner {
+            background: rgba(46, 230, 168, 0.15);
+            border: 1px solid var(--brand-teal);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            color: var(--brand-teal);
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container" style="max-width: 900px; margin: 2rem auto; padding: 0 1rem;">
+        <div class="admin-header">
+            <h1>Follow-up Emails</h1>
+            <a href="/admin" class="back-link">&#8592; Back to Admin</a>
+        </div>
+        
+        {% if request.query_params.get('sent') %}
+        <div class="success-banner">
+            Successfully queued {{ request.query_params.get('sent') }} follow-up email(s) for delivery!
+        </div>
+        {% endif %}
+        
+        <div class="stats-card">
+            <div class="stats-info">
+                <h2>{{ non_purchasers|length }} User{% if non_purchasers|length != 1 %}s{% endif %} Need Follow-up</h2>
+                <p>Users who signed up 24-72 hours ago but haven't made a purchase</p>
+            </div>
+            {% if non_purchasers %}
+            <form method="POST" action="/admin/followups/send">
+                <button type="submit" class="send-btn">Send All Follow-ups</button>
+            </form>
+            {% endif %}
+        </div>
+        
+        {% if non_purchasers %}
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Signed Up</th>
+                    <th>Hours Since</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in non_purchasers %}
+                <tr>
+                    <td>{{ item.user.email }}</td>
+                    <td>{{ item.user.first_name or '-' }} {{ item.user.last_name or '' }}</td>
+                    <td>{{ item.user.created_at.strftime('%b %d, %Y %I:%M %p') }}</td>
+                    <td>
+                        <span class="hours-badge {% if item.hours_since_signup > 48 %}urgent{% else %}normal{% endif %}">
+                            {{ item.hours_since_signup }}h ago
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>No users currently need follow-up emails.</p>
+            <p>Users will appear here 24-72 hours after signup if they haven't made a purchase.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
