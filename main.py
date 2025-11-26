@@ -20,7 +20,7 @@ from services.analysis import run_analysis, MissingAPIKeyError
 from services.reporting import build_echoscope_pdf
 from services.database import init_db, get_db_session, Business, Audit
 from services.audit_runner import run_audit_for_business, get_audit_analysis_data
-from services.stripe_client import load_stripe_config, create_checkout_session, verify_webhook_signature, get_stripe_client
+from services.stripe_client import load_stripe_config, create_checkout_session, create_subscription_checkout_session, verify_webhook_signature, get_stripe_client
 
 app = FastAPI()
 
@@ -296,6 +296,7 @@ async def admin_businesses(request: Request):
                 "business_type": biz.business_type,
                 "source": biz.source,
                 "subscription_active": biz.subscription_active,
+                "plan": biz.plan or "snapshot",
                 "created_at": biz.created_at,
                 "audit_count": len(biz.audits)
             })
@@ -361,6 +362,8 @@ async def admin_business_detail(request: Request, business_id: int):
                     "contact_email": business.contact_email,
                     "source": business.source,
                     "subscription_active": business.subscription_active,
+                    "plan": business.plan or "snapshot",
+                    "stripe_subscription_id": business.stripe_subscription_id,
                     "created_at": business.created_at
                 },
                 "audits": audit_data
@@ -381,6 +384,42 @@ async def admin_run_audit(request: Request, business_id: int):
         business = db.query(Business).filter(Business.id == business_id).first()
         if not business:
             return RedirectResponse(url="/admin/businesses", status_code=302)
+        
+        audit = Audit(
+            business_id=business.id,
+            channel="admin_run",
+            status="pending"
+        )
+        db.add(audit)
+        db.commit()
+        db.refresh(audit)
+        
+        try:
+            run_audit_for_business(business, audit, db)
+            return RedirectResponse(url=f"/admin/audit/{audit.id}", status_code=302)
+        except Exception as e:
+            audit.status = "error"
+            audit.set_visibility_summary({"error": str(e)})
+            db.commit()
+            return RedirectResponse(url=f"/admin/audit/{audit.id}", status_code=302)
+    finally:
+        db.close()
+
+
+@app.post("/admin/business/{business_id}/refresh")
+async def admin_refresh_audit(request: Request, business_id: int):
+    """Run a monthly refresh audit for an ongoing subscription business."""
+    if not is_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return RedirectResponse(url="/admin/businesses", status_code=302)
+        
+        if not business.subscription_active or business.plan != "ongoing":
+            return RedirectResponse(url=f"/admin/business/{business_id}", status_code=302)
         
         audit = Audit(
             business_id=business.id,
@@ -820,6 +859,256 @@ async def snapshot_audit_download(request: Request, audit_id: int):
         db.close()
 
 
+# =============================================================================
+# PRICING PAGE
+# =============================================================================
+
+@app.get("/pricing", response_class=HTMLResponse)
+async def pricing_page(request: Request):
+    """Show pricing page with both Snapshot and Ongoing plans."""
+    return templates.TemplateResponse(
+        "public/pricing.html",
+        {"request": request}
+    )
+
+
+# =============================================================================
+# ONGOING PUBLIC PAID FLOW (SPRINT 3)
+# =============================================================================
+
+@app.get("/ongoing", response_class=HTMLResponse)
+async def ongoing_landing(request: Request):
+    """Show Ongoing subscription landing page."""
+    return templates.TemplateResponse(
+        "public/ongoing/landing.html",
+        {"request": request}
+    )
+
+
+@app.get("/ongoing/business", response_class=HTMLResponse)
+async def ongoing_business_form(request: Request):
+    """Show business info form for Ongoing subscription."""
+    return templates.TemplateResponse(
+        "public/ongoing/business_form.html",
+        {"request": request, "error": None, "form_data": None}
+    )
+
+
+@app.post("/ongoing/business")
+async def ongoing_business_submit(
+    request: Request,
+    name: str = Form(...),
+    primary_domain: str = Form(...),
+    extra_domains: str = Form(""),
+    business_type: str = Form(...),
+    regions: str = Form(""),
+    categories: str = Form(""),
+    contact_name: str = Form(...),
+    contact_email: str = Form(...)
+):
+    """Create business for ongoing plan and redirect to Stripe Checkout."""
+    db = get_db_session()
+    try:
+        extra_domains_list = [d.strip() for d in extra_domains.split("\n") if d.strip()]
+        regions_list = [r.strip() for r in regions.split(",") if r.strip()]
+        categories_list = [c.strip() for c in categories.split(",") if c.strip()]
+        
+        business = Business(
+            name=name,
+            primary_domain=primary_domain,
+            business_type=business_type,
+            contact_name=contact_name,
+            contact_email=contact_email,
+            source="public",
+            plan="ongoing",
+            subscription_active=False
+        )
+        business.set_extra_domains(extra_domains_list)
+        business.set_regions(regions_list)
+        business.set_categories(categories_list)
+        
+        db.add(business)
+        db.commit()
+        db.refresh(business)
+        
+        request.session["ongoing_business_id"] = business.id
+        
+        return RedirectResponse(url=f"/ongoing/checkout?business_id={business.id}", status_code=302)
+    except Exception as e:
+        form_data = {
+            "name": name,
+            "primary_domain": primary_domain,
+            "extra_domains": extra_domains,
+            "business_type": business_type,
+            "regions": regions,
+            "categories": categories,
+            "contact_name": contact_name,
+            "contact_email": contact_email
+        }
+        return templates.TemplateResponse(
+            "public/ongoing/business_form.html",
+            {"request": request, "error": f"Error: {str(e)}", "form_data": form_data}
+        )
+    finally:
+        db.close()
+
+
+@app.get("/ongoing/checkout")
+async def ongoing_checkout(request: Request, business_id: int):
+    """Create Stripe Checkout session for subscription and redirect."""
+    session_business_id = request.session.get("ongoing_business_id")
+    if session_business_id != business_id:
+        return RedirectResponse(url="/ongoing/business", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return RedirectResponse(url="/ongoing/business", status_code=302)
+        
+        domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
+        if not domain:
+            domain = "localhost:5000"
+        
+        protocol = "https" if "replit" in domain else "http"
+        base_url = f"{protocol}://{domain}"
+        
+        success_url = f"{base_url}/ongoing/success?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{base_url}/ongoing/cancel"
+        
+        try:
+            session = await create_subscription_checkout_session(
+                business_id=business.id,
+                success_url=success_url,
+                cancel_url=cancel_url
+            )
+            return RedirectResponse(url=session.url, status_code=302)
+        except Exception as e:
+            return templates.TemplateResponse(
+                "public/ongoing/business_form.html",
+                {"request": request, "error": f"Error creating checkout: {str(e)}", "form_data": None}
+            )
+    finally:
+        db.close()
+
+
+@app.get("/ongoing/success", response_class=HTMLResponse)
+async def ongoing_success(request: Request, session_id: Optional[str] = None):
+    """Show success page after subscription payment."""
+    db = get_db_session()
+    try:
+        business = None
+        audit = None
+        
+        if session_id:
+            try:
+                await load_stripe_config()
+                stripe = get_stripe_client()
+                session = stripe.checkout.Session.retrieve(session_id)
+                
+                business_id = session.metadata.get("business_id")
+                if business_id:
+                    business = db.query(Business).filter(Business.id == int(business_id)).first()
+                    if business:
+                        audit = (
+                            db.query(Audit)
+                            .filter(Audit.business_id == business.id)
+                            .filter(Audit.channel == "self_serve")
+                            .order_by(Audit.created_at.desc())
+                            .first()
+                        )
+            except Exception as e:
+                print(f"Error retrieving Stripe session: {e}")
+        
+        return templates.TemplateResponse(
+            "public/ongoing/success.html",
+            {"request": request, "business": business, "audit": audit}
+        )
+    finally:
+        db.close()
+
+
+@app.get("/ongoing/cancel", response_class=HTMLResponse)
+async def ongoing_cancel(request: Request):
+    """Show cancel page for subscription."""
+    return templates.TemplateResponse(
+        "public/ongoing/cancel.html",
+        {"request": request}
+    )
+
+
+@app.get("/ongoing/audit/{audit_id}", response_class=HTMLResponse)
+async def ongoing_audit_view(request: Request, audit_id: int):
+    """Public view of an ongoing subscription audit."""
+    db = get_db_session()
+    try:
+        audit = db.query(Audit).filter(Audit.id == audit_id).first()
+        
+        if not audit or audit.channel != "self_serve":
+            return templates.TemplateResponse(
+                "admin/error.html",
+                {"request": request, "error": "Audit not found"}
+            )
+        
+        business = audit.business
+        if not business or business.plan != "ongoing":
+            return templates.TemplateResponse(
+                "admin/error.html",
+                {"request": request, "error": "Audit not found"}
+            )
+        
+        visibility = audit.get_visibility_summary() or {}
+        suggestions = audit.get_suggestions() or {}
+        
+        return templates.TemplateResponse(
+            "public/snapshot/audit_view.html",
+            {
+                "request": request,
+                "audit": {
+                    "id": audit.id,
+                    "status": audit.status,
+                    "completed_at": audit.completed_at,
+                    "has_pdf": bool(audit.pdf_path)
+                },
+                "business": {
+                    "id": business.id,
+                    "name": business.name
+                } if business else None,
+                "visibility": visibility,
+                "suggestions": suggestions
+            }
+        )
+    finally:
+        db.close()
+
+
+@app.get("/ongoing/audit/{audit_id}/download")
+async def ongoing_audit_download(request: Request, audit_id: int):
+    """Download PDF for an ongoing subscription audit."""
+    db = get_db_session()
+    try:
+        audit = db.query(Audit).filter(Audit.id == audit_id).first()
+        
+        if not audit or audit.channel != "self_serve":
+            return RedirectResponse(url="/ongoing", status_code=302)
+        
+        business = audit.business
+        if not business or business.plan != "ongoing":
+            return RedirectResponse(url="/ongoing", status_code=302)
+        
+        if not audit.pdf_path or not os.path.exists(audit.pdf_path):
+            return RedirectResponse(url=f"/ongoing/audit/{audit_id}", status_code=302)
+        
+        filename = os.path.basename(audit.pdf_path)
+        return FileResponse(
+            audit.pdf_path,
+            media_type="application/pdf",
+            filename=filename
+        )
+    finally:
+        db.close()
+
+
 def run_audit_background(business_id: int, audit_id: int):
     """Background task to run an audit."""
     db = get_db_session()
@@ -869,13 +1158,23 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
         if event_type == "checkout.session.completed":
             business_id = data_object.get("metadata", {}).get("business_id")
             product_type = data_object.get("metadata", {}).get("product")
+            plan = data_object.get("metadata", {}).get("plan")
+            subscription_id = data_object.get("subscription")
             
-            if business_id and product_type == "echoscope_snapshot":
+            if business_id and product_type in ("echoscope_snapshot", "echoscope_ongoing"):
                 db = get_db_session()
                 try:
                     business = db.query(Business).filter(Business.id == int(business_id)).first()
                     
                     if business:
+                        if product_type == "echoscope_ongoing" or plan == "ongoing":
+                            business.subscription_active = True
+                            business.plan = "ongoing"
+                            if subscription_id:
+                                business.stripe_subscription_id = subscription_id
+                            db.commit()
+                            print(f"Activated ongoing subscription for business {business.id}")
+                        
                         existing_audit = (
                             db.query(Audit)
                             .filter(Audit.business_id == business.id)
@@ -895,7 +1194,7 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
                             db.refresh(audit)
                             
                             background_tasks.add_task(run_audit_background, business.id, audit.id)
-                            print(f"Created self_serve audit {audit.id} for business {business.id}")
+                            print(f"Created self_serve audit {audit.id} for business {business.id} (plan: {business.plan})")
                 finally:
                     db.close()
         

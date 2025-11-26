@@ -15,6 +15,8 @@ class StripeConfig:
     publishable_key: str
     webhook_secret: Optional[str] = None
     price_id: Optional[str] = None
+    price_ongoing_setup: Optional[str] = None
+    price_ongoing_monthly: Optional[str] = None
 
 _cached_config: Optional[StripeConfig] = None
 
@@ -93,6 +95,8 @@ async def load_stripe_config() -> StripeConfig:
     
     webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
     price_id = os.getenv("STRIPE_PRICE_SNAPSHOT")
+    price_ongoing_setup = os.getenv("STRIPE_PRICE_ONGOING_SETUP")
+    price_ongoing_monthly = os.getenv("STRIPE_PRICE_ONGOING_MONTHLY")
     
     if not api_key:
         raise ValueError("Stripe API key not configured. Set up Stripe connection or STRIPE_SECRET_KEY environment variable.")
@@ -101,7 +105,9 @@ async def load_stripe_config() -> StripeConfig:
         api_key=api_key,
         publishable_key=publishable_key,
         webhook_secret=webhook_secret,
-        price_id=price_id
+        price_id=price_id,
+        price_ongoing_setup=price_ongoing_setup,
+        price_ongoing_monthly=price_ongoing_monthly
     )
     
     stripe.api_key = api_key
@@ -147,6 +153,50 @@ async def create_checkout_session(
     )
     
     return session
+
+async def create_subscription_checkout_session(
+    business_id: int,
+    success_url: str,
+    cancel_url: str
+) -> stripe.checkout.Session:
+    """
+    Create a Stripe Checkout session for the Ongoing subscription plan.
+    Includes optional setup fee and recurring monthly price.
+    """
+    config = await load_stripe_config()
+    
+    if not config.price_ongoing_monthly:
+        raise ValueError("STRIPE_PRICE_ONGOING_MONTHLY environment variable not set")
+    
+    stripe.api_key = config.api_key
+    
+    line_items = []
+    
+    if config.price_ongoing_setup:
+        line_items.append({
+            "price": config.price_ongoing_setup,
+            "quantity": 1
+        })
+    
+    line_items.append({
+        "price": config.price_ongoing_monthly,
+        "quantity": 1
+    })
+    
+    session = stripe.checkout.Session.create(
+        mode="subscription",
+        line_items=line_items,
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata={
+            "business_id": str(business_id),
+            "product": "echoscope_ongoing",
+            "plan": "ongoing"
+        }
+    )
+    
+    return session
+
 
 def verify_webhook_signature(payload: bytes, sig_header: str, webhook_secret: str) -> stripe.Event:
     """

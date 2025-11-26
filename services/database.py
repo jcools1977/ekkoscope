@@ -37,6 +37,8 @@ class Business(Base):
     contact_email = Column(String(255), nullable=True)
     source = Column(String(20), default="public")
     subscription_active = Column(Boolean, default=False)
+    stripe_subscription_id = Column(String(255), nullable=True)
+    plan = Column(String(20), default="snapshot")
     created_at = Column(DateTime, default=datetime.utcnow)
     
     audits = relationship("Audit", back_populates="business", order_by="desc(Audit.created_at)")
@@ -185,9 +187,28 @@ def generate_default_queries(
     return queries[:4]
 
 
+def migrate_db():
+    """Run migrations to add new columns to existing tables."""
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        result = conn.execute(text("PRAGMA table_info(businesses)"))
+        columns = [row[1] for row in result.fetchall()]
+        
+        if "plan" not in columns:
+            conn.execute(text("ALTER TABLE businesses ADD COLUMN plan VARCHAR(20) DEFAULT 'snapshot'"))
+            conn.commit()
+            print("Migration: Added 'plan' column to businesses table")
+        
+        if "stripe_subscription_id" not in columns:
+            conn.execute(text("ALTER TABLE businesses ADD COLUMN stripe_subscription_id VARCHAR(255)"))
+            conn.commit()
+            print("Migration: Added 'stripe_subscription_id' column to businesses table")
+
+
 def init_db():
     """Create all tables if they don't exist."""
     Base.metadata.create_all(bind=engine)
+    migrate_db()
 
 
 def get_db():

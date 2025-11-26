@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EchoScope Pricing - GEO Audits for AI Visibility</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .pricing-hero {
+            text-align: center;
+            padding: 3rem 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .pricing-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .pricing-hero .tagline {
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            margin-bottom: 3rem;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .pricing-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+            position: relative;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .pricing-card.featured {
+            border-color: var(--brand-teal);
+            background: linear-gradient(180deg, rgba(46, 230, 168, 0.05) 0%, var(--bg-card) 100%);
+        }
+        
+        .pricing-card.featured::before {
+            content: "BEST VALUE";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.35rem 1rem;
+            border-radius: 20px;
+        }
+        
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-name .teal {
+            color: var(--brand-teal);
+        }
+        
+        .plan-tagline {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .plan-price {
+            margin: 1.5rem 0;
+        }
+        
+        .plan-price .amount {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+        
+        .plan-price .period {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+        
+        .plan-price .setup-note {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+        
+        .plan-features {
+            list-style: none;
+            padding: 0;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+        
+        .plan-features li {
+            padding: 0.6rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .plan-features .check {
+            color: var(--brand-teal);
+            flex-shrink: 0;
+        }
+        
+        .plan-cta {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 1.5rem;
+        }
+        
+        .plan-cta.primary {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+        }
+        
+        .plan-cta.secondary {
+            background: transparent;
+            border: 2px solid var(--brand-teal);
+            color: var(--brand-teal);
+        }
+        
+        .plan-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 230, 168, 0.2);
+        }
+        
+        .comparison-section {
+            margin-top: 4rem;
+            text-align: center;
+        }
+        
+        .comparison-section h2 {
+            color: var(--brand-teal);
+            margin-bottom: 2rem;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .comparison-table th {
+            color: var(--brand-teal);
+            font-weight: 600;
+        }
+        
+        .comparison-table td:nth-child(2),
+        .comparison-table td:nth-child(3) {
+            text-align: center;
+        }
+        
+        .comparison-table th:nth-child(2),
+        .comparison-table th:nth-child(3) {
+            text-align: center;
+        }
+        
+        .check-mark {
+            color: var(--brand-teal);
+            font-size: 1.25rem;
+        }
+        
+        .x-mark {
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <header class="hero-card">
+        <a href="/" class="logo-link">
+            <img src="/static/img/echoscope-icon.svg" alt="EchoScope" class="logo-icon">
+            <span class="logo-text">Echo<span class="teal">Scope</span></span>
+        </a>
+        <p class="hero-subtitle">GEO Engine for AI Visibility</p>
+    </header>
+
+    <main class="container">
+        <div class="pricing-hero">
+            <h1>Choose Your <span class="teal">GEO Plan</span></h1>
+            <p class="tagline">Discover and improve how AI assistants recommend your business</p>
+            
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="plan-name">Echo<span class="teal">Scope</span> Snapshot</div>
+                    <div class="plan-tagline">One-time visibility check</div>
+                    
+                    <div class="plan-price">
+                        <span class="amount">$49</span>
+                        <span class="period">one-time</span>
+                    </div>
+                    
+                    <ul class="plan-features">
+                        <li>
+                            <span class="check">✓</span>
+                            <span>Complete AI visibility analysis</span>
+                        </li>
+                        <li>
+                            <span class="check">✓</span>
+                            <span>Competitor identification</span>
+                        </li>
+                        <li>
+                            <span class="check">✓</span>
+                            <span>Genius Insights with action items</span>
+                        </li>
+                        <li>
+                            <span class="check">✓</span>
+                            <span>Professional PDF report</span>
+                        </li>
+                        <li>
+                            <span class="check">✓</span>
+                            <span>Site content gap analysis</span>
+                        </li>
+                    </ul>
+                    
+                    <a href="/snapshot" class="plan-cta secondary">Get Snapshot</a>
+                </div>
+                
+                <div class="pricing-card featured">
+                    <div class="plan-name">Echo<span class="teal">Scope</span> Ongoing</div>
+                    <div class="plan-tagline">Monthly visibility monitoring</div>
+                    
+                    <div class="plan-price">
+                        <span class="amount">$29</span>
+                        <span class="period">/month</span>
+                        <div class="setup-note">+ $49 setup fee (includes first audit)</div>
+                    </div>
+                    
+                    <ul class="plan-features">
+                        <li>
+                            <span class="check">✓</span>
+                            <span>Everything in Snapshot</span>
+                        </li>
+                        <li>
+                            <span class="check">✓</span>
+                            <span>Initial full GEO audit included</span>
+                        </li>
+                        <li>
+                            <span class="check">✓</span>
+                            <span>Monthly refresh audits</span>
+                        </li>
+                        <li>
+                            <span class="check">✓</span>
+                            <span>Track visibility improvements</span>
+                        </li>
+                        <li>
+                            <span class="check">✓</span>
+                            <span>Updated recommendations</span>
+                        </li>
+                        <li>
+                            <span class="check">✓</span>
+                            <span>Priority support</span>
+                        </li>
+                    </ul>
+                    
+                    <a href="/ongoing" class="plan-cta primary">Start Ongoing</a>
+                </div>
+            </div>
+            
+            <div class="comparison-section">
+                <h2>Plan Comparison</h2>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Snapshot</th>
+                            <th>Ongoing</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Initial AI Visibility Audit</td>
+                            <td><span class="check-mark">✓</span></td>
+                            <td><span class="check-mark">✓</span></td>
+                        </tr>
+                        <tr>
+                            <td>Competitor Analysis</td>
+                            <td><span class="check-mark">✓</span></td>
+                            <td><span class="check-mark">✓</span></td>
+                        </tr>
+                        <tr>
+                            <td>Genius Insights & Recommendations</td>
+                            <td><span class="check-mark">✓</span></td>
+                            <td><span class="check-mark">✓</span></td>
+                        </tr>
+                        <tr>
+                            <td>PDF Report</td>
+                            <td><span class="check-mark">✓</span></td>
+                            <td><span class="check-mark">✓</span></td>
+                        </tr>
+                        <tr>
+                            <td>Monthly Refresh Audits</td>
+                            <td><span class="x-mark">—</span></td>
+                            <td><span class="check-mark">✓</span></td>
+                        </tr>
+                        <tr>
+                            <td>Visibility Trend Tracking</td>
+                            <td><span class="x-mark">—</span></td>
+                            <td><span class="check-mark">✓</span></td>
+                        </tr>
+                        <tr>
+                            <td>Priority Support</td>
+                            <td><span class="x-mark">—</span></td>
+                            <td><span class="check-mark">✓</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    
+    <footer style="text-align: center; padding: 2rem; color: var(--text-muted);">
+        <p>Powered by EchoScope • GEO Engine for AI Visibility</p>
+    </footer>
+</body>
+</html>

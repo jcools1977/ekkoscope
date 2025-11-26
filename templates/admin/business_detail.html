@@ -3,6 +3,39 @@
 {% block title %}{{ business.name }} - EchoScope Admin{% endblock %}
 
 {% block content %}
+<style>
+    .plan-badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .plan-snapshot { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
+    .plan-ongoing { background: rgba(46, 230, 168, 0.2); color: var(--brand-teal); }
+    .sub-active { background: rgba(46, 230, 168, 0.15); color: var(--brand-teal); border: 1px solid rgba(46, 230, 168, 0.3); }
+    .sub-inactive { background: rgba(100, 116, 139, 0.1); color: #64748b; }
+    .btn-secondary {
+        background: transparent;
+        border: 1px solid var(--brand-teal);
+        color: var(--brand-teal);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+    .btn-secondary:hover {
+        background: rgba(46, 230, 168, 0.1);
+    }
+    .actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 1.5rem;
+    }
+</style>
+
 <div class="page-header">
     <h1>{{ business.name }}</h1>
     <p>Business details and audit history</p>
@@ -11,7 +44,10 @@
 <div class="card">
     <div class="card-header">
         <h2>Business Profile</h2>
-        <span class="status-badge {% if business.source == 'admin' %}status-done{% else %}status-pending{% endif %}">{{ business.source }}</span>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span class="plan-badge plan-{{ business.plan or 'snapshot' }}">{{ business.plan or 'snapshot' }}</span>
+            <span class="status-badge {% if business.source == 'admin' %}status-done{% else %}status-pending{% endif %}">{{ business.source }}</span>
+        </div>
     </div>
     
     <div class="detail-grid">
@@ -44,15 +80,38 @@
             <div class="value">{{ business.created_at.strftime('%Y-%m-%d %H:%M') if business.created_at else '-' }}</div>
         </div>
         <div class="detail-item">
-            <div class="label">Subscription</div>
-            <div class="value">{% if business.subscription_active %}Active{% else %}Inactive{% endif %}</div>
+            <div class="label">Plan</div>
+            <div class="value">
+                <span class="plan-badge plan-{{ business.plan or 'snapshot' }}">{{ business.plan or 'snapshot' }}</span>
+            </div>
         </div>
+        <div class="detail-item">
+            <div class="label">Subscription</div>
+            <div class="value">
+                {% if business.subscription_active %}
+                <span class="plan-badge sub-active">Active</span>
+                {% else %}
+                <span class="plan-badge sub-inactive">Inactive</span>
+                {% endif %}
+            </div>
+        </div>
+        {% if business.stripe_subscription_id %}
+        <div class="detail-item">
+            <div class="label">Stripe Subscription</div>
+            <div class="value" style="font-family: monospace; font-size: 0.85rem;">{{ business.stripe_subscription_id }}</div>
+        </div>
+        {% endif %}
     </div>
     
     <div class="actions">
         <form method="POST" action="/admin/business/{{ business.id }}/run" style="display: inline;">
             <button type="submit" class="btn btn-primary">Run EchoScope Audit (Admin)</button>
         </form>
+        {% if business.subscription_active and (business.plan == 'ongoing') %}
+        <form method="POST" action="/admin/business/{{ business.id }}/refresh" style="display: inline;">
+            <button type="submit" class="btn btn-secondary">Run Monthly Refresh Audit</button>
+        </form>
+        {% endif %}
     </div>
 </div>
 

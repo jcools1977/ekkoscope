@@ -35,10 +35,12 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 34523
+localPort = 45933
 externalPort = 3000
 
 [userenv]
 
 [userenv.shared]
 STRIPE_PRICE_SNAPSHOT = "price_1SXqAxBB4Ktzr0dekmYdYQpb"
+STRIPE_PRICE_ONGOING_SETUP = "price_1SXqOKBB4Ktzr0deEm6857Lf"
+STRIPE_PRICE_ONGOING_MONTHLY = "price_1SXqOKBB4Ktzr0deEFftevA0"

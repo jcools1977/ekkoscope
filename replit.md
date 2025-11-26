@@ -242,3 +242,43 @@ Using OpenAI's structured outputs ensures consistent, parseable responses. The t
 - Business ID stored in session to prevent checkout hijacking
 - Webhook signature verification (when STRIPE_WEBHOOK_SECRET is set)
 - Audits only accessible via `self_serve` channel check
+
+### Stripe Integration (Sprint 3 - Ongoing Subscriptions)
+
+**EchoScope Ongoing Plan:**
+- Monthly subscription ($29/month) with optional setup fee ($49)
+- Environment variables: `STRIPE_PRICE_ONGOING_SETUP`, `STRIPE_PRICE_ONGOING_MONTHLY`
+- Subscription mode Stripe Checkout with recurring billing
+
+**Public Ongoing Flow:**
+1. `/pricing` - Comparison page showing both Snapshot and Ongoing plans
+2. `/ongoing` - Landing page with subscription details
+3. `/ongoing/business` - Business info form (creates Business with plan="ongoing")
+4. `/ongoing/checkout` - Creates subscription Stripe Checkout session
+5. Stripe Hosted Checkout - User subscribes
+6. `/webhooks/stripe` - Webhook sets `subscription_active=True`, stores `stripe_subscription_id`
+7. `/ongoing/success` - Shows subscription confirmation and audit status
+8. `/ongoing/audit/{id}` - Public view of ongoing audits
+
+**Business Model Updates (Sprint 3):**
+- `plan` field: "snapshot" or "ongoing" (default: "snapshot")
+- `subscription_active` field: Boolean for active subscription status
+- `stripe_subscription_id` field: Stores Stripe subscription ID for management
+
+**Admin Panel Updates:**
+- Business listing shows Plan and Subscription status columns
+- Filter options: Subscribers Only, Ongoing Plan, Public Only
+- Business detail shows plan type with colored badges
+- "Run Monthly Refresh Audit" button for ongoing subscription businesses
+
+**Webhook Handling:**
+- Handles both `echoscope_snapshot` and `echoscope_ongoing` products
+- For ongoing: sets `subscription_active=True`, stores subscription ID
+- Creates initial self_serve audit for both plan types
+- Runs audit in background task
+
+**Admin Capabilities:**
+- Admin can always create businesses manually (source="admin")
+- Admin can run unlimited audits with channel="admin_run"
+- Refresh button creates new admin_run audits for ongoing businesses
+- All businesses and audits visible regardless of source/channel

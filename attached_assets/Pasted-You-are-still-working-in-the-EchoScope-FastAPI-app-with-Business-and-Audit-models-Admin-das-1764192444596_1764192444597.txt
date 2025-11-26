@@ -1,0 +1,122 @@
+You are still working in the EchoScope FastAPI app with:
+
+- Business and Audit models
+- Admin dashboard and audit runner
+- Public Snapshot flow with Stripe Checkout and webhook
+
+GOAL OF THIS TASK (SPRINT 3)
+
+Add a second public product: **EchoScope Ongoing**, which:
+
+- Charges:
+  - A lower (or zero) setup fee, and
+  - A recurring monthly subscription via Stripe.
+- Still delivers:
+  - An initial full EchoScope GEO audit (same as Snapshot).
+  - Future re-runs of the audit on demand (for now via admin, optional automation later).
+
+IMPORTANT: Admin behavior does NOT change: I can always create businesses and run unlimited audits without Stripe.
+
+PRODUCT LOGIC
+
+- Plan “snapshot” → one-time payment, one audit.
+- Plan “ongoing” → setup + monthly subscription, includes initial audit and future re-runs.
+
+IMPLEMENTATION DETAILS
+
+1) Stripe config
+
+- Add env vars:
+  - `STRIPE_PRICE_ONGOING_SETUP`  (optional; can be zero)
+  - `STRIPE_PRICE_ONGOING_MONTHLY` (recurring price)
+
+- In the Stripe Checkout session for the ongoing plan:
+  - mode = "subscription"
+  - line_items:
+    - price: STRIPE_PRICE_ONGOING_MONTHLY
+    - quantity: 1
+  - You can either:
+    - Add the setup fee as a one-time price in the same session, OR
+    - Bake the setup cost into the early months and skip a separate setup line.
+
+  - As before, include `business_id` and `plan="ongoing"` in `metadata`.
+
+2) Public UI: offer both Snapshot and Ongoing
+
+- On `/` or `/pricing`, show two cards:
+
+  - Snapshot (one-time)
+    - Button → `/snapshot`
+
+  - Ongoing (monthly)
+    - Button → `/ongoing`
+
+- `/ongoing` can reuse the same business info form as Snapshot but:
+  - It sets an internal flag `plan="ongoing"`.
+  - It leads to an ongoing Stripe Checkout instead of the Snapshot one.
+
+3) Ongoing business creation and subscription flag
+
+When the Stripe webhook receives `checkout.session.completed` for an ongoing plan:
+
+- Extract:
+  - `business_id` from metadata
+  - `plan` from metadata ("ongoing")
+  - `subscription` id from the session
+
+- Update the Business:
+  - `subscription_active = True`
+  - (Optional) store `subscription_id` in a new field like `stripe_subscription_id` for future automation.
+
+- Create an Audit:
+  - business_id = that business
+  - channel = "self_serve"
+  - status = "pending"
+
+- Run `run_audit_for_business(business, audit, db_session)` to generate the initial audit & PDF.
+
+4) Admin: Visibility over subscription businesses
+
+In the admin dashboard:
+
+- Make it easy to see who is on an ongoing plan:
+  - Add a badge or column:
+    - “subscription_active: Yes/No”
+  - Add filters:
+    - Show only `subscription_active = True` businesses.
+
+- On `/admin/business/{id}`, show:
+  - “Plan: Snapshot” or “Plan: Ongoing” based on:
+    - If any self_serve audit came from snapshot and no subscription → Snapshot
+    - If subscription_active=True → Ongoing
+
+- For ongoing businesses, add a button:
+  - “Run Monthly Refresh Audit (Admin)”
+    - This simply creates a new Audit with:
+      - channel = "admin_run"
+    - Uses `run_audit_for_business` to run the updated analysis.
+    - This is manual for now; automation can be added later with a scheduler.
+
+5) Public side: keep Snapshot and Ongoing separate but DRY
+
+- Reuse as much of the business info form and success pages as possible.
+- Distinguish flows purely by:
+  - Which route they started at (`/snapshot` vs `/ongoing`)
+  - Which Stripe price(s) they’re hooked to
+  - How you label them in the UI (Snapshot vs Ongoing).
+
+6) Constraints and safety
+
+- Do NOT make public users able to run new audits “for free” beyond what the plan allows:
+  - Snapshot: only one self_serve audit created after payment.
+  - Ongoing: they get the initial self_serve audit after payment; any future audits are initiated via admin (you can later expose a button to them if desired).
+- Admin (me) must ALWAYS retain the ability to:
+  - Create businesses manually (`source="admin"`) and run unlimited audits with `channel="admin_run"`.
+  - View all businesses and audits regardless of how they came in.
+
+After this sprint, I should be able to:
+
+- Offer two public plans: Snapshot (one-time) and Ongoing (monthly).
+- Watch public businesses come in with `source="public"` and either snapshot or ongoing plan.
+- See in admin which businesses are ongoing subscribers (`subscription_active=True`).
+- Run as many offline/admin audits as I want for my private face-to-face clients, with zero Stripe involvement.

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Info - EchoScope Ongoing</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .form-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+        
+        .form-card h1 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-card .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        
+        .plan-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            margin-bottom: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .form-group label .required {
+            color: var(--brand-teal);
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--brand-teal);
+            box-shadow: 0 0 0 3px rgba(46, 230, 168, 0.1);
+        }
+        
+        .form-group .help-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .submit-button {
+            width: 100%;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 230, 168, 0.3);
+        }
+        
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            color: var(--brand-teal);
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .price-summary {
+            background: rgba(46, 230, 168, 0.1);
+            border: 1px solid rgba(46, 230, 168, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .price-summary .amount {
+            color: var(--brand-teal);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header class="hero-card">
+        <a href="/" class="logo-link">
+            <img src="/static/img/echoscope-icon.svg" alt="EchoScope" class="logo-icon">
+            <span class="logo-text">Echo<span class="teal">Scope</span></span>
+        </a>
+        <p class="hero-subtitle">GEO Engine for AI Visibility</p>
+    </header>
+
+    <main class="form-container">
+        <div class="form-card">
+            <span class="plan-badge">ONGOING PLAN</span>
+            <h1>Tell Us About Your <span class="teal">Business</span></h1>
+            <p class="subtitle">We'll use this information to analyze your AI visibility</p>
+            
+            <div class="price-summary">
+                You're signing up for <span class="amount">$29/month</span> + <span class="amount">$49 setup fee</span> (includes your initial full GEO audit)
+            </div>
+            
+            {% if error %}
+            <div class="error-message">{{ error }}</div>
+            {% endif %}
+            
+            <form method="POST" action="/ongoing/business">
+                <div class="form-group">
+                    <label for="name">Business Name <span class="required">*</span></label>
+                    <input type="text" id="name" name="name" required placeholder="Your Business Name" value="{{ form_data.name if form_data else '' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="primary_domain">Website URL <span class="required">*</span></label>
+                    <input type="url" id="primary_domain" name="primary_domain" required placeholder="https://yourbusiness.com" value="{{ form_data.primary_domain if form_data else '' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="extra_domains">Additional Websites</label>
+                    <textarea id="extra_domains" name="extra_domains" rows="2" placeholder="https://shop.yourbusiness.com&#10;https://blog.yourbusiness.com">{{ form_data.extra_domains if form_data else '' }}</textarea>
+                    <p class="help-text">One URL per line if you have multiple sites</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="business_type">Business Type <span class="required">*</span></label>
+                    <select id="business_type" name="business_type" required>
+                        <option value="">-- Select business type --</option>
+                        <option value="local_service" {% if form_data and form_data.business_type == 'local_service' %}selected{% endif %}>Local Service Business</option>
+                        <option value="ecommerce" {% if form_data and form_data.business_type == 'ecommerce' %}selected{% endif %}>E-commerce / Online Store</option>
+                        <option value="saas" {% if form_data and form_data.business_type == 'saas' %}selected{% endif %}>SaaS / Software</option>
+                        <option value="agency" {% if form_data and form_data.business_type == 'agency' %}selected{% endif %}>Agency / Consulting</option>
+                        <option value="restaurant" {% if form_data and form_data.business_type == 'restaurant' %}selected{% endif %}>Restaurant / Food Service</option>
+                        <option value="healthcare" {% if form_data and form_data.business_type == 'healthcare' %}selected{% endif %}>Healthcare / Medical</option>
+                        <option value="professional" {% if form_data and form_data.business_type == 'professional' %}selected{% endif %}>Professional Services</option>
+                        <option value="retail" {% if form_data and form_data.business_type == 'retail' %}selected{% endif %}>Retail / Physical Store</option>
+                        <option value="other" {% if form_data and form_data.business_type == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="regions">Service Regions</label>
+                    <input type="text" id="regions" name="regions" placeholder="e.g., San Francisco, Bay Area, California" value="{{ form_data.regions if form_data else '' }}">
+                    <p class="help-text">Comma-separated geographic areas you serve</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="categories">Business Categories</label>
+                    <input type="text" id="categories" name="categories" placeholder="e.g., plumbing, HVAC, home repair" value="{{ form_data.categories if form_data else '' }}">
+                    <p class="help-text">Comma-separated categories or services</p>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="contact_name">Contact Name <span class="required">*</span></label>
+                        <input type="text" id="contact_name" name="contact_name" required placeholder="Your Name" value="{{ form_data.contact_name if form_data else '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="contact_email">Contact Email <span class="required">*</span></label>
+                        <input type="email" id="contact_email" name="contact_email" required placeholder="you@example.com" value="{{ form_data.contact_email if form_data else '' }}">
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-button">Continue to Payment</button>
+                <a href="/ongoing" class="back-link">← Back to Ongoing info</a>
+            </form>
+        </div>
+    </main>
+</body>
+</html>
