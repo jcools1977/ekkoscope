@@ -25,7 +25,7 @@
 
         <div class="form-card">
             <h2>Select Business Tenant</h2>
-            <form method="POST" action="/analyze">
+            <form method="POST" action="/analyze" id="analysisForm">
                 <div class="form-group">
                     <label for="tenant_id">Tenant:</label>
                     <select name="tenant_id" id="tenant_id" required>
@@ -37,7 +37,35 @@
                         {% endfor %}
                     </select>
                 </div>
-                <button type="submit" class="btn-primary">Run GEO Analysis</button>
+                <button type="submit" class="radar-button" id="radarBtn">
+                    <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="radarGradBtn" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#2EE6A8"/>
+                                <stop offset="100%" style="stop-color:#18A3FF"/>
+                            </linearGradient>
+                        </defs>
+                        <g class="radar-grid">
+                            <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGradBtn)" stroke-width="1.5" opacity="0.3"/>
+                            <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGradBtn)" stroke-width="1.2" opacity="0.4"/>
+                            <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGradBtn)" stroke-width="1" opacity="0.5"/>
+                            <line x1="5" y1="40" x2="75" y2="40" stroke="url(#radarGradBtn)" stroke-width="0.5" opacity="0.3"/>
+                            <line x1="40" y1="5" x2="40" y2="75" stroke="url(#radarGradBtn)" stroke-width="0.5" opacity="0.3"/>
+                        </g>
+                        <g class="radar-sweep">
+                            <path d="M 40 40 L 40 5 A 35 35 0 0 1 72 55 Z" fill="url(#radarGradBtn)" opacity="0.15"/>
+                        </g>
+                        <g class="radar-arcs">
+                            <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                            <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                            <path d="M 64 20 A 30 30 0 0 1 64 60" fill="none" stroke="#18A3FF" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+                        </g>
+                        <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn)"/>
+                        <circle class="radar-pulse" cx="40" cy="40" r="5" fill="none" stroke="#2EE6A8" stroke-width="1.5" opacity="0.8"/>
+                    </svg>
+                    <span class="radar-text">Run GEO Analysis</span>
+                    <span class="radar-loading-text">Scanning AI...</span>
+                </button>
             </form>
         </div>
 
@@ -125,5 +153,20 @@
         {% endif %}
         {% endif %}
     </div>
+
+    <script>
+        document.getElementById('analysisForm').addEventListener('submit', function(e) {
+            const btn = document.getElementById('radarBtn');
+            const select = document.getElementById('tenant_id');
+            
+            if (!select.value) {
+                e.preventDefault();
+                return;
+            }
+            
+            btn.classList.add('loading');
+            btn.disabled = true;
+        });
+    </script>
 </body>
 </html>

@@ -35,6 +35,17 @@ Preferred communication style: Simple, everyday language.
 - "Echo" in regular weight, "Scope" in semi-bold teal accent
 - Gradient accents, glow effects, and smooth hover transitions throughout
 - Custom scrollbar and text selection styling
+- Animated radar button for "Run GEO Analysis" with:
+  - SVG radar icon matching the logo
+  - Spinning sweep animation on hover
+  - Loading state with "Scanning AI..." text when analyzing
+
+**PDF Report Styling:**
+- Print-friendly design (white background to save ink)
+- Brand colors as accents (teal headings, blue highlights)
+- Radar logo on cover page and headers
+- Score distribution bar charts
+- Professional tables with alternating row colors
 
 **Design Pattern:**
 - Traditional server-rendered HTML approach
