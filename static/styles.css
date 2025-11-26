@@ -17,31 +17,56 @@ body {
     padding: 0 1rem;
 }
 
-header {
+.hero-header {
     text-align: center;
     margin-bottom: 2rem;
-    padding: 2rem 0;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 2.5rem 2rem;
+    background: linear-gradient(135deg, #050B11 0%, #0a1628 50%, #050B11 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 40px rgba(46, 230, 168, 0.05);
+    position: relative;
+    overflow: hidden;
 }
 
-header h1 {
-    font-size: 2.5rem;
-    color: #2563eb;
-    margin-bottom: 0.5rem;
+.hero-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(46, 230, 168, 0.08) 0%, transparent 60%);
+    pointer-events: none;
 }
 
-.tagline {
+.logo-container {
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.logo {
+    height: 56px;
+    width: auto;
+    filter: drop-shadow(0 2px 8px rgba(46, 230, 168, 0.3));
+}
+
+.hero-header .tagline {
     font-size: 1.1rem;
-    color: #666;
+    color: #94a3b8;
     margin-bottom: 0.5rem;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 1;
 }
 
-.brand {
-    font-size: 0.9rem;
-    color: #999;
+.powered-by {
+    font-size: 0.85rem;
+    color: #64748b;
     font-style: italic;
+    position: relative;
+    z-index: 1;
 }
 
 .error-message {

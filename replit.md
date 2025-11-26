@@ -19,6 +19,18 @@ Preferred communication style: Simple, everyday language.
 - Single-page application pattern with form submission
 - Static CSS file for styling (no frameworks)
 
+**Branding & Visual Design:**
+- Sci-fi radar logo concept representing "GEO radar for AI echoes"
+- Color palette:
+  - Primary: #2EE6A8 (neon teal) and #18A3FF (electric blue)
+  - Background: #050B11 (near-black, blue-tinted)
+  - Text: #F5F7FA (soft off-white)
+- Logo files in `static/img/`:
+  - `echoscope-logo.svg`: Full logo with animated radar and wordmark
+  - `echoscope-icon.svg`: Icon-only version
+  - `favicon.svg`: Browser tab icon
+- "Echo" in regular weight, "Scope" in semi-bold teal accent
+
 **Design Pattern:**
 - Traditional server-rendered HTML approach
 - Form POST submission triggers analysis
