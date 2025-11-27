@@ -20,18 +20,21 @@ EkkoScope is a premium SaaS web application designed to analyze and improve "AI 
 - `services/gemini_client.py` - Google Gemini API client
 - `services/gemini_visibility.py` - Gemini simulated AI assistant recommendations
 
-### Premium PDF Report Enhancement (v1.0)
-- **Enhanced Query Generation**: Expanded from 4 generic queries to 20-30 industry-specific queries with intent classification (emergency, high_ticket, replenishment, informational, transactional)
-- **Professional PDF Reports**: Complete redesign with:
+### Premium PDF Report Enhancement (v1.2)
+- **No Text Truncation**: All content displays fully - queries, AI responses, competitor names, and recommendations wrap naturally with no character limits
+- **List-Based Layouts**: Redesigned multi-LLM visibility, competitor landscape, and comparison sections to use list format with proper text wrapping
+- **Smaller Professional Logo**: Cover page logo reduced from 70mm to 24mm for cleaner professional appearance
+- **Professional Margins**: Improved margins (15mm left/right, 18mm top) and spacing throughout
+- **Complete Content Sections**:
   - Executive Dashboard with key metrics and score distribution
-  - Query Analysis with intent classification
-  - Competitor Landscape Matrix with threat levels
-  - Multi-Source AI Visibility Matrix (OpenAI, Perplexity, Gemini comparison)
-  - Detailed Page Blueprints section (3-7 pages with SEO specs)
-  - 30-Day Implementation Roadmap (week-by-week action plan)
-  - Strategic Recommendations section
-- **Industry-Specific Content**: Reports now use business categories and specific products/services rather than generic "industrial supplies" language
-- **Branding Fixes**: Consistent EkkoScope naming, proper bullet formatting, no raw markdown characters
+  - Query Analysis with full AI response display and intent classification
+  - Competitor Landscape with numbered list and threat indicators
+  - AI Provider Visibility Analysis (OpenAI, Perplexity, Gemini) with full query text
+  - Genius Insights with complete patterns and opportunities
+  - Detailed Page Blueprints section (3-7 pages with full SEO specs)
+  - 30-Day Implementation Roadmap with complete task descriptions
+  - Strategic Recommendations with full details
+- **Industry-Specific Content**: Reports use business categories and specific products/services
 
 ### Key Files Updated
 - `services/query_generator.py` (NEW) - Comprehensive query generation with intent classification
