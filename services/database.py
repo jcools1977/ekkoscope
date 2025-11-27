@@ -10,7 +10,7 @@ from typing import Optional, List
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Text, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, Session
-from passlib.hash import bcrypt
+import bcrypt
 
 SQLITE_DATABASE_PATH = "ekkoscope.db"
 DATABASE_URL = f"sqlite:///./{SQLITE_DATABASE_PATH}"
@@ -44,15 +44,15 @@ class User(Base):
     
     def set_password(self, password: str):
         """Hash and store password. Truncates to 72 bytes for bcrypt compatibility."""
-        # bcrypt only uses the first 72 bytes, so truncate to avoid errors
         password_bytes = password.encode('utf-8')[:72]
-        self.password_hash = bcrypt.hash(password_bytes.decode('utf-8', errors='ignore'))
+        salt = bcrypt.gensalt()
+        self.password_hash = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
     
     def verify_password(self, password: str) -> bool:
         """Verify password against stored hash."""
-        # Truncate to match hashing behavior
         password_bytes = password.encode('utf-8')[:72]
-        return bcrypt.verify(password_bytes.decode('utf-8', errors='ignore'), self.password_hash)
+        stored_hash = self.password_hash.encode('utf-8')
+        return bcrypt.checkpw(password_bytes, stored_hash)
     
     @property
     def full_name(self) -> str:
