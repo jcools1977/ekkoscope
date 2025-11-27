@@ -65,7 +65,7 @@ def parse_openai_response(raw: str, business_name: str) -> Dict[str, Any]:
     Parse OpenAI's JSON response.
     """
     if not raw:
-        return {"recommended_brands": [], "target_found": False}
+        return {"recommended_brands": [], "target_found": False, "target_position": None}
     
     try:
         if "```json" in raw:
@@ -85,6 +85,14 @@ def parse_openai_response(raw: str, business_name: str) -> Dict[str, Any]:
         target_found = data.get("target_business_mentioned", False)
         target_position = data.get("target_position")
         
+        if target_position is not None:
+            if isinstance(target_position, int):
+                pass
+            elif isinstance(target_position, str) and target_position.isdigit():
+                target_position = int(target_position)
+            else:
+                target_position = None
+        
         if not target_found and recommended:
             for i, rec in enumerate(recommended):
                 name = rec.get("name", "").lower()
@@ -101,7 +109,7 @@ def parse_openai_response(raw: str, business_name: str) -> Dict[str, Any]:
         }
     except json.JSONDecodeError as e:
         logger.warning("Could not parse OpenAI visibility JSON: %s", e)
-        return {"recommended_brands": [], "target_found": False}
+        return {"recommended_brands": [], "target_found": False, "target_position": None}
 
 
 def run_openai_visibility_for_queries(
