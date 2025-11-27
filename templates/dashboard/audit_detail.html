@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Results - {{ business.name }} - EkkoScope</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .dashboard-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+        
+        .nav-logo img.full-logo {
+            height: 32px;
+            width: auto;
+        }
+        
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-name {
+            color: var(--text-secondary);
+        }
+        
+        .admin-badge {
+            background: linear-gradient(135deg, #2EE6A8, #18A3FF);
+            color: #0a1628;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        
+        .logout-btn:hover {
+            border-color: #2EE6A8;
+            color: #2EE6A8;
+        }
+        
+        .dashboard-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .breadcrumb {
+            margin-bottom: 1.5rem;
+        }
+        
+        .breadcrumb a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            color: #2EE6A8;
+        }
+        
+        .breadcrumb span {
+            color: var(--text-secondary);
+            margin: 0 0.5rem;
+        }
+        
+        .audit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+        }
+        
+        .audit-title h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .audit-meta {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .audit-status {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .status-completed {
+            background: rgba(46, 230, 168, 0.15);
+            color: #2EE6A8;
+        }
+        
+        .status-pending {
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+        }
+        
+        .status-error {
+            background: rgba(255, 82, 82, 0.15);
+            color: #ff5252;
+        }
+        
+        .score-card {
+            background: linear-gradient(135deg, rgba(46, 230, 168, 0.1), rgba(24, 163, 255, 0.1));
+            border: 1px solid rgba(46, 230, 168, 0.3);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .score-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .score-value {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #2EE6A8;
+            line-height: 1;
+        }
+        
+        .score-suffix {
+            font-size: 2rem;
+        }
+        
+        .score-summary {
+            color: var(--text-secondary);
+            margin-top: 1rem;
+            font-size: 1rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2EE6A8;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .results-table th,
+        .results-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .results-table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+        
+        .score-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .score-2 {
+            background: rgba(46, 230, 168, 0.15);
+            color: #2EE6A8;
+        }
+        
+        .score-1 {
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+        }
+        
+        .score-0 {
+            background: rgba(255, 82, 82, 0.15);
+            color: #ff5252;
+        }
+        
+        .suggestion-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        
+        .suggestion-title {
+            font-weight: 600;
+            color: #2EE6A8;
+            margin-bottom: 0.25rem;
+        }
+        
+        .suggestion-type {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .suggestion-details {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #2EE6A8, #18A3FF);
+            color: #0a1628;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .error-message {
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.3);
+            color: #ff5252;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="dashboard-nav">
+        <a href="/dashboard" class="nav-logo">
+            <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope" class="full-logo">
+        </a>
+        <div class="nav-user">
+            {% if user.is_admin %}
+            <span class="admin-badge">ADMIN</span>
+            {% endif %}
+            <span class="user-name">{{ user.full_name }}</span>
+            <a href="/auth/logout" class="logout-btn">Log Out</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="breadcrumb">
+            <a href="/dashboard">Dashboard</a>
+            <span>&rsaquo;</span>
+            <a href="/dashboard/business/{{ business.id }}">{{ business.name }}</a>
+            <span>&rsaquo;</span>
+            Audit Results
+        </div>
+        
+        <div class="audit-header">
+            <div class="audit-title">
+                <h1>AI Visibility Audit</h1>
+                <div class="audit-meta">
+                    {{ audit.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                    &bull; {{ business.name }}
+                </div>
+            </div>
+            <span class="audit-status status-{{ audit.status }}">{{ audit.status | title }}</span>
+        </div>
+        
+        {% if analysis %}
+        {% set visibility = analysis.visibility %}
+        {% set suggestions = analysis.suggestions %}
+        
+        {% if visibility and visibility.error %}
+        <div class="error-message">
+            Error: {{ visibility.error }}
+        </div>
+        {% elif visibility %}
+        
+        <div class="score-card">
+            <div class="score-label">AI Visibility Score</div>
+            <div class="score-value">
+                {{ visibility.visibility_score or (visibility.avg_score * 50) | round | int }}<span class="score-suffix">%</span>
+            </div>
+            {% if visibility.visibility_summary %}
+            <p class="score-summary">{{ visibility.visibility_summary }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">&#x1F4CA; Overview</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">{{ visibility.total_queries or 0 }}</div>
+                    <div class="stat-label">Total Queries</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ visibility.mentioned_count or 0 }}</div>
+                    <div class="stat-label">Times Mentioned</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ visibility.primary_count or 0 }}</div>
+                    <div class="stat-label">Primary Recommendations</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ "%.1f" | format(visibility.avg_score or 0) }}</div>
+                    <div class="stat-label">Average Score</div>
+                </div>
+            </div>
+        </div>
+        
+        {% if visibility.results %}
+        <div class="card">
+            <h2 class="card-title">&#x1F50D; Query Results</h2>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Query</th>
+                        <th>Score</th>
+                        <th>Mentioned</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in visibility.results %}
+                    <tr>
+                        <td>{{ result.query[:60] }}{% if result.query|length > 60 %}...{% endif %}</td>
+                        <td>
+                            <span class="score-badge score-{{ result.score }}">{{ result.score }}</span>
+                        </td>
+                        <td>{% if result.mentioned %}Yes{% else %}No{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        
+        {% if suggestions and suggestions.suggestions %}
+        <div class="card">
+            <h2 class="card-title">&#x1F4A1; Recommendations</h2>
+            {% for suggestion in suggestions.suggestions[:5] %}
+            <div class="suggestion-item">
+                <div class="suggestion-title">{{ suggestion.title }}</div>
+                <div class="suggestion-type">{{ suggestion.type }}</div>
+                <div class="suggestion-details">{{ suggestion.details }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% if audit.pdf_path %}
+        <div class="card">
+            <h2 class="card-title">&#x1F4C4; Download Report</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Get your full PDF report with detailed insights and recommendations.</p>
+            <a href="/admin/audit/{{ audit.id }}/download" class="download-btn">
+                &#x1F4E5; Download PDF
+            </a>
+        </div>
+        {% endif %}
+        
+        {% endif %}
+        {% else %}
+        <div class="card">
+            <p style="color: var(--text-secondary);">Audit is still processing or no data available.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

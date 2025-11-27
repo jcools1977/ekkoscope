@@ -280,11 +280,110 @@ async def dashboard_business_new(
         db.commit()
         db.refresh(business)
         
+        if user.is_admin:
+            return RedirectResponse(url=f"/dashboard/business/{business.id}", status_code=302)
         return RedirectResponse(url=f"/dashboard/business/{business.id}/upgrade", status_code=302)
     except Exception as e:
         return templates.TemplateResponse(
             "dashboard/business_new.html",
             {"request": request, "user": user, "error": str(e), "form_data": form_data}
+        )
+    finally:
+        db.close()
+
+
+@app.get("/dashboard/business/{business_id}", response_class=HTMLResponse)
+async def dashboard_business_detail(request: Request, business_id: int):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        if user.is_admin:
+            business = db.query(Business).filter(Business.id == business_id).first()
+        else:
+            business = db.query(Business).filter(
+                Business.id == business_id,
+                Business.owner_user_id == user.id
+            ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        audits = db.query(Audit).filter(Audit.business_id == business.id).order_by(Audit.created_at.desc()).all()
+        
+        return templates.TemplateResponse(
+            "dashboard/business_detail.html",
+            {"request": request, "user": user, "business": business, "audits": audits}
+        )
+    finally:
+        db.close()
+
+
+@app.post("/dashboard/business/{business_id}/run-audit")
+async def dashboard_run_audit(request: Request, business_id: int):
+    """Admin-only: Run an audit without payment."""
+    user = get_current_user(request)
+    if not user or not user.is_admin:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        audit = Audit(
+            business_id=business.id,
+            channel="admin_run",
+            status="pending"
+        )
+        db.add(audit)
+        db.commit()
+        db.refresh(audit)
+        
+        try:
+            run_audit_for_business(business, audit, db)
+            return RedirectResponse(url=f"/dashboard/business/{business.id}/audit/{audit.id}", status_code=302)
+        except Exception as e:
+            audit.status = "error"
+            audit.set_visibility_summary({"error": str(e)})
+            db.commit()
+            return RedirectResponse(url=f"/dashboard/business/{business.id}", status_code=302)
+    finally:
+        db.close()
+
+
+@app.get("/dashboard/business/{business_id}/audit/{audit_id}", response_class=HTMLResponse)
+async def dashboard_audit_detail(request: Request, business_id: int, audit_id: int):
+    """View audit results."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        if user.is_admin:
+            business = db.query(Business).filter(Business.id == business_id).first()
+        else:
+            business = db.query(Business).filter(
+                Business.id == business_id,
+                Business.owner_user_id == user.id
+            ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        audit = db.query(Audit).filter(Audit.id == audit_id, Audit.business_id == business_id).first()
+        if not audit:
+            return RedirectResponse(url=f"/dashboard/business/{business_id}", status_code=302)
+        
+        analysis_data = get_audit_analysis_data(audit)
+        
+        return templates.TemplateResponse(
+            "dashboard/audit_detail.html",
+            {"request": request, "user": user, "business": business, "audit": audit, "analysis": analysis_data}
         )
     finally:
         db.close()

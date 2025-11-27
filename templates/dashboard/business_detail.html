@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ business.name }} - EkkoScope</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .dashboard-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+        
+        .nav-logo img.full-logo {
+            height: 32px;
+            width: auto;
+        }
+        
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-name {
+            color: var(--text-secondary);
+        }
+        
+        .admin-badge {
+            background: linear-gradient(135deg, #2EE6A8, #18A3FF);
+            color: #0a1628;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        
+        .logout-btn:hover {
+            border-color: var(--brand-teal);
+            color: var(--brand-teal);
+        }
+        
+        .dashboard-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .breadcrumb {
+            margin-bottom: 1.5rem;
+        }
+        
+        .breadcrumb a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            color: #2EE6A8;
+        }
+        
+        .breadcrumb span {
+            color: var(--text-secondary);
+            margin: 0 0.5rem;
+        }
+        
+        .business-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            gap: 2rem;
+        }
+        
+        .business-info h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .business-domain {
+            color: #2EE6A8;
+            font-size: 1.1rem;
+        }
+        
+        .business-meta {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .run-audit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #2EE6A8, #18A3FF);
+            color: #0a1628;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .run-audit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(46, 230, 168, 0.3);
+        }
+        
+        .admin-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        
+        .admin-link:hover {
+            border-color: #2EE6A8;
+            color: #2EE6A8;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .audits-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .audit-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: border-color 0.2s;
+        }
+        
+        .audit-card:hover {
+            border-color: #2EE6A8;
+        }
+        
+        .audit-card a {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .audit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        
+        .audit-date {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .audit-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-completed {
+            background: rgba(46, 230, 168, 0.15);
+            color: #2EE6A8;
+        }
+        
+        .status-pending {
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+        }
+        
+        .status-error {
+            background: rgba(255, 82, 82, 0.15);
+            color: #ff5252;
+        }
+        
+        .audit-score {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2EE6A8;
+        }
+        
+        .audit-channel {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+        
+        .empty-state p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="dashboard-nav">
+        <a href="/dashboard" class="nav-logo">
+            <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope" class="full-logo">
+        </a>
+        <div class="nav-user">
+            {% if user.is_admin %}
+            <span class="admin-badge">ADMIN</span>
+            {% endif %}
+            <span class="user-name">{{ user.full_name }}</span>
+            <a href="/auth/logout" class="logout-btn">Log Out</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="breadcrumb">
+            <a href="/dashboard">Dashboard</a>
+            <span>&rsaquo;</span>
+            {{ business.name }}
+        </div>
+        
+        <div class="business-header">
+            <div class="business-info">
+                <h1>{{ business.name }}</h1>
+                <div class="business-domain">{{ business.primary_domain }}</div>
+                <div class="business-meta">
+                    Type: {{ business.business_type | replace('_', ' ') | title }}
+                    {% if business.get_categories() %}
+                    &bull; {{ business.get_categories() | join(', ') }}
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                {% if user.is_admin %}
+                <form action="/dashboard/business/{{ business.id }}/run-audit" method="post" style="display:inline;">
+                    <button type="submit" class="run-audit-btn">
+                        &#x1F680; Run Audit
+                    </button>
+                </form>
+                <a href="/admin/business/{{ business.id }}" class="admin-link">
+                    Admin View
+                </a>
+                {% else %}
+                <a href="/dashboard/business/{{ business.id }}/upgrade" class="run-audit-btn">
+                    Get Audit
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <h2 class="section-title">&#x1F4CA; Audit History</h2>
+        
+        {% if audits %}
+        <div class="audits-list">
+            {% for audit in audits %}
+            <div class="audit-card">
+                <a href="/dashboard/business/{{ business.id }}/audit/{{ audit.id }}">
+                    <div class="audit-header">
+                        <span class="audit-date">{{ audit.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                        <span class="audit-status status-{{ audit.status }}">{{ audit.status | title }}</span>
+                    </div>
+                    {% if audit.status == 'completed' and audit.get_visibility_summary() %}
+                    {% set summary = audit.get_visibility_summary() %}
+                    <div class="audit-score">
+                        Score: {{ summary.get('visibility_score', 'N/A') }}%
+                    </div>
+                    {% endif %}
+                    <div class="audit-channel">Channel: {{ audit.channel | replace('_', ' ') | title }}</div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No audits yet for this business.</p>
+            {% if user.is_admin %}
+            <form action="/dashboard/business/{{ business.id }}/run-audit" method="post">
+                <button type="submit" class="run-audit-btn">
+                    &#x1F680; Run Your First Audit
+                </button>
+            </form>
+            {% else %}
+            <a href="/dashboard/business/{{ business.id }}/upgrade" class="run-audit-btn">
+                Get Your First Audit
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
