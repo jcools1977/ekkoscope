@@ -1,0 +1,574 @@
+You are Replit AI working inside my AN2B EkkoScope FastAPI app.
+
+PROJECT CONTEXT
+
+EkkoScope (AN2B EkkoScope) is an AI Visibility GEO Engine. Current behavior:
+
+- Takes a Business (industry, type, regions, domains).
+- Generates 20–30 GEO queries with intent tags.
+- Uses multiple LLMs (OpenAI strategy, Perplexity for web-grounded, Gemini as extra channel) to:
+  - Produce multi-LLM visibility data (who is recommended where).
+  - Run “Genius Mode” to:
+    - Find patterns and gaps.
+    - Generate 3–7 page blueprints.
+    - Build a 30-day implementation roadmap.
+- Generates a premium PDF report with dashboards, matrices, blueprints, and a roadmap.
+
+I now want to add **EkkoBrain**:
+
+> A persistent memory layer that stores patterns from each audit (blueprints, tasks, visibility patterns) and reuses them as “prior art” to make future audits smarter.
+
+EkkoBrain will have two layers:
+
+- **Structured storage (DB)**: normalize per-audit artifacts into tables.
+- **Semantic memory (Pinecone)**: embed blueprints & tasks as vector “patterns” for retrieval.
+
+You must integrate this without breaking the existing audit pipeline or PDF.
+
+========================================
+HIGH-LEVEL EKKoBRAIN DESIGN (DO THIS)
+========================================
+
+1) For every completed audit, we want to:
+   - Log structured data in the database:
+     - Queries + intents.
+     - Multi-LLM visibility results (who was recommended where).
+     - Page blueprints (slug, title, outline, etc.).
+     - Roadmap tasks (week, text, intent, impact/effort).
+   - Push “patterns” into Pinecone as vectors:
+     - Blueprint patterns.
+     - Roadmap task patterns.
+
+2) For new audits, we want to:
+   - Before calling Genius Mode, search EkkoBrain for relevant patterns:
+     - Same/near industry.
+     - Same business type (local_service, ecommerce, b2b).
+     - Similar intent clusters (emergency, high_ticket, replenishment, informational, transactional).
+     - Similar region group (e.g., “US_southeast”).
+   - Feed top patterns into Genius Mode as contextual examples:
+     - “Here are patterns that worked for similar businesses; adapt them for THIS business.”
+
+3) EkkoBrain must be:
+   - Optional (if Pinecone vars are missing, audits still run normally).
+   - Tenant-safe and not creepy:
+     - No client names or domains in the GLOBAL pattern index.
+     - Store generic, anonymized text for patterns (e.g., “Emergency Roof Leak page outline,” not “A-D Roofing emergency page”).
+
+========================================
+PART 1 – DB MODELS FOR AUDIT ARTIFACTS
+========================================
+
+First, add structured models/tables for EkkoScope artifacts.
+
+We likely already have `Business` and `Audit` models. Extend without breaking them.
+
+In the models module (e.g., `services/models.py`):
+
+1) Add a normalized `AuditQuery` model:
+
+```python
+class AuditQuery(Base):
+    __tablename__ = "audit_queries"
+
+    id = Column(Integer, primary_key=True)
+    audit_id = Column(Integer, ForeignKey("audits.id"), index=True)
+    query_text = Column(String, index=True)
+    intent = Column(String, index=True)  # emergency, high_ticket, replenishment, informational, transactional, transactional, etc.
+    region = Column(String, nullable=True)  # optional, derived from business
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    audit = relationship("Audit", back_populates="queries")
+Add queries = relationship("AuditQuery", back_populates="audit") to the Audit model.
+
+Add QueryVisibilityResult model:
+
+python
+Copy code
+class QueryVisibilityResult(Base):
+    __tablename__ = "query_visibility_results"
+
+    id = Column(Integer, primary_key=True)
+    audit_query_id = Column(Integer, ForeignKey("audit_queries.id"), index=True)
+
+    provider = Column(String, index=True)  # "openai_sim", "perplexity_web", "gemini_sim", etc.
+    brand_name = Column(String, index=True)
+    brand_url = Column(String, nullable=True)
+    reason = Column(Text, nullable=True)
+    rank = Column(Integer, nullable=True)
+
+    audit_query = relationship("AuditQuery", back_populates="visibility_results")
+Add visibility_results = relationship("QueryVisibilityResult", back_populates="audit_query") on AuditQuery.
+
+Add PageBlueprint model:
+
+python
+Copy code
+class PageBlueprint(Base):
+    __tablename__ = "page_blueprints"
+
+    id = Column(Integer, primary_key=True)
+    audit_id = Column(Integer, ForeignKey("audits.id"), index=True)
+    business_id = Column(Integer, ForeignKey("businesses.id"), index=True)
+
+    intent_cluster = Column(String, index=True)  # e.g., "school_trash_liners", "emergency_roof_leak", etc. (string from Genius Mode)
+    url_slug = Column(String)
+    seo_title = Column(String)
+    meta_description = Column(Text)
+    h1 = Column(String)
+    outline_json = Column(Text)  # JSON-encoded list of sections/H2s
+    target_keywords = Column(Text)  # comma-separated or JSON
+
+    industry = Column(String, index=True)         # from Business
+    business_type = Column(String, index=True)    # "local_service", "ecommerce", "b2b"
+    region_group = Column(String, index=True)     # e.g., "US_southeast", "US_national"
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    audit = relationship("Audit", back_populates="page_blueprints")
+    business = relationship("Business")
+Add page_blueprints = relationship("PageBlueprint", back_populates="audit") to Audit.
+
+Add RoadmapTask model:
+
+python
+Copy code
+class RoadmapTask(Base):
+    __tablename__ = "roadmap_tasks"
+
+    id = Column(Integer, primary_key=True)
+    audit_id = Column(Integer, ForeignKey("audits.id"), index=True)
+    business_id = Column(Integer, ForeignKey("businesses.id"), index=True)
+
+    week_number = Column(Integer, index=True)  # 1–4
+    task_text = Column(Text)
+    intent_cluster = Column(String, nullable=True)  # if we can link to a query cluster
+    impact = Column(String, nullable=True)  # "high", "medium", "low"
+    effort = Column(String, nullable=True)  # "small", "medium", "large"
+    owner_role = Column(String, nullable=True)  # "developer", "content_writer", "owner"
+
+    industry = Column(String, index=True)
+    business_type = Column(String, index=True)
+    region_group = Column(String, index=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    audit = relationship("Audit", back_populates="roadmap_tasks")
+    business = relationship("Business")
+Add roadmap_tasks = relationship("RoadmapTask", back_populates="audit") to Audit.
+
+NOTE:
+
+If migrations are in use (Alembic), add a migration file.
+
+If not, make sure table creation runs cleanly on the existing DB.
+
+========================================
+PART 2 – PINECONE EKKoBRAIN CLIENT
+We will create a Pinecone semantic memory index for patterns:
+
+Index name: ekkobrain-patterns (configurable).
+
+Items:
+
+Pattern type: "blueprint" or "task".
+
+Industry, business_type, region_group, intent_cluster.
+
+Add env + config in services/config.py:
+
+python
+Copy code
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+PINECONE_ENV = os.getenv("PINECONE_ENV", "")  # for serverless, may not be needed depending on client version
+PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "ekkobrain-patterns")
+
+PINECONE_ENABLED = bool(PINECONE_API_KEY)
+Add services/ekkobrain_pinecone.py:
+
+Use the up-to-date Pinecone client style if available in the repo; otherwise, create a minimal one. The general pattern:
+
+python
+Copy code
+from typing import List, Dict, Any, Optional
+import logging
+import os
+
+from pinecone import Pinecone, ServerlessSpec
+from .config import PINECONE_API_KEY, PINECONE_INDEX_NAME, PINECONE_ENABLED
+from openai import OpenAI  # or whichever client is already used for embeddings
+
+logger = logging.getLogger(__name__)
+
+EMBED_MODEL = os.getenv("EKKOBRAIN_EMBED_MODEL", "text-embedding-3-small")
+
+pc = None
+index = None
+
+def init_ekkobrain_index():
+    global pc, index
+    if not PINECONE_ENABLED:
+        logger.info("Pinecone/EkkoBrain disabled: no PINECONE_API_KEY set.")
+        return
+
+    pc = Pinecone(api_key=PINECONE_API_KEY)
+
+    # Create index if not exists. Adjust ServerlessSpec region if needed.
+    existing = [idx.name for idx in pc.list_indexes()]
+    if PINECONE_INDEX_NAME not in existing:
+        pc.create_index(
+            name=PINECONE_INDEX_NAME,
+            dimension=1536,
+            metric="cosine",
+            spec=ServerlessSpec(cloud="aws", region="us-east-1"),
+        )
+
+    index = pc.Index(PINECONE_INDEX_NAME)
+    logger.info("EkkoBrain Pinecone index initialized: %s", PINECONE_INDEX_NAME)
+Embedding helper (reuse existing OpenAI client):
+
+python
+Copy code
+from .config import OPENAI_API_KEY  # etc.
+
+emb_client = OpenAI(api_key=OPENAI_API_KEY)
+
+def embed_text(text: str) -> Optional[List[float]]:
+    if not OPENAI_API_KEY:
+        logger.warning("No OPENAI_API_KEY for EkkoBrain embedding.")
+        return None
+    resp = emb_client.embeddings.create(
+        model=EMBED_MODEL,
+        input=text,
+    )
+    return resp.data[0].embedding
+Upsert and query functions:
+
+python
+Copy code
+import uuid
+
+def upsert_patterns(vectors: List[Dict[str, Any]]):
+    """
+    vectors: list of {id, values, metadata}
+    """
+    if not PINECONE_ENABLED or index is None:
+        return
+    index.upsert(vectors=vectors)
+
+def search_patterns(
+    query_text: str,
+    top_k: int = 8,
+    filter: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
+    if not PINECONE_ENABLED or index is None:
+        return []
+    emb = embed_text(query_text)
+    if emb is None:
+        return []
+    res = index.query(
+        vector=emb,
+        top_k=top_k,
+        include_metadata=True,
+        filter=filter,
+    )
+    return [
+        {
+            "id": m.id,
+            "score": m.score,
+            "metadata": m.metadata,
+        }
+        for m in res.matches
+    ]
+Ensure init_ekkobrain_index() is called at app startup (e.g., in main or startup event).
+
+========================================
+PART 3 – WRITING TO EKKoBRAIN ON AUDIT COMPLETE
+Create a module services/ekkobrain_writer.py that:
+
+Takes the computed artifacts from an audit.
+
+Stores them in DB (using the new models).
+
+Writes anonymized patterns into Pinecone.
+
+Assume the audit pipeline ends in a function like finalize_audit(audit: Audit, business: Business, genius_payload: dict, visibility_data: dict).
+
+From the in-memory structures (you know their exact shape from earlier prompts):
+
+queries_with_intent: list of dicts, each with query, intent.
+
+visibility_data: multi-LLM visibility snapshot (providers & brand hits).
+
+genius_payload: includes:
+
+page_blueprints: list of blueprint dicts
+
+roadmap: list of tasks, each with week, text, impact, effort, etc.
+
+intent_clusters: optional per-blueprint cluster labels.
+
+Implement log_audit_to_db_and_ekkobrain(audit, business, queries_with_intent, visibility_data, genius_payload):
+
+For each query:
+
+Create AuditQuery with query_text, intent, region.
+
+For each provider result on that query:
+
+Create QueryVisibilityResult row(s).
+
+For each page blueprint:
+
+Create a PageBlueprint entry with:
+
+industry = business.industry or equivalent
+
+business_type (local_service, ecommerce, b2b)
+
+region_group (derive from business regions, e.g., using simple mapping function in a helper)
+
+intent_cluster (from genius_payload if available; otherwise, fallback to something descriptive)
+
+For each roadmap task:
+
+Create a RoadmapTask entry with:
+
+week_number, task_text, impact, effort, owner_role
+
+industry, business_type, region_group, intent_cluster if available
+
+Build anonymized patterns for Pinecone:
+
+For each blueprint:
+
+pattern_type = "blueprint"
+
+content_to_embed = a short normalized description:
+
+Example:
+
+text
+Copy code
+Blueprint type: {intent_cluster or generic}.
+Page outline for a {business_type} in {industry}, {region_group}.
+
+H1: {h1}
+Sections:
+- {first 3 H2/outline entries}
+Target keywords: {some keywords}
+metadata:
+
+python
+Copy code
+{
+  "pattern_type": "blueprint",
+  "industry": industry,
+  "business_type": business_type,
+  "region_group": region_group,
+  "intent_cluster": intent_cluster or "general",
+}
+DO NOT include:
+
+business name
+
+domain
+
+any obvious identifiers
+
+For each roadmap task:
+
+pattern_type = "task"
+
+content_to_embed = e.g.:
+
+text
+Copy code
+Week {week_number} task for {business_type} in {industry}, {region_group}.
+
+Task: {task_text}
+Impact: {impact}, Effort: {effort}, Owner: {owner_role}
+metadata:
+
+python
+Copy code
+{
+  "pattern_type": "task",
+  "industry": industry,
+  "business_type": business_type,
+  "region_group": region_group,
+  "intent_cluster": intent_cluster or "general",
+}
+Use embed_text() and upsert_patterns() to insert these into Pinecone.
+
+Use stable IDs like f"bp_{audit.id}_{blueprint.id}" and f"task_{audit.id}_{task.id}".
+
+Call this writer once per successful audit.
+
+========================================
+PART 4 – READING EKKoBRAIN BEFORE GENIUS MODE
+Create services/ekkobrain_reader.py with a function like:
+
+python
+Copy code
+def fetch_ekkobrain_context_for_audit(business, queries_with_intent, max_patterns: int = 10) -> Dict[str, Any]:
+    """
+    Use business + intents to retrieve relevant patterns from EkkoBrain (Pinecone).
+    Returns:
+    {
+      "blueprint_patterns": [...],  # simplified records
+      "task_patterns": [...],
+    }
+    """
+Logic:
+
+Build a query_text for embedding, something like:
+
+text
+Copy code
+Patterns for a {business_type} in {industry} serving {region_group},
+focusing on intents: {list of unique intents from queries_with_intent}.
+Derive filter:
+
+python
+Copy code
+filter = {
+  "industry": business.industry or "unknown",
+  "business_type": business.business_type or "unknown",
+  "region_group": derive_region_group(business)  # e.g., "US_southeast", "US_national"
+}
+Call search_patterns(query_text, top_k=max_patterns*2, filter=filter).
+
+Split results into:
+
+blueprint_patterns = patterns where metadata["pattern_type"] == "blueprint"
+
+task_patterns = patterns where metadata["pattern_type"] == "task"
+
+Limit each to max_patterns and return these as simplified dicts to be fed into Genius Mode.
+
+The simplified patterns should only contain:
+
+pattern_type
+
+industry, business_type, region_group, intent_cluster
+
+a short “snippet” of the pattern (extracted or precomputed description).
+
+========================================
+PART 5 – INTEGRATE EKKoBRAIN INTO GENIUS MODE
+In the module where Genius Mode is implemented (e.g., services/genius_mode.py or similar):
+
+Before calling OpenAI to generate the plan:
+
+Call fetch_ekkobrain_context_for_audit(business, queries_with_intent, max_patterns=8) to get:
+
+python
+Copy code
+ekkobrain_context = {
+    "blueprint_patterns": [...],
+    "task_patterns": [...],
+}
+In the OpenAI prompt, add a section:
+
+After site context and multi-LLM visibility, add:
+
+text
+Copy code
+EKKoBRAIN MEMORY (ANONYMIZED PATTERNS):
+
+Here are examples of page blueprints and roadmap tasks that have been recommended for similar businesses in the past. 
+They are anonymized and should be treated as patterns, not templates to copy.
+
+BLUEPRINT PATTERNS:
+- [summaries from ekkobrain_context["blueprint_patterns"]]
+
+TASK PATTERNS:
+- [summaries from ekkobrain_context["task_patterns"]]
+
+Use these patterns as inspiration to:
+- Prioritize opportunities.
+- Shape your page blueprints and roadmap.
+But ALWAYS adapt them to THIS business' specific products, brand voice, and region.
+Never copy phrases verbatim; use them as high-level guidance only.
+Genius Mode should still:
+
+Generate new, business-specific blueprints and tasks.
+
+Not just repeat EkkoBrain patterns.
+
+Ensure that if Pinecone / EkkoBrain is disabled:
+
+ekkobrain_context is empty.
+
+The prompt simply omits the EKKoBRAIN MEMORY section.
+
+The rest of Genius Mode behaves as before.
+
+========================================
+PART 6 – CONFIG & ROBUSTNESS
+Add to config:
+
+PINECONE_API_KEY, PINECONE_INDEX_NAME, EKKOBRAIN_EMBED_MODEL.
+
+PINECONE_ENABLED boolean from env.
+
+Make EkkoBrain fully optional:
+
+If PINECONE_ENABLED is False:
+
+init_ekkobrain_index() should log and return.
+
+Writer functions should log and skip Pinecone.
+
+Reader should return empty patterns.
+
+Ensure DB logging stays cheap:
+
+If DB is SQLite, keep inserts batch-oriented but simple.
+
+If an error occurs in EkkoBrain writer, do NOT fail the audit; log at WARNING and continue.
+
+========================================
+PART 7 – ACCEPTANCE & SUMMARY
+When you’re done, please:
+
+List the new/changed files, e.g.:
+
+services/models.py additions
+
+services/ekkobrain_pinecone.py
+
+services/ekkobrain_writer.py
+
+services/ekkobrain_reader.py
+
+Genius Mode module changes
+
+Audit pipeline changes
+
+Describe, step-by-step, what happens when:
+
+A new audit is created and completed.
+
+A future audit is run for a similar business (how EkkoBrain is queried and used).
+
+Confirm behavior when:
+
+PINECONE_API_KEY is set (EkkoBrain active).
+
+PINECONE_API_KEY is missing (EkkoBrain gracefully disabled).
+
+Confirm that:
+
+Better Pak and A-D Roofing audits now log queries, visibility, blueprints, and tasks in the DB.
+
+EkkoBrain is upserting patterns into a Pinecone index.
+
+Genius Mode includes an EKKoBRAIN MEMORY section when Pinecone is enabled.
+
+The PDF still generates with the premium layout and content.
+
+Do NOT remove or break the existing premium PDF, multi-LLM visibility, or Business/Audit model behavior. Extend the system to add EkkoBrain memory while keeping current features stable.
+
+yaml
+Copy code
