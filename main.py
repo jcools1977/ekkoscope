@@ -1946,23 +1946,51 @@ def run_audit_background(business_id: int, audit_id: int):
 
 
 @app.get("/api/audit/{audit_id}/status")
-async def api_audit_status(audit_id: int):
-    """Get audit status for polling."""
+async def api_audit_status(request: Request, audit_id: int):
+    """Get audit status for polling (authenticated)."""
+    user = get_current_user(request)
+    if not user:
+        return {"status": "unauthorized"}
+    
     db = get_db_session()
     try:
         audit = db.query(Audit).filter(Audit.id == audit_id).first()
         if not audit:
             return {"status": "not_found"}
+        
+        if not user.is_admin:
+            business = db.query(Business).filter(
+                Business.id == audit.business_id,
+                Business.owner_user_id == user.id
+            ).first()
+            if not business:
+                return {"status": "unauthorized"}
+        
         return {"status": audit.status, "audit_id": audit.id}
     finally:
         db.close()
 
 
 @app.get("/api/business/{business_id}/latest-audit")
-async def api_latest_audit(business_id: int):
-    """Get the latest audit for a business."""
+async def api_latest_audit(request: Request, business_id: int):
+    """Get the latest audit for a business (authenticated)."""
+    user = get_current_user(request)
+    if not user:
+        return {"audit_id": None, "status": "unauthorized"}
+    
     db = get_db_session()
     try:
+        if user.is_admin:
+            business = db.query(Business).filter(Business.id == business_id).first()
+        else:
+            business = db.query(Business).filter(
+                Business.id == business_id,
+                Business.owner_user_id == user.id
+            ).first()
+        
+        if not business:
+            return {"audit_id": None, "status": "unauthorized"}
+        
         audit = (
             db.query(Audit)
             .filter(Audit.business_id == business_id)
