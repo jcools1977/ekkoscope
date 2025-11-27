@@ -427,15 +427,17 @@ def _add_query_analysis_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant:
             score_label = "NOT FOUND"
             border_color = ERROR_RED
         
-        pdf.set_draw_color(*border_color)
-        pdf.set_line_width(0.8)
         start_y = pdf.get_y()
-        pdf.line(10, start_y, 10, start_y + 4)
         
         pdf.set_font("Helvetica", "B", 10)
         pdf.set_text_color(*DARK_TEXT)
-        pdf.set_x(14)
-        pdf.multi_cell(155, 5, query)
+        pdf.set_x(18)
+        pdf.multi_cell(150, 5, query)
+        
+        end_y = pdf.get_y()
+        pdf.set_draw_color(*border_color)
+        pdf.set_line_width(1.5)
+        pdf.line(12, start_y, 12, max(end_y - 2, start_y + 5))
         
         pdf.set_font("Helvetica", "B", 9)
         pdf.set_text_color(*score_color)
@@ -446,13 +448,13 @@ def _add_query_analysis_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant:
         
         pdf.set_font("Helvetica", "", 8)
         pdf.set_text_color(*PURPLE)
-        pdf.set_x(14)
+        pdf.set_x(18)
         pdf.cell(0, 4, f"Intent: {intent.replace('_', ' ').title()}", align="L")
         pdf.ln(4)
         
         if competitors:
             pdf.set_text_color(*MEDIUM_TEXT)
-            pdf.set_x(14)
+            pdf.set_x(18)
             comp_str = "Competitors: " + ", ".join(competitors)
             pdf.multi_cell(0, 4, comp_str)
         pdf.ln(3)
@@ -461,8 +463,8 @@ def _add_query_analysis_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant:
             pdf.set_font("Helvetica", "", 8)
             pdf.set_text_color(*MEDIUM_TEXT)
             pdf.set_fill_color(*ACCENT_BG)
-            pdf.set_x(14)
-            pdf.multi_cell(182, 4, ai_response, fill=True)
+            pdf.set_x(18)
+            pdf.multi_cell(178, 4, ai_response, fill=True)
         
         pdf.ln(8)
     

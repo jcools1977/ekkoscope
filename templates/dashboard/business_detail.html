@@ -542,7 +542,7 @@
             <circle class="radar-center" cx="100" cy="100" r="12" fill="url(#overlayGrad)"/>
             <circle class="radar-pulse" cx="100" cy="100" r="12" fill="none" stroke="#2EE6A8" stroke-width="2" opacity="0.8"/>
         </svg>
-        <div class="overlay-status">
+        <div class="overlay-status" id="overlayRunning">
             <div class="overlay-title">Analyzing AI Visibility</div>
             <div class="overlay-subtitle">Please wait while we scan across AI assistants</div>
             <div class="overlay-steps">
@@ -570,6 +570,17 @@
             <div class="overlay-timer">
                 Elapsed: <span id="elapsedTime">0:00</span> | Typical: 5-8 minutes
             </div>
+        </div>
+        <div class="overlay-status" id="overlaySuccess" style="display: none;">
+            <div class="success-checkmark">
+                <svg viewBox="0 0 52 52" style="width: 80px; height: 80px;">
+                    <circle cx="26" cy="26" r="25" fill="none" stroke="#2EE6A8" stroke-width="2"/>
+                    <path fill="none" stroke="#2EE6A8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                </svg>
+            </div>
+            <div class="overlay-title" style="color: #2EE6A8; margin-top: 1rem;">Audit Complete!</div>
+            <div class="overlay-subtitle">Your AI visibility report is ready</div>
+            <div class="overlay-timer" style="margin-top: 1rem;">Loading results...</div>
         </div>
     </div>
 
@@ -844,7 +855,15 @@
                 const response = await fetch(`/api/audit/${runningAuditId}/status`);
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.status === 'done' || data.status === 'error' || data.status === 'failed' || data.status === 'stopped') {
+                    if (data.status === 'done') {
+                        if (timerInterval) clearInterval(timerInterval);
+                        if (pollInterval) clearInterval(pollInterval);
+                        document.getElementById('overlayRunning').style.display = 'none';
+                        document.getElementById('overlaySuccess').style.display = 'block';
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else if (data.status === 'error' || data.status === 'failed' || data.status === 'stopped') {
                         hideOverlay();
                         window.location.reload();
                     }
