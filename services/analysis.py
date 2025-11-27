@@ -185,6 +185,10 @@ Rules:
 
 
 def run_analysis(tenant_config: Dict[str, Any], business: Optional[Any] = None) -> Dict[str, Any]:
+    import sys
+    print("[ANALYSIS DEBUG] Starting run_analysis")
+    sys.stdout.flush()
+    
     tenant_id = tenant_config["id"]
     tenant_name = tenant_config["display_name"]
     brand_aliases = tenant_config["brand_aliases"]
@@ -192,7 +196,12 @@ def run_analysis(tenant_config: Dict[str, Any], business: Optional[Any] = None) 
     domains = tenant_config.get("domains", [])
     geo_focus = tenant_config.get("geo_focus", [])
     
+    print(f"[ANALYSIS DEBUG] Tenant: {tenant_name}, {len(queries)} queries")
+    sys.stdout.flush()
+    
     from services.query_generator import get_query_intent_map
+    print("[ANALYSIS DEBUG] Getting query intent map...")
+    sys.stdout.flush()
     query_intent_map = get_query_intent_map(
         name=tenant_name,
         categories=tenant_config.get("categories", []),
@@ -200,6 +209,8 @@ def run_analysis(tenant_config: Dict[str, Any], business: Optional[Any] = None) 
         business_type=tenant_config.get("business_type", ""),
         max_queries=len(queries)
     )
+    print("[ANALYSIS DEBUG] Query intent map complete")
+    sys.stdout.flush()
     
     primary_domain = domains[0] if domains else ""
     
@@ -215,6 +226,8 @@ def run_analysis(tenant_config: Dict[str, Any], business: Optional[Any] = None) 
     multi_llm_visibility = None
     perplexity_visibility = None
     
+    print("[ANALYSIS DEBUG] Running multi-LLM visibility probe...")
+    sys.stdout.flush()
     logger.info("Running multi-LLM visibility probe for %s", tenant_name)
     try:
         multi_llm_visibility = run_multi_llm_visibility(
@@ -226,6 +239,8 @@ def run_analysis(tenant_config: Dict[str, Any], business: Optional[Any] = None) 
             run_perplexity=PERPLEXITY_ENABLED,
             run_gemini=GEMINI_ENABLED
         )
+        print("[ANALYSIS DEBUG] Multi-LLM visibility complete")
+        sys.stdout.flush()
         logger.info(
             "Multi-LLM visibility complete: %d queries, providers: %s",
             len(multi_llm_visibility.queries),
@@ -233,13 +248,19 @@ def run_analysis(tenant_config: Dict[str, Any], business: Optional[Any] = None) 
         )
         
         if PERPLEXITY_ENABLED:
+            print("[ANALYSIS DEBUG] Running Perplexity visibility...")
+            sys.stdout.flush()
             perplexity_visibility = run_perplexity_visibility_probe(
                 business_name=tenant_name,
                 primary_domain=primary_domain,
                 regions=geo_focus,
                 queries=queries
             )
+            print("[ANALYSIS DEBUG] Perplexity visibility complete")
+            sys.stdout.flush()
     except Exception as e:
+        print(f"[ANALYSIS DEBUG] Multi-LLM visibility FAILED: {e}")
+        sys.stdout.flush()
         logger.warning("Multi-LLM visibility probe failed (non-fatal): %s", e)
         multi_llm_visibility = None
     

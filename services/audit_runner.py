@@ -52,13 +52,25 @@ def run_audit_for_business(business: Business, audit: Audit, db_session: Session
     Returns:
         Updated Audit instance
     """
+    import sys
+    print(f"[RUNNER DEBUG] Starting run_audit_for_business for audit {audit.id}")
+    sys.stdout.flush()
+    
     try:
         audit.status = "running"
         db_session.commit()
+        print(f"[RUNNER DEBUG] Set status to running for audit {audit.id}")
+        sys.stdout.flush()
         
         tenant_config = business.to_tenant_config()
+        print(f"[RUNNER DEBUG] Got tenant config for audit {audit.id}")
+        sys.stdout.flush()
         
+        print(f"[RUNNER DEBUG] Calling run_analysis for audit {audit.id}...")
+        sys.stdout.flush()
         analysis = run_analysis(tenant_config, business=business)
+        print(f"[RUNNER DEBUG] run_analysis completed for audit {audit.id}")
+        sys.stdout.flush()
         
         visibility_summary = {
             "tenant_id": analysis.get("tenant_id"),
