@@ -80,8 +80,8 @@ def parse_gemini_response(raw: str, business_name: str) -> Dict[str, Any]:
         
         if not target_found and recommended:
             for i, rec in enumerate(recommended):
-                name = rec.get("name", "").lower()
-                url = rec.get("url", "").lower()
+                name = (rec.get("name") or "").lower()
+                url = (rec.get("url") or "").lower()
                 if business_name.lower() in name or business_name.lower() in url:
                     target_found = True
                     target_position = i + 1
