@@ -134,6 +134,11 @@
             color: #ff5252;
         }
         
+        .status-badge.stopped {
+            background: rgba(156, 163, 175, 0.15);
+            color: #9ca3af;
+        }
+        
         .view-btn {
             padding: 0.5rem 1rem;
             background: var(--brand-teal);
@@ -159,6 +164,34 @@
         .empty-state p {
             color: var(--text-secondary);
             margin-bottom: 1.5rem;
+        }
+        
+        .btn-delete {
+            background: transparent;
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+        
+        .btn-stop {
+            background: transparent;
+            border: 1px solid #f59e0b;
+            color: #f59e0b;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .btn-stop:hover {
+            background: rgba(245, 158, 11, 0.2);
         }
     </style>
 </head>
@@ -187,16 +220,26 @@
                     <div class="date">{{ audit.created_at.strftime('%B %d, %Y at %I:%M %p') }}</div>
                 </div>
                 <div class="audit-status">
-                    {% if audit.status == 'done' %}
+                    {% if audit.status == 'done' or audit.status == 'completed' %}
                     <span class="status-badge done">Completed</span>
-                    <a href="/dashboard/audit/{{ audit.id }}" class="view-btn">View Report</a>
+                    <a href="/dashboard/business/{{ business.id }}/audit/{{ audit.id }}" class="view-btn">View Report</a>
                     {% elif audit.status == 'pending' %}
                     <span class="status-badge pending">Pending</span>
                     {% elif audit.status == 'running' %}
                     <span class="status-badge running">Running</span>
+                    <form method="POST" action="/dashboard/business/{{ business.id }}/audit/{{ audit.id }}/stop" style="display:inline;" onsubmit="return confirm('Stop this running audit?');">
+                        <button type="submit" class="btn-stop">Stop</button>
+                    </form>
+                    {% elif audit.status == 'stopped' %}
+                    <span class="status-badge stopped">Stopped</span>
+                    {% elif audit.status == 'error' %}
+                    <span class="status-badge error">Error</span>
                     {% else %}
                     <span class="status-badge error">{{ audit.status }}</span>
                     {% endif %}
+                    <form method="POST" action="/dashboard/business/{{ business.id }}/audit/{{ audit.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this audit? This cannot be undone.');">
+                        <button type="submit" class="btn-delete">Delete</button>
+                    </form>
                 </div>
             </div>
             {% endfor %}

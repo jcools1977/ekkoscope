@@ -517,6 +517,37 @@ async def dashboard_delete_audit(request: Request, business_id: int, audit_id: i
         db.close()
 
 
+@app.post("/dashboard/business/{business_id}/audit/{audit_id}/stop")
+async def dashboard_stop_audit(request: Request, business_id: int, audit_id: int):
+    """Stop a running audit by setting its status to error."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        if user.is_admin:
+            business = db.query(Business).filter(Business.id == business_id).first()
+        else:
+            business = db.query(Business).filter(
+                Business.id == business_id,
+                Business.owner_user_id == user.id
+            ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        audit = db.query(Audit).filter(Audit.id == audit_id, Audit.business_id == business_id).first()
+        if audit and audit.status in ('running', 'pending'):
+            audit.status = 'stopped'
+            audit.set_visibility_summary({"error": "Audit was manually stopped by user"})
+            db.commit()
+        
+        return RedirectResponse(url=f"/dashboard/business/{business_id}", status_code=302)
+    finally:
+        db.close()
+
+
 @app.get("/dashboard/business/{business_id}/upgrade", response_class=HTMLResponse)
 async def dashboard_business_upgrade(request: Request, business_id: int):
     user = get_current_user(request)
