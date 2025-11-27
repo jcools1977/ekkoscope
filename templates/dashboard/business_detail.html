@@ -402,9 +402,177 @@
             gap: 0.5rem;
             margin-top: 0.5rem;
         }
+        
+        .audit-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 22, 40, 0.95);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .audit-overlay.active {
+            display: flex;
+        }
+        
+        .overlay-radar {
+            width: 200px;
+            height: 200px;
+        }
+        
+        .overlay-radar .radar-sweep {
+            transform-origin: 100px 100px;
+            animation: sweep-spin 2s linear infinite;
+        }
+        
+        .overlay-radar .radar-pulse {
+            transform-origin: 100px 100px;
+            animation: pulse-glow-lg 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow-lg {
+            0%, 100% { r: 12; opacity: 0.8; }
+            50% { r: 30; opacity: 0; }
+        }
+        
+        .overlay-status {
+            text-align: center;
+        }
+        
+        .overlay-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #2EE6A8;
+            margin-bottom: 0.5rem;
+            animation: text-pulse 2s ease-in-out infinite;
+        }
+        
+        .overlay-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .overlay-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .overlay-step {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        .overlay-step.active {
+            color: #2EE6A8;
+        }
+        
+        .overlay-step.completed {
+            color: #2EE6A8;
+            opacity: 0.6;
+        }
+        
+        .step-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+        
+        .overlay-step.active .step-indicator {
+            background: #2EE6A8;
+            border-color: #2EE6A8;
+            color: #0a1628;
+            animation: pulse-glow 1s ease-in-out infinite;
+        }
+        
+        .overlay-step.completed .step-indicator::after {
+            content: '\2713';
+        }
+        
+        .overlay-timer {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .overlay-timer span {
+            color: #2EE6A8;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
+    <div class="audit-overlay" id="auditOverlay">
+        <svg class="overlay-radar" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="overlayGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#2EE6A8"/>
+                    <stop offset="100%" style="stop-color:#18A3FF"/>
+                </linearGradient>
+            </defs>
+            <g class="radar-grid">
+                <circle cx="100" cy="100" r="85" fill="none" stroke="url(#overlayGrad)" stroke-width="2" opacity="0.3"/>
+                <circle cx="100" cy="100" r="60" fill="none" stroke="url(#overlayGrad)" stroke-width="1.5" opacity="0.4"/>
+                <circle cx="100" cy="100" r="35" fill="none" stroke="url(#overlayGrad)" stroke-width="1" opacity="0.5"/>
+                <line x1="15" y1="100" x2="185" y2="100" stroke="url(#overlayGrad)" stroke-width="0.5" opacity="0.3"/>
+                <line x1="100" y1="15" x2="100" y2="185" stroke="url(#overlayGrad)" stroke-width="0.5" opacity="0.3"/>
+            </g>
+            <g class="radar-sweep">
+                <path d="M 100 100 L 100 15 A 85 85 0 0 1 175 135 Z" fill="url(#overlayGrad)" opacity="0.2"/>
+            </g>
+            <g class="radar-arcs">
+                <path d="M 130 80 A 40 40 0 0 1 130 120" fill="none" stroke="#2EE6A8" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+                <path d="M 145 65 A 55 55 0 0 1 145 135" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+                <path d="M 160 50 A 75 75 0 0 1 160 150" fill="none" stroke="#18A3FF" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+            </g>
+            <circle class="radar-center" cx="100" cy="100" r="12" fill="url(#overlayGrad)"/>
+            <circle class="radar-pulse" cx="100" cy="100" r="12" fill="none" stroke="#2EE6A8" stroke-width="2" opacity="0.8"/>
+        </svg>
+        <div class="overlay-status">
+            <div class="overlay-title">Analyzing AI Visibility</div>
+            <div class="overlay-subtitle">Please wait while we scan across AI assistants</div>
+            <div class="overlay-steps">
+                <div class="overlay-step" id="step1">
+                    <span class="step-indicator">1</span>
+                    <span>Generating smart queries...</span>
+                </div>
+                <div class="overlay-step" id="step2">
+                    <span class="step-indicator">2</span>
+                    <span>Probing OpenAI visibility...</span>
+                </div>
+                <div class="overlay-step" id="step3">
+                    <span class="step-indicator">3</span>
+                    <span>Checking Perplexity search...</span>
+                </div>
+                <div class="overlay-step" id="step4">
+                    <span class="step-indicator">4</span>
+                    <span>Analyzing Gemini responses...</span>
+                </div>
+                <div class="overlay-step" id="step5">
+                    <span class="step-indicator">5</span>
+                    <span>Generating insights report...</span>
+                </div>
+            </div>
+            <div class="overlay-timer">
+                Elapsed: <span id="elapsedTime">0:00</span> | Typical: 4-5 minutes
+            </div>
+        </div>
+    </div>
+
     <nav class="dashboard-nav">
         <a href="/dashboard" class="nav-logo">
             <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope" class="full-logo">
@@ -594,6 +762,98 @@
     </div>
     
     <script>
+        const businessId = {{ business.id }};
+        let runningAuditId = null;
+        let startTime = null;
+        let timerInterval = null;
+        let pollInterval = null;
+        let currentStep = 0;
+        
+        const overlay = document.getElementById('auditOverlay');
+        const elapsedTimeEl = document.getElementById('elapsedTime');
+        const steps = [
+            document.getElementById('step1'),
+            document.getElementById('step2'),
+            document.getElementById('step3'),
+            document.getElementById('step4'),
+            document.getElementById('step5')
+        ];
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function updateTimer() {
+            if (startTime) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                elapsedTimeEl.textContent = formatTime(elapsed);
+                
+                if (elapsed < 20) {
+                    setStep(0);
+                } else if (elapsed < 60) {
+                    setStep(1);
+                } else if (elapsed < 120) {
+                    setStep(2);
+                } else if (elapsed < 180) {
+                    setStep(3);
+                } else {
+                    setStep(4);
+                }
+            }
+        }
+        
+        function setStep(stepIndex) {
+            if (stepIndex === currentStep) return;
+            currentStep = stepIndex;
+            steps.forEach((step, i) => {
+                step.classList.remove('active', 'completed');
+                if (i < stepIndex) {
+                    step.classList.add('completed');
+                } else if (i === stepIndex) {
+                    step.classList.add('active');
+                }
+            });
+        }
+        
+        function showOverlay(auditId) {
+            runningAuditId = auditId;
+            startTime = Date.now();
+            currentStep = 0;
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            setStep(0);
+            
+            timerInterval = setInterval(updateTimer, 1000);
+            pollInterval = setInterval(checkAuditStatus, 5000);
+        }
+        
+        function hideOverlay() {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+            if (timerInterval) clearInterval(timerInterval);
+            if (pollInterval) clearInterval(pollInterval);
+            runningAuditId = null;
+        }
+        
+        async function checkAuditStatus() {
+            if (!runningAuditId) return;
+            
+            try {
+                const response = await fetch(`/api/audit/${runningAuditId}/status`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'done' || data.status === 'error' || data.status === 'failed' || data.status === 'stopped') {
+                        hideOverlay();
+                        window.location.reload();
+                    }
+                }
+            } catch (e) {
+                console.log('Status check failed, will retry');
+            }
+        }
+        
         document.querySelectorAll('.audit-form, #auditForm').forEach(form => {
             form.addEventListener('submit', function(e) {
                 const btn = this.querySelector('.radar-button');
@@ -601,8 +861,26 @@
                     btn.classList.add('loading');
                     btn.disabled = true;
                 }
+                
+                setTimeout(() => {
+                    fetch(`/api/business/${businessId}/latest-audit`)
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.audit_id && (data.status === 'running' || data.status === 'pending')) {
+                                showOverlay(data.audit_id);
+                            }
+                        })
+                        .catch(e => console.log('Could not get audit ID'));
+                }, 1000);
             });
         });
+        
+        {% set running_audit = audits | selectattr('status', 'in', ['running', 'pending']) | first %}
+        {% if running_audit %}
+        document.addEventListener('DOMContentLoaded', function() {
+            showOverlay({{ running_audit.id }});
+        });
+        {% endif %}
     </script>
 </body>
 </html>

@@ -1945,6 +1945,37 @@ def run_audit_background(business_id: int, audit_id: int):
         db.close()
 
 
+@app.get("/api/audit/{audit_id}/status")
+async def api_audit_status(audit_id: int):
+    """Get audit status for polling."""
+    db = get_db_session()
+    try:
+        audit = db.query(Audit).filter(Audit.id == audit_id).first()
+        if not audit:
+            return {"status": "not_found"}
+        return {"status": audit.status, "audit_id": audit.id}
+    finally:
+        db.close()
+
+
+@app.get("/api/business/{business_id}/latest-audit")
+async def api_latest_audit(business_id: int):
+    """Get the latest audit for a business."""
+    db = get_db_session()
+    try:
+        audit = (
+            db.query(Audit)
+            .filter(Audit.business_id == business_id)
+            .order_by(Audit.created_at.desc())
+            .first()
+        )
+        if not audit:
+            return {"audit_id": None, "status": None}
+        return {"audit_id": audit.id, "status": audit.status}
+    finally:
+        db.close()
+
+
 @app.post("/webhooks/stripe")
 async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
     """Handle Stripe webhook events."""
