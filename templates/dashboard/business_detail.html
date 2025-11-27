@@ -116,25 +116,146 @@
             flex-shrink: 0;
         }
         
-        .run-audit-btn {
-            display: inline-flex;
+        .radar-button {
+            display: flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
+            gap: 0.75rem;
+            background: transparent;
+            border: 2px solid #2EE6A8;
+            border-radius: 60px;
             padding: 0.75rem 1.5rem;
-            background: linear-gradient(135deg, #2EE6A8, #18A3FF);
-            color: #0a1628;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
             cursor: pointer;
-            text-decoration: none;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
         
-        .run-audit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(46, 230, 168, 0.3);
+        .radar-button::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 30% 50%, rgba(46, 230, 168, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .radar-button:hover::before {
+            opacity: 1;
+        }
+        
+        .radar-button:hover {
+            border-color: #2EE6A8;
+            box-shadow: 0 0 30px rgba(46, 230, 168, 0.3), inset 0 0 20px rgba(46, 230, 168, 0.05);
+            transform: scale(1.02);
+        }
+        
+        .radar-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.9;
+        }
+        
+        .radar-icon {
+            width: 40px;
+            height: 40px;
+            transition: all 0.3s ease;
+        }
+        
+        .radar-button:hover .radar-icon {
+            filter: drop-shadow(0 0 8px rgba(46, 230, 168, 0.6));
+        }
+        
+        .radar-sweep {
+            transform-origin: 40px 40px;
+            transition: transform 0.3s ease;
+        }
+        
+        .radar-button:hover .radar-sweep {
+            animation: sweep-hover 2s linear infinite;
+        }
+        
+        .radar-button.loading .radar-sweep {
+            animation: sweep-spin 1s linear infinite;
+        }
+        
+        .radar-pulse {
+            transform-origin: 40px 40px;
+        }
+        
+        .radar-button:hover .radar-pulse {
+            animation: pulse-glow 1.5s ease-in-out infinite;
+        }
+        
+        .radar-button.loading .radar-pulse {
+            animation: pulse-glow 0.8s ease-in-out infinite;
+        }
+        
+        .radar-arcs {
+            transform-origin: 40px 40px;
+        }
+        
+        .radar-button.loading .radar-arcs {
+            animation: arcs-pulse 1.2s ease-in-out infinite;
+        }
+        
+        @keyframes sweep-hover {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes sweep-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { r: 5; opacity: 0.8; }
+            50% { r: 12; opacity: 0; }
+        }
+        
+        @keyframes arcs-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
+        .radar-text {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+        
+        .radar-button:hover .radar-text {
+            color: #2EE6A8;
+            text-shadow: 0 0 10px rgba(46, 230, 168, 0.5);
+        }
+        
+        .radar-loading-text {
+            display: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2EE6A8;
+            letter-spacing: 0.5px;
+            animation: text-pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes text-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .radar-button.loading .radar-text {
+            display: none;
+        }
+        
+        .radar-button.loading .radar-loading-text {
+            display: inline;
+        }
+        
+        .radar-button.loading {
+            border-color: #2EE6A8;
+            box-shadow: 0 0 40px rgba(46, 230, 168, 0.4), inset 0 0 30px rgba(46, 230, 168, 0.08);
         }
         
         .admin-link {
@@ -282,17 +403,61 @@
             
             <div class="action-buttons">
                 {% if user.is_admin %}
-                <form action="/dashboard/business/{{ business.id }}/run-audit" method="post" style="display:inline;">
-                    <button type="submit" class="run-audit-btn">
-                        &#x1F680; Run Audit
+                <form action="/dashboard/business/{{ business.id }}/run-audit" method="post" style="display:inline;" id="auditForm">
+                    <button type="submit" class="radar-button" id="radarBtn">
+                        <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="radarGradBtn" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#2EE6A8"/>
+                                    <stop offset="100%" style="stop-color:#18A3FF"/>
+                                </linearGradient>
+                            </defs>
+                            <g class="radar-grid">
+                                <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGradBtn)" stroke-width="1.5" opacity="0.3"/>
+                                <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGradBtn)" stroke-width="1.2" opacity="0.4"/>
+                                <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGradBtn)" stroke-width="1" opacity="0.5"/>
+                                <line x1="5" y1="40" x2="75" y2="40" stroke="url(#radarGradBtn)" stroke-width="0.5" opacity="0.3"/>
+                                <line x1="40" y1="5" x2="40" y2="75" stroke="url(#radarGradBtn)" stroke-width="0.5" opacity="0.3"/>
+                            </g>
+                            <g class="radar-sweep">
+                                <path d="M 40 40 L 40 5 A 35 35 0 0 1 72 55 Z" fill="url(#radarGradBtn)" opacity="0.15"/>
+                            </g>
+                            <g class="radar-arcs">
+                                <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                                <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                                <path d="M 64 20 A 30 30 0 0 1 64 60" fill="none" stroke="#18A3FF" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+                            </g>
+                            <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn)"/>
+                            <circle class="radar-pulse" cx="40" cy="40" r="5" fill="none" stroke="#2EE6A8" stroke-width="1.5" opacity="0.8"/>
+                        </svg>
+                        <span class="radar-text">Run Audit</span>
+                        <span class="radar-loading-text">Running Audit...</span>
                     </button>
                 </form>
                 <a href="/admin/business/{{ business.id }}" class="admin-link">
                     Admin View
                 </a>
                 {% else %}
-                <a href="/dashboard/business/{{ business.id }}/upgrade" class="run-audit-btn">
-                    Get Audit
+                <a href="/dashboard/business/{{ business.id }}/upgrade" class="radar-button" style="text-decoration: none;">
+                    <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="radarGradBtn2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#2EE6A8"/>
+                                <stop offset="100%" style="stop-color:#18A3FF"/>
+                            </linearGradient>
+                        </defs>
+                        <g class="radar-grid">
+                            <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGradBtn2)" stroke-width="1.5" opacity="0.3"/>
+                            <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGradBtn2)" stroke-width="1.2" opacity="0.4"/>
+                            <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGradBtn2)" stroke-width="1" opacity="0.5"/>
+                        </g>
+                        <g class="radar-arcs">
+                            <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                            <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                        </g>
+                        <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn2)"/>
+                    </svg>
+                    <span class="radar-text">Get Audit</span>
                 </a>
                 {% endif %}
             </div>
@@ -324,18 +489,71 @@
         <div class="empty-state">
             <p>No audits yet for this business.</p>
             {% if user.is_admin %}
-            <form action="/dashboard/business/{{ business.id }}/run-audit" method="post">
-                <button type="submit" class="run-audit-btn">
-                    &#x1F680; Run Your First Audit
+            <form action="/dashboard/business/{{ business.id }}/run-audit" method="post" class="audit-form">
+                <button type="submit" class="radar-button">
+                    <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="radarGradBtn3" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#2EE6A8"/>
+                                <stop offset="100%" style="stop-color:#18A3FF"/>
+                            </linearGradient>
+                        </defs>
+                        <g class="radar-grid">
+                            <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGradBtn3)" stroke-width="1.5" opacity="0.3"/>
+                            <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGradBtn3)" stroke-width="1.2" opacity="0.4"/>
+                            <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGradBtn3)" stroke-width="1" opacity="0.5"/>
+                        </g>
+                        <g class="radar-sweep">
+                            <path d="M 40 40 L 40 5 A 35 35 0 0 1 72 55 Z" fill="url(#radarGradBtn3)" opacity="0.15"/>
+                        </g>
+                        <g class="radar-arcs">
+                            <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                            <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                        </g>
+                        <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn3)"/>
+                        <circle class="radar-pulse" cx="40" cy="40" r="5" fill="none" stroke="#2EE6A8" stroke-width="1.5" opacity="0.8"/>
+                    </svg>
+                    <span class="radar-text">Run Your First Audit</span>
+                    <span class="radar-loading-text">Running Audit...</span>
                 </button>
             </form>
             {% else %}
-            <a href="/dashboard/business/{{ business.id }}/upgrade" class="run-audit-btn">
-                Get Your First Audit
+            <a href="/dashboard/business/{{ business.id }}/upgrade" class="radar-button" style="text-decoration: none;">
+                <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="radarGradBtn4" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#2EE6A8"/>
+                            <stop offset="100%" style="stop-color:#18A3FF"/>
+                        </linearGradient>
+                    </defs>
+                    <g class="radar-grid">
+                        <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGradBtn4)" stroke-width="1.5" opacity="0.3"/>
+                        <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGradBtn4)" stroke-width="1.2" opacity="0.4"/>
+                        <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGradBtn4)" stroke-width="1" opacity="0.5"/>
+                    </g>
+                    <g class="radar-arcs">
+                        <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                        <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                    </g>
+                    <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn4)"/>
+                </svg>
+                <span class="radar-text">Get Your First Audit</span>
             </a>
             {% endif %}
         </div>
         {% endif %}
     </div>
+    
+    <script>
+        document.querySelectorAll('.audit-form, #auditForm').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const btn = this.querySelector('.radar-button');
+                if (btn) {
+                    btn.classList.add('loading');
+                    btn.disabled = true;
+                }
+            });
+        });
+    </script>
 </body>
 </html>
