@@ -1205,12 +1205,12 @@ def _add_30_day_action_plan(pdf: EkkoScopePDF, data: Dict[str, Any], tenant: Dic
             pdf.set_font("Helvetica", "", 9)
             pdf.set_text_color(*DARK_TEXT)
             pdf.set_x(12)
-            pdf.multi_cell(130, 5, task["task"])
+            pdf.multi_cell(110, 5, task["task"])
             
             task_end_y = pdf.get_y()
-            row_height = task_end_y - start_y
+            row_height = max(task_end_y - start_y, 5)
             
-            pdf.set_xy(145, start_y)
+            pdf.set_xy(125, start_y)
             impact = task["impact"]
             if impact == "High":
                 pdf.set_text_color(*SUCCESS_GREEN)
@@ -1219,16 +1219,16 @@ def _add_30_day_action_plan(pdf: EkkoScopePDF, data: Dict[str, Any], tenant: Dic
             else:
                 pdf.set_text_color(*LIGHT_TEXT)
             pdf.set_font("Helvetica", "B", 8)
-            pdf.cell(20, row_height, impact, align="C")
+            pdf.cell(18, row_height, impact, align="C")
             
-            pdf.set_xy(165, start_y)
+            pdf.set_xy(145, start_y)
             pdf.set_text_color(*BRAND_BLUE)
-            pdf.cell(15, row_height, task["effort"], align="C")
+            pdf.cell(12, row_height, task["effort"], align="C")
             
-            pdf.set_xy(180, start_y)
+            pdf.set_xy(160, start_y)
             pdf.set_text_color(*MEDIUM_TEXT)
             pdf.set_font("Helvetica", "", 8)
-            pdf.cell(25, row_height, task["owner"], align="L")
+            pdf.cell(30, row_height, task["owner"], align="L")
             
             pdf.set_y(task_end_y + 2)
         
