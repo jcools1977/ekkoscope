@@ -95,8 +95,8 @@ def parse_openai_response(raw: str, business_name: str) -> Dict[str, Any]:
         
         if not target_found and recommended:
             for i, rec in enumerate(recommended):
-                name = rec.get("name", "").lower()
-                url = rec.get("url", "").lower()
+                name = (rec.get("name") or "").lower()
+                url = (rec.get("url") or "").lower()
                 if business_name.lower() in name or business_name.lower() in url:
                     target_found = True
                     target_position = i + 1
@@ -130,6 +130,8 @@ def run_openai_visibility_for_queries(
     Returns:
         List of ProviderVisibility objects
     """
+    import sys
+    
     if not OPENAI_ENABLED:
         logger.info("OpenAI visibility probe skipped - not enabled")
         return []
@@ -139,8 +141,11 @@ def run_openai_visibility_for_queries(
         return []
     
     results: List[ProviderVisibility] = []
+    total = len(queries_with_intent)
     
-    for item in queries_with_intent:
+    for idx, item in enumerate(queries_with_intent):
+        print(f"[OPENAI VIS] Query {idx+1}/{total}...")
+        sys.stdout.flush()
         query = item.get("query", "")
         intent = item.get("intent")
         

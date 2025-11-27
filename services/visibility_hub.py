@@ -144,7 +144,11 @@ def run_multi_llm_visibility(
     Returns:
         MultiLLMVisibilityResult with aggregated data from all providers
     """
+    import sys
     queries_to_probe = queries_with_intent[:MAX_VISIBILITY_QUERIES_PER_PROVIDER]
+    
+    print(f"[VISIBILITY HUB] Starting with {len(queries_to_probe)} queries for {business_name}")
+    sys.stdout.flush()
     
     logger.info(
         "Running multi-LLM visibility for %s with %d queries across providers: %s",
@@ -165,11 +169,15 @@ def run_multi_llm_visibility(
     providers_used = []
     
     if run_openai and OPENAI_ENABLED:
+        print("[VISIBILITY HUB] Starting OpenAI visibility probe...")
+        sys.stdout.flush()
         logger.info("Running OpenAI simulated visibility probe...")
         try:
             openai_results = run_openai_visibility_for_queries(
                 business_name, primary_domain, regions, queries_to_probe
             )
+            print(f"[VISIBILITY HUB] OpenAI complete: {len(openai_results) if openai_results else 0} results")
+            sys.stdout.flush()
             if openai_results and len(openai_results) > 0:
                 successful_count = sum(1 for r in openai_results if r.success)
                 if successful_count > 0:
@@ -183,6 +191,8 @@ def run_multi_llm_visibility(
             else:
                 logger.info("OpenAI visibility: no results returned")
         except Exception as e:
+            print(f"[VISIBILITY HUB] OpenAI FAILED: {e}")
+            sys.stdout.flush()
             logger.error("OpenAI visibility probe failed: %s", e)
     
     if run_perplexity and PERPLEXITY_ENABLED:
