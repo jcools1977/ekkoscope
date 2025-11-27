@@ -53,6 +53,13 @@ async def startup():
     with open("data/tenants.json") as f:
         TENANTS = json.load(f)
     init_db()
+    
+    try:
+        from services.ekkobrain_pinecone import init_ekkobrain_index
+        init_ekkobrain_index()
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning("EkkoBrain init failed (non-fatal): %s", e)
 
 
 def get_tenant_list():

@@ -1,17 +1,23 @@
 """
 Audit Runner Service for EkkoScope Sprint 1.
 Orchestrates the full audit pipeline using existing v0.3 logic.
+Now integrates EkkoBrain for pattern-based learning.
 """
 
 import os
 import json
+import logging
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
 
 from services.database import Business, Audit
 from services.analysis import run_analysis, MissingAPIKeyError
 from services.reporting import build_ekkoscope_pdf
+from services.ekkobrain_reader import fetch_ekkobrain_context
+from services.ekkobrain_writer import log_audit_to_ekkobrain
+
+logger = logging.getLogger(__name__)
 
 
 REPORTS_DIR = "reports"
@@ -34,6 +40,10 @@ def run_audit_for_business(business: Business, audit: Audit, db_session: Session
     - Calls Genius Mode v2 to generate patterns and priority opportunities
     - Generates the PDF report
     
+    Now integrates EkkoBrain:
+    - Fetches relevant patterns before Genius Mode
+    - Logs audit artifacts after completion for future pattern learning
+    
     Args:
         business: The Business model instance
         audit: The Audit model instance (must be created with status='pending')
@@ -48,7 +58,7 @@ def run_audit_for_business(business: Business, audit: Audit, db_session: Session
         
         tenant_config = business.to_tenant_config()
         
-        analysis = run_analysis(tenant_config)
+        analysis = run_analysis(tenant_config, business=business)
         
         visibility_summary = {
             "tenant_id": analysis.get("tenant_id"),
@@ -96,6 +106,13 @@ def run_audit_for_business(business: Business, audit: Audit, db_session: Session
         
         db_session.commit()
         
+        _log_audit_artifacts_to_ekkobrain(
+            db_session=db_session,
+            audit=audit,
+            business=business,
+            analysis=analysis
+        )
+        
         return audit
         
     except MissingAPIKeyError as e:
@@ -109,6 +126,39 @@ def run_audit_for_business(business: Business, audit: Audit, db_session: Session
         audit.set_visibility_summary({"error": str(e)})
         db_session.commit()
         raise
+
+
+def _log_audit_artifacts_to_ekkobrain(
+    db_session: Session,
+    audit: Audit,
+    business: Business,
+    analysis: Dict[str, Any]
+):
+    """
+    Log audit artifacts to EkkoBrain for pattern learning.
+    This runs after the audit completes and is non-blocking.
+    """
+    try:
+        queries_with_intent = analysis.get("queries_with_intent", [])
+        visibility_data = analysis.get("multi_llm_visibility_data")
+        genius_payload = analysis.get("genius_insights")
+        
+        if not genius_payload:
+            logger.info("Skipping EkkoBrain logging: no genius_payload")
+            return
+        
+        log_audit_to_ekkobrain(
+            db=db_session,
+            audit=audit,
+            business=business,
+            queries_with_intent=queries_with_intent,
+            visibility_data=visibility_data,
+            genius_payload=genius_payload
+        )
+        logger.info("EkkoBrain artifacts logged for audit_id=%d", audit.id)
+        
+    except Exception as e:
+        logger.warning("EkkoBrain logging failed (non-fatal): %s", e)
 
 
 def get_audit_analysis_data(audit: Audit) -> Optional[dict]:

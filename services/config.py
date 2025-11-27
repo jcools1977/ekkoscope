@@ -20,6 +20,12 @@ GEMINI_ENABLED = bool(GEMINI_API_KEY)
 
 MAX_VISIBILITY_QUERIES_PER_PROVIDER = int(os.getenv("MAX_VISIBILITY_QUERIES", "30"))
 
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "ekkobrain-patterns")
+PINECONE_ENABLED = bool(PINECONE_API_KEY)
+
+EKKOBRAIN_EMBED_MODEL = os.getenv("EKKOBRAIN_EMBED_MODEL", "text-embedding-3-small")
+
 
 def is_perplexity_enabled() -> bool:
     """Check if Perplexity API is configured and enabled."""

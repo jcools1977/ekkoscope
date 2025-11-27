@@ -2,6 +2,7 @@
 Genius Insights Module v2 for EkkoScope GEO Visibility Analysis
 Enhanced with site awareness, impact/effort scoring, and structured JSON output.
 Now includes multi-LLM visibility data (OpenAI, Perplexity, Gemini) for enhanced insights.
+Integrates EkkoBrain memory for pattern-based recommendations.
 """
 
 import os
@@ -10,6 +11,7 @@ from typing import Dict, Any, List, Optional
 from openai import OpenAI
 from services.site_inspector import summarize_site_content
 from services.perplexity_visibility import format_perplexity_visibility_for_genius
+from services.ekkobrain_reader import format_ekkobrain_context_for_genius
 
 
 class GeniusInsightError(Exception):
@@ -30,7 +32,8 @@ def generate_genius_insights(
     analysis: Dict[str, Any],
     site_snapshot: Dict[str, Any] | None = None,
     perplexity_visibility: Optional[Dict[str, Any]] = None,
-    multi_llm_visibility: Optional[Any] = None
+    multi_llm_visibility: Optional[Any] = None,
+    ekkobrain_context: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """
     Use OpenAI to turn raw analysis + site snapshot + multi-LLM visibility into actionable genius insights:
@@ -198,6 +201,12 @@ Output ONLY valid JSON matching this exact structure:
 
 Generate 2-3 patterns, 2-3 priority opportunities with full page blueprints, 3-5 quick wins, and 2 future AI answer previews."""
 
+        ekkobrain_section = ""
+        ekkobrain_enabled = False
+        if ekkobrain_context and ekkobrain_context.get("enabled", False):
+            ekkobrain_section = format_ekkobrain_context_for_genius(ekkobrain_context)
+            ekkobrain_enabled = bool(ekkobrain_section)
+        
         user_prompt = f"""Analyze this GEO visibility data and generate genius insights for {tenant_name}:
 
 === ANALYSIS DATA ===
@@ -210,13 +219,16 @@ Generate 2-3 patterns, 2-3 priority opportunities with full page blueprints, 3-5
 
 {perplexity_summary if perplexity_available and not multi_llm_available else ""}
 
+{ekkobrain_section if ekkobrain_enabled else ""}
+
 === REQUIREMENTS ===
 - {tenant_name} operates in: {', '.join(geo_focus) if geo_focus else 'their local area'}
 - Their domains: {', '.join([d for d in domains if not d.startswith('AD_') and '_SITE_URL' not in d]) if domains else 'not specified'}
 - Reference the ACTUAL queries, scores, and competitors from the data above
 - Make every recommendation specific to THIS business
 - {"Identify content gaps based on what the site currently says vs what AI recommends" if site_available else "Note that site content analysis was not possible"}
-- {"Cross-reference visibility across OpenAI, Perplexity, and Gemini to find consistent patterns and gaps" if multi_llm_available else "Multi-LLM cross-referencing was not available for this run"}"""
+- {"Cross-reference visibility across OpenAI, Perplexity, and Gemini to find consistent patterns and gaps" if multi_llm_available else "Multi-LLM cross-referencing was not available for this run"}
+- {"Use EkkoBrain patterns as inspiration but adapt them specifically to THIS business" if ekkobrain_enabled else ""}"""
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -242,7 +254,8 @@ Generate 2-3 patterns, 2-3 priority opportunities with full page blueprints, 3-5
             "site_analyzed": site_available,
             "perplexity_used": perplexity_available,
             "multi_llm_used": multi_llm_available,
-            "providers_used": multi_llm_visibility.providers_used if multi_llm_visibility else []
+            "providers_used": multi_llm_visibility.providers_used if multi_llm_visibility else [],
+            "ekkobrain_used": ekkobrain_enabled
         }
     
     except Exception as e:
@@ -260,7 +273,8 @@ def _empty_genius_insights() -> Dict[str, Any]:
         "site_analyzed": False,
         "perplexity_used": False,
         "multi_llm_used": False,
-        "providers_used": []
+        "providers_used": [],
+        "ekkobrain_used": False
     }
 
 

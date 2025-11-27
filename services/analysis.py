@@ -9,6 +9,7 @@ from services.site_inspector import fetch_site_snapshot
 from services.perplexity_visibility import run_perplexity_visibility_probe
 from services.visibility_hub import run_multi_llm_visibility, format_multi_llm_visibility_for_genius
 from services.config import PERPLEXITY_ENABLED, OPENAI_ENABLED, GEMINI_ENABLED
+from services.ekkobrain_reader import fetch_ekkobrain_context
 
 logger = logging.getLogger(__name__)
 
@@ -183,7 +184,7 @@ Rules:
         }
 
 
-def run_analysis(tenant_config: Dict[str, Any]) -> Dict[str, Any]:
+def run_analysis(tenant_config: Dict[str, Any], business: Optional[Any] = None) -> Dict[str, Any]:
     tenant_id = tenant_config["id"]
     tenant_name = tenant_config["display_name"]
     brand_aliases = tenant_config["brand_aliases"]
@@ -304,17 +305,33 @@ def run_analysis(tenant_config: Dict[str, Any]) -> Dict[str, Any]:
         site_snapshot = {"pages": [], "fetch_status": "error"}
         summary["site_snapshot"] = site_snapshot
     
+    ekkobrain_context = None
+    if business is not None:
+        try:
+            ekkobrain_context = fetch_ekkobrain_context(
+                business=business,
+                queries_with_intent=queries_with_intent
+            )
+            logger.info("EkkoBrain context fetched: enabled=%s", ekkobrain_context.get("enabled", False))
+        except Exception as e:
+            logger.warning("Error fetching EkkoBrain context (non-fatal): %s", e)
+            ekkobrain_context = None
+    
     try:
         genius_data = generate_genius_insights(
             tenant_config, 
             summary, 
             site_snapshot,
             perplexity_visibility=perplexity_visibility,
-            multi_llm_visibility=multi_llm_visibility
+            multi_llm_visibility=multi_llm_visibility,
+            ekkobrain_context=ekkobrain_context
         )
         summary["genius_insights"] = genius_data
     except Exception as e:
         logger.warning("Error generating genius insights (non-fatal): %s", e)
         summary["genius_insights"] = None
+    
+    summary["queries_with_intent"] = queries_with_intent
+    summary["multi_llm_visibility_data"] = multi_llm_data
     
     return summary

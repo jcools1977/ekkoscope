@@ -20,3 +20,4 @@ stripe
 bcrypt
 passlib
 google-generativeai
+pinecone
