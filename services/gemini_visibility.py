@@ -115,9 +115,16 @@ def run_gemini_visibility_for_queries(
     Returns:
         List of ProviderVisibility objects
     """
+    import sys
+    
     if not gemini_enabled():
+        print("[GEMINI VISIBILITY] Skipped - Gemini not enabled")
+        sys.stdout.flush()
         logger.info("Gemini visibility probe skipped - not enabled")
         return []
+    
+    print(f"[GEMINI VISIBILITY] Starting for {len(queries_with_intent)} queries")
+    sys.stdout.flush()
     
     results: List[ProviderVisibility] = []
     

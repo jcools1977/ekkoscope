@@ -81,7 +81,9 @@ def run_audit_for_business(business: Business, audit: Audit, db_session: Session
             "primary_count": analysis.get("primary_count"),
             "avg_score": analysis.get("avg_score"),
             "visibility_summary": analysis.get("visibility_summary", ""),
-            "results": analysis.get("results", [])
+            "results": analysis.get("results", []),
+            "multi_llm_visibility": analysis.get("multi_llm_visibility"),
+            "perplexity_visibility": analysis.get("perplexity_visibility")
         }
         
         suggestions_data = {

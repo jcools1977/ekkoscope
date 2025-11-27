@@ -217,11 +217,15 @@ def run_multi_llm_visibility(
             logger.error("Perplexity visibility probe failed: %s", e)
     
     if run_gemini and GEMINI_ENABLED:
+        print("[VISIBILITY HUB] Starting Gemini visibility probe...")
+        sys.stdout.flush()
         logger.info("Running Gemini simulated visibility probe...")
         try:
             gemini_results = run_gemini_visibility_for_queries(
                 business_name, primary_domain, regions, queries_to_probe
             )
+            print(f"[VISIBILITY HUB] Gemini complete: {len(gemini_results) if gemini_results else 0} results")
+            sys.stdout.flush()
             if gemini_results and len(gemini_results) > 0:
                 successful_count = sum(1 for r in gemini_results if r.success)
                 if successful_count > 0:
@@ -231,11 +235,20 @@ def run_multi_llm_visibility(
                     providers_used.append("gemini_sim")
                     logger.info("Gemini visibility: %d results (%d successful)", len(gemini_results), successful_count)
                 else:
+                    print(f"[VISIBILITY HUB] Gemini: all {len(gemini_results)} probes failed")
+                    sys.stdout.flush()
                     logger.warning("Gemini visibility: all %d probes failed", len(gemini_results))
             else:
+                print("[VISIBILITY HUB] Gemini: no results returned")
+                sys.stdout.flush()
                 logger.info("Gemini visibility: no results returned")
         except Exception as e:
+            print(f"[VISIBILITY HUB] Gemini FAILED: {e}")
+            sys.stdout.flush()
             logger.error("Gemini visibility probe failed: %s", e)
+    else:
+        print(f"[VISIBILITY HUB] Gemini skipped: run_gemini={run_gemini}, GEMINI_ENABLED={GEMINI_ENABLED}")
+        sys.stdout.flush()
     
     aggregates = list(agg_by_query.values())
     
