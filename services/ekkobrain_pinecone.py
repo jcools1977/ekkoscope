@@ -25,7 +25,7 @@ _initialized = False
 
 
 def init_ekkobrain_index():
-    """Initialize Pinecone client and create index if needed."""
+    """Initialize Pinecone client and connect to existing index."""
     global pc, index, _initialized
     
     if _initialized:
@@ -37,22 +37,19 @@ def init_ekkobrain_index():
         return
     
     try:
-        from pinecone import Pinecone, ServerlessSpec
+        from pinecone import Pinecone
         
         pc = Pinecone(api_key=PINECONE_API_KEY)
         
         existing = [idx.name for idx in pc.list_indexes()]
         if PINECONE_INDEX_NAME not in existing:
-            logger.info("Creating EkkoBrain Pinecone index: %s", PINECONE_INDEX_NAME)
-            pc.create_index(
-                name=PINECONE_INDEX_NAME,
-                dimension=1536,
-                metric="cosine",
-                spec=ServerlessSpec(cloud="aws", region="us-east-1"),
-            )
+            logger.warning("EkkoBrain index '%s' not found. Please create it in Pinecone dashboard.", PINECONE_INDEX_NAME)
+            logger.info("Available indexes: %s", existing)
+            _initialized = True
+            return
         
         index = pc.Index(PINECONE_INDEX_NAME)
-        logger.info("EkkoBrain Pinecone index initialized: %s", PINECONE_INDEX_NAME)
+        logger.info("EkkoBrain Pinecone connected to index: %s", PINECONE_INDEX_NAME)
         _initialized = True
         
     except ImportError:
