@@ -19,10 +19,11 @@ LIGHT_TEXT = (100, 116, 139)
 ACCENT_BG = (241, 245, 249)
 WHITE = (255, 255, 255)
 SUCCESS_GREEN = (34, 197, 94)
-WARNING_YELLOW = (245, 158, 11)
-ERROR_RED = (239, 68, 68)
-PURPLE = (168, 85, 247)
-PINK = (244, 114, 182)
+WARNING_YELLOW = (234, 179, 8)
+ERROR_RED = (185, 85, 85)
+PURPLE = (139, 92, 246)
+PINK = (236, 72, 153)
+SLATE_GRAY = (148, 163, 184)
 
 
 class EkkoScopePDF(FPDF):
@@ -237,38 +238,47 @@ def _add_cover_page(pdf: EkkoScopePDF, data: Dict[str, Any], tenant: Dict[str, A
     pdf.line(50, pdf.get_y(), 160, pdf.get_y())
     pdf.ln(20)
     
-    pdf.set_font("Helvetica", "B", 28)
+    pdf.set_font("Helvetica", "B", 26)
     pdf.set_text_color(*DARK_TEXT)
-    pdf.multi_cell(0, 12, data["tenant_name"], align="C")
-    pdf.ln(8)
+    pdf.multi_cell(0, 11, data["tenant_name"], align="C")
+    pdf.ln(10)
     
-    pdf.set_font("Helvetica", "", 14)
-    pdf.set_text_color(*LIGHT_TEXT)
+    pdf.set_font("Helvetica", "", 16)
+    pdf.set_text_color(*BRAND_BLUE)
     pdf.cell(0, 8, "AI Visibility Analysis Report", align="C")
-    pdf.ln(8)
+    pdf.ln(10)
     
-    pdf.set_font("Helvetica", "I", 11)
+    pdf.set_font("Helvetica", "", 11)
     pdf.set_text_color(*MEDIUM_TEXT)
     pdf.cell(0, 6, "Comprehensive GEO analysis of how AI assistants recommend your business", align="C")
-    pdf.ln(25)
+    pdf.ln(30)
     
     generated_at = data["generated_at"]
     try:
         dt = datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
-        formatted_date = dt.strftime("%B %d, %Y at %H:%M UTC")
+        formatted_date = dt.strftime("%B %d, %Y")
     except:
         formatted_date = generated_at
     
     pdf.set_font("Helvetica", "", 11)
     pdf.set_text_color(*MEDIUM_TEXT)
-    pdf.cell(0, 8, f"Generated: {formatted_date}", align="C")
-    pdf.ln(5)
+    pdf.cell(0, 8, f"Report Date: {formatted_date}", align="C")
+    pdf.ln(6)
     
     geo_focus = tenant.get("geo_focus", [])
     if geo_focus:
         pdf.set_font("Helvetica", "", 10)
         pdf.set_text_color(*LIGHT_TEXT)
         pdf.cell(0, 6, f"Market Focus: {', '.join(geo_focus[:3])}", align="C")
+    
+    pdf.set_y(260)
+    pdf.set_draw_color(*SLATE_GRAY)
+    pdf.set_line_width(0.3)
+    pdf.line(40, 260, 170, 260)
+    pdf.ln(5)
+    pdf.set_font("Helvetica", "", 8)
+    pdf.set_text_color(*SLATE_GRAY)
+    pdf.cell(0, 5, "Powered by EkkoScope GEO Engine | AI Visibility Intelligence", align="C")
 
 
 def _add_executive_dashboard(pdf: EkkoScopePDF, data: Dict[str, Any], analysis: Dict[str, Any]):
@@ -448,20 +458,11 @@ def _add_query_analysis_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant:
         pdf.ln(3)
         
         if ai_response:
-            pdf.set_fill_color(*ACCENT_BG)
-            response_y = pdf.get_y()
-            
             pdf.set_font("Helvetica", "", 8)
             pdf.set_text_color(*MEDIUM_TEXT)
-            pdf.set_x(14)
-            
             pdf.set_fill_color(*ACCENT_BG)
-            pdf.rect(14, response_y, 182, 2, style="F")
-            pdf.multi_cell(182, 4, ai_response)
-            end_y = pdf.get_y()
-            pdf.rect(14, response_y, 182, end_y - response_y, style="F")
-            pdf.set_xy(14, response_y)
-            pdf.multi_cell(182, 4, ai_response)
+            pdf.set_x(14)
+            pdf.multi_cell(182, 4, ai_response, fill=True)
         
         pdf.ln(8)
     
@@ -964,18 +965,11 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
             pdf.multi_cell(0, 5, f"Q: {query}")
             pdf.ln(3)
             
-            pdf.set_fill_color(*ACCENT_BG)
-            start_y = pdf.get_y()
-            
             pdf.set_font("Helvetica", "", 9)
             pdf.set_text_color(*MEDIUM_TEXT)
+            pdf.set_fill_color(*ACCENT_BG)
             pdf.set_x(15)
-            pdf.multi_cell(180, 4, answer)
-            
-            end_y = pdf.get_y()
-            pdf.rect(12, start_y - 2, 186, end_y - start_y + 4, style="F")
-            pdf.set_xy(15, start_y)
-            pdf.multi_cell(180, 4, answer)
+            pdf.multi_cell(180, 4, answer, fill=True)
             
             pdf.ln(8)
 
@@ -1105,16 +1099,11 @@ def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant
             if pdf.get_y() > 240:
                 pdf.add_page()
             pdf.ln(3)
-            pdf.set_fill_color(255, 251, 235)
-            start_y = pdf.get_y()
             pdf.set_font("Helvetica", "I", 8)
-            pdf.set_text_color(*WARNING_YELLOW)
-            pdf.set_x(18)
-            pdf.multi_cell(174, 4, f"Site Note: {note_on_site}")
-            end_y = pdf.get_y()
-            pdf.rect(15, start_y - 2, 180, end_y - start_y + 4, style="F")
-            pdf.set_xy(18, start_y)
-            pdf.multi_cell(174, 4, f"Site Note: {note_on_site}")
+            pdf.set_text_color(180, 130, 50)
+            pdf.set_fill_color(255, 251, 235)
+            pdf.set_x(15)
+            pdf.multi_cell(180, 4, f"Site Note: {note_on_site}", fill=True)
         
         pdf.ln(10)
 
