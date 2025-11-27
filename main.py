@@ -1893,16 +1893,33 @@ async def ongoing_audit_download(request: Request, audit_id: int):
 
 def run_audit_background(business_id: int, audit_id: int):
     """Background task to run an audit."""
+    print(f"[AUDIT DEBUG] Starting background task for audit {audit_id}, business {business_id}")
+    import sys
+    sys.stdout.flush()
+    
     db = get_db_session()
     try:
+        print(f"[AUDIT DEBUG] Got DB session for audit {audit_id}")
+        sys.stdout.flush()
+        
         business = db.query(Business).filter(Business.id == business_id).first()
         audit = db.query(Audit).filter(Audit.id == audit_id).first()
         
+        print(f"[AUDIT DEBUG] Found business={business is not None}, audit={audit is not None}")
+        sys.stdout.flush()
+        
         if business and audit:
             try:
+                print(f"[AUDIT DEBUG] Calling run_audit_for_business for audit {audit_id}")
+                sys.stdout.flush()
                 run_audit_for_business(business, audit, db)
+                print(f"[AUDIT DEBUG] Audit {audit_id} completed successfully")
+                sys.stdout.flush()
             except Exception as e:
                 import traceback
+                print(f"[AUDIT DEBUG] Audit {audit_id} EXCEPTION: {e}")
+                print(f"[AUDIT DEBUG] Traceback: {traceback.format_exc()}")
+                sys.stdout.flush()
                 audit.status = "error"
                 audit.set_visibility_summary({
                     "error": str(e),
@@ -1911,8 +1928,18 @@ def run_audit_background(business_id: int, audit_id: int):
                 })
                 db.commit()
                 print(f"Audit {audit_id} failed: {e}")
+        else:
+            print(f"[AUDIT DEBUG] Missing business or audit for {audit_id}")
+            sys.stdout.flush()
+    except Exception as outer_e:
+        print(f"[AUDIT DEBUG] OUTER EXCEPTION in audit {audit_id}: {outer_e}")
+        import traceback
+        print(f"[AUDIT DEBUG] Outer traceback: {traceback.format_exc()}")
+        sys.stdout.flush()
     finally:
         db.close()
+        print(f"[AUDIT DEBUG] Background task finished for audit {audit_id}")
+        sys.stdout.flush()
 
 
 @app.get("/api/audit/{audit_id}/status")
