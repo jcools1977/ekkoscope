@@ -125,6 +125,16 @@
             color: #ff5252;
         }
         
+        .status-stopped {
+            background: rgba(156, 163, 175, 0.15);
+            color: #9ca3af;
+        }
+        
+        .status-running {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+        
         .score-card {
             background: linear-gradient(135deg, rgba(46, 230, 168, 0.1), rgba(24, 163, 255, 0.1));
             border: 1px solid rgba(46, 230, 168, 0.3);
@@ -424,9 +434,36 @@
         {% endif %}
         {% else %}
         <div class="card">
-            <p style="color: var(--text-secondary);">Audit is still processing or no data available.</p>
+            {% if audit.status == 'stopped' %}
+            <div class="error-message" style="background: rgba(156, 163, 175, 0.1); border-color: rgba(156, 163, 175, 0.3); color: #9ca3af;">
+                <strong>Audit Stopped</strong><br>
+                This audit was manually stopped before completion.
+            </div>
+            {% elif audit.status == 'error' %}
+            <div class="error-message">
+                <strong>Audit Error</strong><br>
+                {% if analysis and analysis.visibility and analysis.visibility.error %}
+                {{ analysis.visibility.error }}
+                {% else %}
+                An error occurred while running this audit. Please try running a new audit.
+                {% endif %}
+            </div>
+            {% elif audit.status in ['running', 'pending'] %}
+            <p style="color: var(--text-secondary);">
+                <strong>Audit in Progress</strong><br>
+                This audit is currently running. Please check back in a few minutes.
+            </p>
+            {% else %}
+            <p style="color: var(--text-secondary);">No data available for this audit.</p>
+            {% endif %}
         </div>
         {% endif %}
+        
+        <div style="margin-top: 1.5rem;">
+            <a href="/dashboard/business/{{ business.id }}" style="color: var(--text-secondary); text-decoration: none;">
+                &larr; Back to Business
+            </a>
+        </div>
     </div>
 </body>
 </html>
