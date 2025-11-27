@@ -329,8 +329,8 @@ async def dashboard_business_detail(request: Request, business_id: int):
 
 
 @app.post("/dashboard/business/{business_id}/run-audit")
-async def dashboard_run_audit(request: Request, business_id: int):
-    """Admin-only: Run an audit without payment."""
+async def dashboard_run_audit(request: Request, business_id: int, background_tasks: BackgroundTasks):
+    """Admin-only: Run an audit without payment (runs in background)."""
     user = get_current_user(request)
     if not user or not user.is_admin:
         return RedirectResponse(url="/auth/login", status_code=302)
@@ -350,19 +350,9 @@ async def dashboard_run_audit(request: Request, business_id: int):
         db.commit()
         db.refresh(audit)
         
-        try:
-            run_audit_for_business(business, audit, db)
-            return RedirectResponse(url=f"/dashboard/business/{business.id}/audit/{audit.id}", status_code=302)
-        except Exception as e:
-            import traceback
-            audit.status = "error"
-            audit.set_visibility_summary({
-                "error": str(e),
-                "error_type": type(e).__name__,
-                "error_details": traceback.format_exc()
-            })
-            db.commit()
-            return RedirectResponse(url=f"/dashboard/business/{business.id}/audit/{audit.id}", status_code=302)
+        background_tasks.add_task(run_audit_background, business.id, audit.id)
+        
+        return RedirectResponse(url=f"/dashboard/business/{business.id}", status_code=302)
     finally:
         db.close()
 
@@ -1061,8 +1051,8 @@ async def admin_business_detail(request: Request, business_id: int):
 
 
 @app.post("/admin/business/{business_id}/run")
-async def admin_run_audit(request: Request, business_id: int):
-    """Run an EkkoScope audit for a business."""
+async def admin_run_audit(request: Request, business_id: int, background_tasks: BackgroundTasks):
+    """Run an EkkoScope audit for a business (runs in background)."""
     if not is_authenticated(request):
         return RedirectResponse(url="/admin/login", status_code=302)
     
@@ -1081,26 +1071,16 @@ async def admin_run_audit(request: Request, business_id: int):
         db.commit()
         db.refresh(audit)
         
-        try:
-            run_audit_for_business(business, audit, db)
-            return RedirectResponse(url=f"/admin/audit/{audit.id}", status_code=302)
-        except Exception as e:
-            import traceback
-            audit.status = "error"
-            audit.set_visibility_summary({
-                "error": str(e),
-                "error_type": type(e).__name__,
-                "error_details": traceback.format_exc()
-            })
-            db.commit()
-            return RedirectResponse(url=f"/admin/audit/{audit.id}", status_code=302)
+        background_tasks.add_task(run_audit_background, business.id, audit.id)
+        
+        return RedirectResponse(url=f"/admin/business/{business_id}", status_code=302)
     finally:
         db.close()
 
 
 @app.post("/admin/business/{business_id}/refresh")
-async def admin_refresh_audit(request: Request, business_id: int):
-    """Run a monthly refresh audit for an ongoing subscription business."""
+async def admin_refresh_audit(request: Request, business_id: int, background_tasks: BackgroundTasks):
+    """Run a monthly refresh audit for an ongoing subscription business (runs in background)."""
     if not is_authenticated(request):
         return RedirectResponse(url="/admin/login", status_code=302)
     
@@ -1122,19 +1102,9 @@ async def admin_refresh_audit(request: Request, business_id: int):
         db.commit()
         db.refresh(audit)
         
-        try:
-            run_audit_for_business(business, audit, db)
-            return RedirectResponse(url=f"/admin/audit/{audit.id}", status_code=302)
-        except Exception as e:
-            import traceback
-            audit.status = "error"
-            audit.set_visibility_summary({
-                "error": str(e),
-                "error_type": type(e).__name__,
-                "error_details": traceback.format_exc()
-            })
-            db.commit()
-            return RedirectResponse(url=f"/admin/audit/{audit.id}", status_code=302)
+        background_tasks.add_task(run_audit_background, business.id, audit.id)
+        
+        return RedirectResponse(url=f"/admin/business/{business_id}", status_code=302)
     finally:
         db.close()
 
