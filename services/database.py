@@ -43,12 +43,16 @@ class User(Base):
     purchases = relationship("Purchase", back_populates="user")
     
     def set_password(self, password: str):
-        """Hash and store password."""
-        self.password_hash = bcrypt.hash(password)
+        """Hash and store password. Truncates to 72 bytes for bcrypt compatibility."""
+        # bcrypt only uses the first 72 bytes, so truncate to avoid errors
+        password_bytes = password.encode('utf-8')[:72]
+        self.password_hash = bcrypt.hash(password_bytes.decode('utf-8', errors='ignore'))
     
     def verify_password(self, password: str) -> bool:
         """Verify password against stored hash."""
-        return bcrypt.verify(password, self.password_hash)
+        # Truncate to match hashing behavior
+        password_bytes = password.encode('utf-8')[:72]
+        return bcrypt.verify(password_bytes.decode('utf-8', errors='ignore'), self.password_hash)
     
     @property
     def full_name(self) -> str:

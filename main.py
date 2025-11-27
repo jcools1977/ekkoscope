@@ -36,6 +36,7 @@ TENANTS = {}
 
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "ekkoscope2024")
+ADMIN_EMAILS = [e.strip().lower() for e in os.getenv("ADMIN_EMAILS", "").split(",") if e.strip()]
 
 if ADMIN_PASSWORD == "ekkoscope2024":
     import warnings
@@ -62,8 +63,19 @@ def get_tenant_list():
 
 
 def is_authenticated(request: Request) -> bool:
-    """Check if user is authenticated via session."""
-    return request.session.get("authenticated", False)
+    """Check if user is authenticated for admin access.
+    Returns True if:
+    - User logged in via admin password, OR
+    - User is logged in as a regular user with is_admin=True
+    """
+    if request.session.get("authenticated", False):
+        return True
+    
+    user = get_current_user(request)
+    if user and user.is_admin:
+        return True
+    
+    return False
 
 
 def require_auth(request: Request):
@@ -154,15 +166,27 @@ async def auth_signup(
     db = get_db_session()
     try:
         user = create_user(db, email, password, first_name, last_name)
+        
+        if email.lower().strip() in ADMIN_EMAILS:
+            user.is_admin = True
+            db.commit()
+        
         login_user(request, user)
         
         background_tasks.add_task(send_welcome_email, email, first_name or "there")
         
-        return RedirectResponse(url=next or "/dashboard", status_code=302)
+        redirect_url = "/admin" if user.is_admin else (next or "/dashboard")
+        return RedirectResponse(url=redirect_url, status_code=302)
     except ValueError as e:
         return templates.TemplateResponse(
             "auth/signup.html",
             {"request": request, "error": str(e), "email": email, "first_name": first_name, "last_name": last_name, "next": next}
+        )
+    except Exception as e:
+        error_msg = "An error occurred creating your account. Please try again."
+        return templates.TemplateResponse(
+            "auth/signup.html",
+            {"request": request, "error": error_msg, "email": email, "first_name": first_name, "last_name": last_name, "next": next}
         )
     finally:
         db.close()
@@ -529,9 +553,11 @@ async def admin_login_page(request: Request):
     if is_authenticated(request):
         return RedirectResponse(url="/admin", status_code=302)
     
+    user = get_current_user(request)
+    
     return templates.TemplateResponse(
         "admin/login.html",
-        {"request": request, "error": None}
+        {"request": request, "error": None, "user": user}
     )
 
 

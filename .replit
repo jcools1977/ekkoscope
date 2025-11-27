@@ -35,9 +35,14 @@ outputType = "webview"
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 42385
+externalPort = 3000
+
 [userenv]
 
 [userenv.shared]
 STRIPE_PRICE_SNAPSHOT = "price_1SXrky49IDZUQDseBmZoKXMm"
 STRIPE_PRICE_ONGOING_SETUP = "price_1SXrky49IDZUQDseCIr8f7XS"
 STRIPE_PRICE_ONGOING_MONTHLY = "price_1SXrky49IDZUQDsel3bvvUUd"
+ADMIN_EMAILS = "john@an2b.com"
