@@ -1,0 +1,463 @@
+You are Replit AI working inside my AN2B EkkoScope FastAPI app.
+
+CONTEXT
+
+EkkoScope is an AI Visibility GEO Engine. It currently:
+
+- Uses **OpenAI** to:
+  - Generate and classify GEO queries.
+  - Run "Genius Mode" to analyze visibility and produce page blueprints + 30-day plans.
+- Uses **Perplexity** (sonar-pro) to:
+  - Run web-grounded visibility probes for each query.
+  - Return which brands are recommended in real-time search results.
+
+I have now added the **Gemini API** (Google Generative AI). I want to use **all three LLMs** together in a clean, intentional way.
+
+GOAL
+
+Refactor and extend the code so that:
+
+- **OpenAI** remains the **strategy brain**:
+  - Query generation & classification.
+  - Genius Mode planning + page blueprints + roadmap.
+- **Perplexity** is the **web-grounded probe**:
+  - Real-time search visibility per query.
+- **Gemini** becomes a **second AI-channel probe**:
+  - For each query, it answers like another assistant (similar to ChatGPT) and returns which brands it would recommend.
+- All three are normalized into a **single "visibility provider" abstraction** that:
+  - Makes it easy to compute multi-LLM share-of-voice.
+  - Feeds a unified snapshot into Genius Mode and the premium PDF.
+
+Do NOT blow up the working pipeline. Extend and reorganize it.
+
+======================================================
+PART 1 – Introduce a Visibility Provider Abstraction
+======================================================
+
+1) Create unified data models for multi-LLM visibility.
+
+In a central module (e.g. `services/visibility_models.py`), define Pydantic models or dataclasses like:
+
+```python
+from typing import List, Optional
+from pydantic import BaseModel
+
+class BrandHit(BaseModel):
+    name: str
+    url: Optional[str] = None
+    reason: Optional[str] = None
+
+class ProviderVisibility(BaseModel):
+    provider: str  # "openai_sim", "perplexity_web", "gemini_sim"
+    query: str
+    intent: Optional[str] = None  # emergency, high_ticket, replenishment, informational, transactional
+    recommended_brands: List[BrandHit] = []
+
+class QueryVisibilityAggregate(BaseModel):
+    query: str
+    intent: Optional[str] = None
+    providers: List[ProviderVisibility] = []
+This is the contract all providers must write into.
+
+Create a "visibility hub" module.
+
+Add a module, e.g. services/visibility_hub.py, which will:
+
+Accept:
+
+business
+
+queries (with intent metadata)
+
+Call each configured provider:
+
+OpenAI simulated assistant
+
+Perplexity web probe
+
+Gemini simulated assistant
+
+Return:
+
+A list of QueryVisibilityAggregate objects.
+
+Summary metrics pre-computed for the PDF (share-of-voice per provider, top competitors, etc.)
+
+Shape of main function (adjust to your conventions):
+
+python
+Copy code
+from typing import List, Dict, Any
+from .visibility_models import QueryVisibilityAggregate
+
+def run_multi_llm_visibility(
+    business,
+    queries_with_intent: List[Dict[str, str]],  # [{"query": str, "intent": str}, ...]
+) -> Dict[str, Any]:
+    """
+    Returns:
+    {
+      "queries": List[QueryVisibilityAggregate],
+      "summary": {
+        "providers": {...},
+        "competitors": {...},
+        ...
+      }
+    }
+    """
+    ...
+You will fill this in using the provider-specific functions in the next parts.
+
+======================================================
+PART 2 – Define provider roles & clients
+A) OpenAI "simulated assistant" visibility
+
+We already use OpenAI for Genius Mode. Here, we also want a simulated ChatGPT-style answer per query to see which brands it would recommend WITHOUT tools.
+
+Create or adjust a module like services/openai_visibility.py:
+
+For each query:
+
+Ask OpenAI something like:
+
+"A customer asks: '<<<query>>>' Which businesses or brands would you recommend and why? Return STRICT JSON with recommended_brands: [{name, url, reason}]"
+
+Parse the JSON.
+
+For each query, produce a ProviderVisibility with:
+
+provider="openai_sim"
+
+query
+
+intent
+
+recommended_brands=[...]
+
+Ensure this function is called by visibility_hub.run_multi_llm_visibility and appended to each QueryVisibilityAggregate.
+
+B) Perplexity web-grounded probe (already exists)
+
+You already have services/perplexity_client.py and services/perplexity_visibility.py. Adapt them to write into the new models:
+
+In perplexity_visibility, instead of returning ad-hoc dicts:
+
+Parse the JSON from Perplexity.
+
+Construct ProviderVisibility with:
+
+provider="perplexity_web"
+
+query
+
+intent
+
+recommended_brands=[...]
+
+When integrating into visibility_hub, merge this provider into the correct QueryVisibilityAggregate for the same query.
+
+Keep PERPLEXITY_ENABLED logic:
+
+If no PERPLEXITY_API_KEY, skip this provider and log a clear info message.
+
+C) Gemini "simulated assistant" visibility
+
+Create two new modules:
+
+services/gemini_client.py
+
+services/gemini_visibility.py
+
+In gemini_client.py:
+
+Configure Gemini using the existing API key/env variable you’ve already added, e.g.:
+
+python
+Copy code
+import os
+import google.generativeai as genai
+from typing import Optional
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+
+genai.configure(api_key=GEMINI_API_KEY)
+
+def gemini_enabled() -> bool:
+    return GEMINI_API_KEY is not None
+
+def gemini_generate_json(prompt: str) -> Optional[str]:
+    if not gemini_enabled():
+        return None
+    model = genai.GenerativeModel(GEMINI_MODEL)
+    resp = model.generate_content(prompt)
+    # Depending on version, content may be in resp.text or resp.candidates[0].content.parts
+    # Extract plain text JSON string here.
+    ...
+Use the correct extraction based on the Gemini client version in this repo.
+
+In gemini_visibility.py:
+
+Mirror the OpenAI visibility prompt but for Gemini:
+
+python
+Copy code
+from typing import List, Dict
+import json
+from .gemini_client import gemini_generate_json
+from .visibility_models import BrandHit, ProviderVisibility
+
+def build_gemini_visibility_prompt(business, query: str) -> str:
+    # Describe the task and require STRICT JSON with recommended_brands
+    ...
+
+def run_gemini_visibility_for_queries(
+    business,
+    queries_with_intent: List[Dict[str, str]],
+) -> List[ProviderVisibility]:
+    results: List[ProviderVisibility] = []
+    for item in queries_with_intent:
+        q = item["query"]
+        intent = item.get("intent")
+        prompt = build_gemini_visibility_prompt(business, q)
+        raw = gemini_generate_json(prompt)
+        if not raw:
+            continue
+        try:
+            data = json.loads(raw)
+            recommended = [
+                BrandHit(**hit) for hit in data.get("recommended_brands", [])
+            ]
+        except Exception:
+            recommended = []
+        results.append(
+            ProviderVisibility(
+                provider="gemini_sim",
+                query=q,
+                intent=intent,
+                recommended_brands=recommended,
+            )
+        )
+    return results
+Handle errors gracefully: if Gemini is disabled or returns bad JSON, skip and continue.
+
+D) Wire all three providers into visibility_hub
+
+In services/visibility_hub.py:
+
+Accept queries_with_intent.
+
+Look up results from:
+
+OpenAI simulated (openai_visibility)
+
+Perplexity (perplexity_visibility)
+
+Gemini simulated (gemini_visibility)
+
+Build a dictionary keyed by query so you can merge provider results into QueryVisibilityAggregate.
+
+Example:
+
+python
+Copy code
+from collections import defaultdict
+from .visibility_models import QueryVisibilityAggregate, ProviderVisibility
+
+def run_multi_llm_visibility(business, queries_with_intent):
+    agg_by_query: Dict[str, QueryVisibilityAggregate] = {}
+
+    # 1) Seed aggregates
+    for item in queries_with_intent:
+        q = item["query"]
+        intent = item.get("intent")
+        agg_by_query[q] = QueryVisibilityAggregate(query=q, intent=intent, providers=[])
+
+    # 2) Add provider results
+    openai_vis = run_openai_visibility_for_queries(business, queries_with_intent)
+    perpl_vis = run_perplexity_visibility_for_queries(business, queries_with_intent)
+    gemini_vis = run_gemini_visibility_for_queries(business, queries_with_intent)
+
+    for vis in (openai_vis + perpl_vis + gemini_vis):
+        agg = agg_by_query.get(vis.query)
+        if agg:
+            agg.providers.append(vis)
+
+    # 3) Compute summary stats for PDF:
+    #    - share-of-voice per provider
+    #    - top competitors aggregated across providers
+
+    summary = compute_visibility_summary(list(agg_by_query.values()))
+
+    return {
+        "queries": list(agg_by_query.values()),
+        "summary": summary,
+    }
+Implement compute_visibility_summary to:
+
+Count how many queries each competitor appears in.
+
+Count how many queries the client appears in.
+
+Do this per-provider and overall.
+
+======================================================
+PART 3 – Integrate multi-LLM visibility into audits & PDF
+A) Audit pipeline
+
+Wherever you currently run:
+
+Query generation
+
+Perplexity visibility probe
+
+Genius Mode
+
+PDF generation
+
+Update to:
+
+Generate queries with intents (your new system already does 20–30 queries; reuse that).
+
+Call run_multi_llm_visibility(business, queries_with_intent) to get:
+
+visibility_data["queries"] (list of QueryVisibilityAggregate)
+
+visibility_data["summary"] (aggregated stats)
+
+Store visibility_data in the audit object (e.g., audit.multi_llm_visibility_json).
+
+Pass visibility_data into:
+
+Genius Mode (as part of the context).
+
+PDF generator (to build the Multi-Source Visibility and Competitor Intelligence sections).
+
+B) Genius Mode
+
+In your Genius Mode / strategy module, update the prompt so that:
+
+In addition to site context + Perplexity snapshot, it now receives:
+
+text
+Copy code
+MULTI-LLM VISIBILITY SNAPSHOT:
+- For each query: which brands each LLM (OpenAI sim, Perplexity web, Gemini sim) recommended.
+- Aggregated "share-of-voice" per competitor.
+
+Use this to:
+- Identify where the client is never mentioned.
+- Prioritize opportunities where competitors dominate across multiple assistants.
+- Suggest pages and actions that will improve recommendations across ALL AI channels.
+You don’t need to change the external behavior of Genius Mode; just give it richer context.
+
+C) PDF generator
+
+Update the premium PDF so that:
+
+Executive Dashboard reads from visibility_data["summary"]:
+
+Total queries
+
+Percent where the client is mentioned overall
+
+Percent where the client is mentioned in each provider (OpenAI, Perplexity, Gemini)
+
+Top 3 competitors by frequency
+
+Multi-Source Visibility section:
+
+Show a matrix like:
+
+Rows: query clusters or key queries
+
+Columns: OpenAI, Perplexity, Gemini
+
+Cells: who is recommended (client vs main competitor)
+
+Make it clear in the text:
+
+"OpenAI simulated assistant"
+
+"Perplexity (web-grounded)"
+
+"Gemini simulated assistant"
+
+Competitor Intelligence section:
+
+Use aggregated competitor counts:
+
+e.g., “Grainger appears in 18/24 queries, Uline in 16/24, Better Pak in 0/24.”
+
+Ensure styling remains consistent:
+
+Color coding by intent type (you already added this).
+
+Provider labels are clear and consistent.
+
+======================================================
+PART 4 – Config, Feature Flags, and Robustness
+Environment variables
+
+Ensure services/config.py supports:
+
+OPENAI_API_KEY
+
+PERPLEXITY_API_KEY
+
+GEMINI_API_KEY or GOOGLE_API_KEY
+
+Optional:
+
+GEMINI_MODEL (default "gemini-1.5-flash")
+
+Add helper flags:
+
+python
+Copy code
+OPENAI_ENABLED = bool(OPENAI_API_KEY)
+PERPLEXITY_ENABLED = bool(PERPLEXITY_API_KEY)
+GEMINI_ENABLED = bool(GEMINI_API_KEY or GOOGLE_API_KEY)
+Each provider module should check its own flag before running.
+
+Fallbacks
+
+If a provider is disabled or errors:
+
+Do NOT crash the audit.
+
+Just skip that provider, leaving fewer ProviderVisibility entries.
+
+The summary computation and PDF must handle missing providers gracefully.
+
+Performance & cost
+
+If needed, allow a simple config to limit how many queries are sent per provider, e.g.,:
+
+MAX_VISIBILITY_QUERIES_PER_PROVIDER default 30.
+
+Try to reuse existing query generation instead of inventing new paths.
+
+======================================================
+PART 5 – Acceptance Checklist & Summary
+When you’re done, please:
+
+List the files you changed/created:
+
+e.g., services/visibility_models.py, services/visibility_hub.py, services/openai_visibility.py, services/gemini_client.py, services/gemini_visibility.py, PDF generator updates, etc.
+
+Explain:
+
+How an audit now uses all three LLMs (step by step).
+
+How to disable Gemini/Perplexity via env vars and what effect that has.
+
+Confirm:
+
+A new Better Pak audit generates a PDF where:
+
+Multi-Source Visibility explicitly references OpenAI, Perplexity, and Gemini.
+
+The Competitor Intelligence section uses aggregated counts across providers.
+
+The report still meets the premium formatting and content standards from the previous prompt.

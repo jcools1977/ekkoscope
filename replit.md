@@ -6,13 +6,27 @@ EkkoScope is a premium SaaS web application designed to analyze and improve "AI 
 
 ## Recent Changes (November 2025)
 
+### Multi-LLM Visibility System (v1.1)
+- **Three AI Provider Support**: Visibility analysis now runs across OpenAI, Perplexity, and Google Gemini
+- **Unified Visibility Models**: New Pydantic models for consistent data across all providers
+- **Multi-Source Visibility Matrix**: PDF reports show side-by-side comparison of visibility across all AI assistants
+- **Enhanced Genius Mode**: Now receives cross-platform visibility data for more comprehensive insights
+- **Graceful Degradation**: System continues working if any provider is unavailable or fails
+
+### New Multi-LLM Files
+- `services/visibility_models.py` - Pydantic models for unified visibility data (BrandHit, ProviderVisibility, QueryVisibilityAggregate)
+- `services/visibility_hub.py` - Orchestrates all visibility providers and computes summary stats
+- `services/openai_visibility.py` - OpenAI simulated ChatGPT recommendations
+- `services/gemini_client.py` - Google Gemini API client
+- `services/gemini_visibility.py` - Gemini simulated AI assistant recommendations
+
 ### Premium PDF Report Enhancement (v1.0)
 - **Enhanced Query Generation**: Expanded from 4 generic queries to 20-30 industry-specific queries with intent classification (emergency, high_ticket, replenishment, informational, transactional)
 - **Professional PDF Reports**: Complete redesign with:
   - Executive Dashboard with key metrics and score distribution
   - Query Analysis with intent classification
   - Competitor Landscape Matrix with threat levels
-  - Multi-Source Visibility comparison (OpenAI vs Perplexity)
+  - Multi-Source AI Visibility Matrix (OpenAI, Perplexity, Gemini comparison)
   - Detailed Page Blueprints section (3-7 pages with SEO specs)
   - 30-Day Implementation Roadmap (week-by-week action plan)
   - Strategic Recommendations section
@@ -21,9 +35,11 @@ EkkoScope is a premium SaaS web application designed to analyze and improve "AI 
 
 ### Key Files Updated
 - `services/query_generator.py` (NEW) - Comprehensive query generation with intent classification
-- `services/reporting.py` - Complete PDF report redesign
-- `services/analysis.py` - Added intent metadata to query results
+- `services/reporting.py` - Complete PDF report redesign with multi-LLM visibility matrix
+- `services/analysis.py` - Added intent metadata and multi-LLM visibility to query results
+- `services/genius.py` - Enhanced with multi-LLM visibility context
 - `services/database.py` - Enhanced tenant config with categories and business_type
+- `services/config.py` - Added Gemini configuration and provider flags
 
 ## User Preferences
 
@@ -41,7 +57,12 @@ The backend is built with FastAPI and Uvicorn, running on Python 3.11+. It handl
 
 ### AI Integration
 
-The system integrates with the OpenAI API for core AI visibility analysis and content recommendation generation. It employs prompt engineering for structured, JSON-formatted responses. Genius Mode leverages both OpenAI and optionally Perplexity AI to generate patterns, priority opportunities, and quick wins based on query results and website content analysis. Each query is now classified by intent type for more actionable insights.
+The system integrates with multiple AI APIs for comprehensive visibility analysis:
+- **OpenAI API**: Core engine for query analysis, simulated ChatGPT recommendations, and Genius Mode insights
+- **Perplexity API**: Web-grounded real-time search visibility using Sonar Pro model
+- **Google Gemini API**: Additional AI assistant simulation for cross-platform visibility comparison
+
+The multi-LLM visibility hub orchestrates queries across all available providers and aggregates results into unified visibility data. Genius Mode receives cross-platform visibility snapshots to generate more comprehensive patterns, opportunities, and recommendations. Each query is classified by intent type for prioritized insights.
 
 ### System Design Choices
 
@@ -60,6 +81,7 @@ The system integrates with the OpenAI API for core AI visibility analysis and co
 
 - **OpenAI API**: Core AI engine for visibility analysis and content recommendations. Requires `OPENAI_API_KEY`.
 - **Perplexity API**: (Optional) Provides web-grounded, real-time search capabilities to augment AI visibility analysis. Requires `PERPLEXITY_API_KEY`.
+- **Google Gemini API**: (Optional) Additional AI assistant simulation for cross-platform visibility comparison. Requires `GOOGLE_GEMINI_API_KEY`.
 - **Stripe**: Payment gateway for one-time snapshot audits and ongoing subscriptions. Integrates Stripe Checkout for payment processing and webhooks for transaction handling. Requires `STRIPE_PRICE_SNAPSHOT`, `STRIPE_PRICE_ONGOING_SETUP`, `STRIPE_PRICE_ONGOING_MONTHLY`, and `STRIPE_WEBHOOK_SECRET`.
 
 ### Python Packages

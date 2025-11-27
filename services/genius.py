@@ -1,7 +1,7 @@
 """
 Genius Insights Module v2 for EkkoScope GEO Visibility Analysis
 Enhanced with site awareness, impact/effort scoring, and structured JSON output.
-Now includes Perplexity web-grounded visibility data for enhanced insights.
+Now includes multi-LLM visibility data (OpenAI, Perplexity, Gemini) for enhanced insights.
 """
 
 import os
@@ -29,10 +29,11 @@ def generate_genius_insights(
     tenant: Dict[str, Any],
     analysis: Dict[str, Any],
     site_snapshot: Dict[str, Any] | None = None,
-    perplexity_visibility: Optional[Dict[str, Any]] = None
+    perplexity_visibility: Optional[Dict[str, Any]] = None,
+    multi_llm_visibility: Optional[Any] = None
 ) -> Dict[str, Any]:
     """
-    Use OpenAI to turn raw analysis + site snapshot + Perplexity visibility into actionable genius insights:
+    Use OpenAI to turn raw analysis + site snapshot + multi-LLM visibility into actionable genius insights:
     - Patterns in AI visibility with evidence
     - Prioritized opportunities with impact/effort scoring
     - Quick wins for next 30 days
@@ -42,7 +43,8 @@ def generate_genius_insights(
         tenant: Tenant configuration (name, domains, aliases, geo, etc.)
         analysis: Normalized analysis result (queries, scores, competitors, etc.)
         site_snapshot: Optional site content snapshot from site_inspector
-        perplexity_visibility: Optional Perplexity visibility probe results
+        perplexity_visibility: Optional Perplexity visibility probe results (legacy)
+        multi_llm_visibility: Optional MultiLLMVisibilityResult from visibility hub
     
     Returns:
         JSON-serializable dict with enhanced genius insights
@@ -90,6 +92,13 @@ def generate_genius_insights(
         perplexity_summary = format_perplexity_visibility_for_genius(perplexity_visibility)
         perplexity_available = perplexity_visibility and perplexity_visibility.get("enabled", False)
         
+        multi_llm_summary = ""
+        multi_llm_available = False
+        if multi_llm_visibility:
+            from services.visibility_hub import format_multi_llm_visibility_for_genius
+            multi_llm_summary = format_multi_llm_visibility_for_genius(multi_llm_visibility, tenant_name)
+            multi_llm_available = len(multi_llm_visibility.providers_used) > 0
+        
         context_json = json.dumps({
             "tenant_name": tenant_name,
             "domains": [d for d in domains if not d.startswith("AD_") and "_SITE_URL" not in d],
@@ -105,13 +114,21 @@ def generate_genius_insights(
             "top_competitors": top_competitors
         }, indent=2)
         
+        multi_llm_input = ""
+        if multi_llm_available:
+            providers = multi_llm_visibility.providers_used if multi_llm_visibility else []
+            multi_llm_input = f"4. MULTI-LLM VISIBILITY ANALYSIS: Results from {len(providers)} AI providers ({', '.join(providers)}) showing who each AI recommends"
+        else:
+            multi_llm_input = "4. Multi-LLM visibility data: NOT AVAILABLE"
+        
         system_prompt = f"""You are an expert GEO (Generative Engine Optimization) strategist analyzing AI visibility data for {tenant_name}.
 
 INPUTS PROVIDED:
 1. Tenant info: name, domains, geo focus, brand aliases
 2. Query analysis: each query tested, its score (0-2), and competitors that appeared
 3. {"Current site content: actual headings, meta descriptions, and text from their website" if site_available else "Site content: NOT AVAILABLE for this analysis"}
-4. {"PERPLEXITY WEB-GROUNDED VISIBILITY: Real-time web search results showing who currently appears for each query" if perplexity_available else "Perplexity visibility data: NOT AVAILABLE"}
+{multi_llm_input}
+5. {"PERPLEXITY WEB-GROUNDED VISIBILITY: Real-time web search results showing who currently appears for each query" if perplexity_available else "Perplexity visibility data: NOT AVAILABLE (covered in multi-LLM analysis if available)"}
 
 YOUR TASK: Generate SPECIFIC, ACTIONABLE insights grounded in the actual data.
 
@@ -124,7 +141,7 @@ CRITICAL RULES:
 6. Quick wins MUST be completable in 30 days with specific actions
 7. NO generic advice like "improve SEO" - everything must be specific to THIS business
 {"8. Use the site content to identify missing phrases, weak headings, and content gaps" if site_available else "8. Note that site content review was not possible for this run"}
-{"9. IMPORTANT: Cross-reference the Perplexity web search results with the OpenAI visibility analysis - note where they agree/disagree on who is recommended" if perplexity_available else ""}
+{"9. IMPORTANT: Cross-reference visibility across ALL AI providers (OpenAI, Perplexity, Gemini) to find where they agree/disagree on recommendations. Prioritize opportunities where the client is missing across multiple AIs." if multi_llm_available else "9. Note: Multi-LLM cross-referencing was not available for this run"}
 
 Output ONLY valid JSON matching this exact structure:
 
@@ -189,7 +206,9 @@ Generate 2-3 patterns, 2-3 priority opportunities with full page blueprints, 3-5
 {"=== CURRENT SITE CONTENT ===" if site_available else "=== SITE CONTENT ==="}
 {site_content_summary if site_available else "Site content could not be retrieved. Focus insights on the query analysis and competitor data."}
 
-{perplexity_summary}
+{multi_llm_summary if multi_llm_available else "MULTI-LLM VISIBILITY: Not available for this run."}
+
+{perplexity_summary if perplexity_available and not multi_llm_available else ""}
 
 === REQUIREMENTS ===
 - {tenant_name} operates in: {', '.join(geo_focus) if geo_focus else 'their local area'}
@@ -197,7 +216,7 @@ Generate 2-3 patterns, 2-3 priority opportunities with full page blueprints, 3-5
 - Reference the ACTUAL queries, scores, and competitors from the data above
 - Make every recommendation specific to THIS business
 - {"Identify content gaps based on what the site currently says vs what AI recommends" if site_available else "Note that site content analysis was not possible"}
-- {"Cross-reference Perplexity's real-time web visibility with OpenAI's simulated recommendations to find patterns" if perplexity_available else "Perplexity data was not available for this run"}"""
+- {"Cross-reference visibility across OpenAI, Perplexity, and Gemini to find consistent patterns and gaps" if multi_llm_available else "Multi-LLM cross-referencing was not available for this run"}"""
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -221,7 +240,9 @@ Generate 2-3 patterns, 2-3 priority opportunities with full page blueprints, 3-5
             "quick_wins": insights.get("quick_wins", []),
             "future_ai_answers": insights.get("future_ai_answers", []),
             "site_analyzed": site_available,
-            "perplexity_used": perplexity_available
+            "perplexity_used": perplexity_available,
+            "multi_llm_used": multi_llm_available,
+            "providers_used": multi_llm_visibility.providers_used if multi_llm_visibility else []
         }
     
     except Exception as e:
@@ -237,7 +258,9 @@ def _empty_genius_insights() -> Dict[str, Any]:
         "quick_wins": [],
         "future_ai_answers": [],
         "site_analyzed": False,
-        "perplexity_used": False
+        "perplexity_used": False,
+        "multi_llm_used": False,
+        "providers_used": []
     }
 
 

@@ -547,69 +547,84 @@ def _add_competitor_matrix(pdf: EkkoScopePDF, data: Dict[str, Any]):
 
 
 def _add_multi_source_visibility(pdf: EkkoScopePDF, data: Dict[str, Any]):
-    """Add multi-source visibility comparison (OpenAI vs Perplexity)."""
+    """Add multi-source visibility comparison (OpenAI, Perplexity, Gemini)."""
     pdf.add_page()
+    
+    multi_llm = data.get("multi_llm_visibility")
+    providers_used = multi_llm.get("providers_used", []) if multi_llm else []
     
     perplexity_data = data.get("perplexity_visibility")
     perplexity_enabled = perplexity_data and perplexity_data.get("enabled", False)
     
     pdf.section_header(
-        "Multi-Source Visibility Snapshot",
-        "Comparison of AI visibility across different AI platforms and search engines"
+        "Multi-Source AI Visibility Matrix",
+        "Cross-platform comparison of your visibility across multiple AI assistants"
     )
     pdf.ln(5)
     
     pdf.set_font("Helvetica", "B", 11)
     pdf.set_text_color(*BRAND_BLUE)
-    pdf.cell(0, 8, "Data Sources Used", align="L")
+    pdf.cell(0, 8, "AI Providers Analyzed", align="L")
     pdf.ln(8)
     
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(*DARK_TEXT)
     
-    sources = ["OpenAI GPT-4o-mini - Simulated AI recommendations"]
-    if perplexity_enabled:
-        sources.append("Perplexity Sonar - Web-grounded real-time visibility")
+    provider_descriptions = {
+        "openai_sim": "OpenAI (ChatGPT) - Simulated assistant recommendations",
+        "perplexity_web": "Perplexity - Web-grounded real-time search visibility",
+        "gemini_sim": "Google Gemini - Simulated AI assistant recommendations"
+    }
+    
+    if providers_used:
+        for provider in providers_used:
+            desc = provider_descriptions.get(provider, provider)
+            pdf.bullet_point(desc)
+    else:
+        pdf.bullet_point("OpenAI GPT-4o-mini - Simulated AI recommendations")
+        if perplexity_enabled:
+            pdf.bullet_point("Perplexity Sonar - Web-grounded real-time visibility")
     
     site_snapshot = data.get("site_snapshot")
     if site_snapshot and site_snapshot.get("pages"):
-        sources.append("Site Content Analysis - Current website content review")
-    
-    for source in sources:
-        pdf.bullet_point(source)
+        pdf.bullet_point("Site Content Analysis - Current website content review")
     
     pdf.ln(8)
     
-    perplexity_queries_list = perplexity_data.get("queries", []) if perplexity_data else []
+    multi_llm_queries = multi_llm.get("queries", []) if multi_llm else []
     
-    if perplexity_enabled and perplexity_queries_list:
-        pdf.subsection_header("OpenAI vs Perplexity Comparison")
+    if multi_llm_queries and len(providers_used) > 1:
+        pdf.subsection_header("AI Provider Comparison Matrix")
         
         pdf.set_fill_color(*BRAND_TEAL)
         pdf.set_text_color(*WHITE)
-        pdf.set_font("Helvetica", "B", 8)
-        pdf.cell(70, 7, "Query", border=0, align="L", fill=True)
-        pdf.cell(30, 7, "OpenAI", border=0, align="C", fill=True)
-        pdf.cell(30, 7, "Perplexity", border=0, align="C", fill=True)
-        pdf.cell(60, 7, "Key Competitors", border=0, align="L", fill=True)
+        pdf.set_font("Helvetica", "B", 7)
+        
+        col_width = 25
+        query_width = 55
+        
+        pdf.cell(query_width, 7, "Query", border=0, align="L", fill=True)
+        
+        provider_labels = {
+            "openai_sim": "OpenAI",
+            "perplexity_web": "Perplexity",
+            "gemini_sim": "Gemini"
+        }
+        
+        for provider in ["openai_sim", "perplexity_web", "gemini_sim"]:
+            if provider in providers_used:
+                pdf.cell(col_width, 7, provider_labels.get(provider, provider), border=0, align="C", fill=True)
+        
+        pdf.cell(55, 7, "Top Competitors", border=0, align="L", fill=True)
         pdf.ln()
         
-        pdf.set_font("Helvetica", "", 8)
+        pdf.set_font("Helvetica", "", 7)
         row_fill = False
         
-        perplexity_queries = {q.get("query", ""): q for q in perplexity_queries_list}
-        
-        for query_data in data["queries"][:12]:
-            query = query_data.get("query", "")
-            query_short = query[:40] + "..." if len(query) > 40 else query
-            openai_score = query_data.get("score", 0)
-            
-            perp_data = perplexity_queries.get(query, {})
-            perp_mentioned = perp_data.get("business_mentioned", False)
-            perp_score = "Yes" if perp_mentioned else "No"
-            
-            competitors = query_data.get("competitors", [])[:2]
-            comp_str = ", ".join(competitors)[:35] if competitors else "-"
+        for q_agg in multi_llm_queries[:15]:
+            query = q_agg.get("query", "")
+            query_short = query[:32] + "..." if len(query) > 32 else query
+            intent = q_agg.get("intent", "")
             
             if row_fill:
                 pdf.set_fill_color(*ACCENT_BG)
@@ -617,46 +632,150 @@ def _add_multi_source_visibility(pdf: EkkoScopePDF, data: Dict[str, Any]):
                 pdf.set_fill_color(*WHITE)
             
             pdf.set_text_color(*DARK_TEXT)
-            pdf.cell(70, 6, query_short, border=0, align="L", fill=True)
+            pdf.cell(query_width, 6, query_short, border=0, align="L", fill=True)
             
-            if openai_score == 2:
-                pdf.set_text_color(*SUCCESS_GREEN)
-                openai_str = "Primary"
-            elif openai_score == 1:
-                pdf.set_text_color(*WARNING_YELLOW)
-                openai_str = "Mentioned"
-            else:
-                pdf.set_text_color(*ERROR_RED)
-                openai_str = "Not Found"
-            pdf.cell(30, 6, openai_str, border=0, align="C", fill=True)
+            providers_data = q_agg.get("providers", [])
+            providers_by_name = {p.get("provider"): p for p in providers_data}
             
-            if perp_mentioned:
-                pdf.set_text_color(*SUCCESS_GREEN)
-            else:
-                pdf.set_text_color(*ERROR_RED)
-            pdf.cell(30, 6, perp_score, border=0, align="C", fill=True)
+            all_competitors = []
             
+            for provider in ["openai_sim", "perplexity_web", "gemini_sim"]:
+                if provider in providers_used:
+                    pv = providers_by_name.get(provider, {})
+                    target_found = pv.get("target_found", False)
+                    
+                    if target_found:
+                        pdf.set_text_color(*SUCCESS_GREEN)
+                        status = "Found"
+                    else:
+                        pdf.set_text_color(*ERROR_RED)
+                        status = "Missing"
+                    
+                    pdf.cell(col_width, 6, status, border=0, align="C", fill=True)
+                    
+                    for brand in pv.get("recommended_brands", [])[:2]:
+                        name = brand.get("name", "") if isinstance(brand, dict) else str(brand)
+                        if name and name not in all_competitors:
+                            all_competitors.append(name)
+            
+            comp_str = ", ".join(all_competitors[:3])[:35] if all_competitors else "-"
             pdf.set_text_color(*MEDIUM_TEXT)
-            pdf.cell(60, 6, comp_str, border=0, align="L", fill=True)
+            pdf.cell(55, 6, comp_str, border=0, align="L", fill=True)
             pdf.ln()
             
             row_fill = not row_fill
+        
+        pdf.ln(5)
+        
+        summary = multi_llm.get("summary", {}) if multi_llm else {}
+        provider_stats = summary.get("provider_stats", {})
+        
+        if provider_stats:
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(*BRAND_BLUE)
+            pdf.cell(0, 8, "Visibility by Provider", align="L")
+            pdf.ln(6)
+            
+            pdf.set_font("Helvetica", "", 9)
+            for provider, stats in provider_stats.items():
+                if stats.get("total_probes", 0) > 0:
+                    label = provider_labels.get(provider, provider)
+                    found = stats.get("target_found", 0)
+                    total = stats.get("successful_probes", 0)
+                    pct = stats.get("target_percent", 0)
+                    
+                    pdf.set_text_color(*DARK_TEXT)
+                    pdf.cell(40, 5, f"{label}:", align="L")
+                    
+                    if pct >= 50:
+                        pdf.set_text_color(*SUCCESS_GREEN)
+                    elif pct >= 25:
+                        pdf.set_text_color(*WARNING_YELLOW)
+                    else:
+                        pdf.set_text_color(*ERROR_RED)
+                    
+                    pdf.cell(0, 5, f"Found in {found}/{total} queries ({pct:.1f}%)", align="L")
+                    pdf.ln()
+    
+    elif perplexity_enabled:
+        perplexity_queries_list = perplexity_data.get("queries", []) if perplexity_data else []
+        
+        if perplexity_queries_list:
+            pdf.subsection_header("OpenAI vs Perplexity Comparison")
+            
+            pdf.set_fill_color(*BRAND_TEAL)
+            pdf.set_text_color(*WHITE)
+            pdf.set_font("Helvetica", "B", 8)
+            pdf.cell(70, 7, "Query", border=0, align="L", fill=True)
+            pdf.cell(30, 7, "OpenAI", border=0, align="C", fill=True)
+            pdf.cell(30, 7, "Perplexity", border=0, align="C", fill=True)
+            pdf.cell(60, 7, "Key Competitors", border=0, align="L", fill=True)
+            pdf.ln()
+            
+            pdf.set_font("Helvetica", "", 8)
+            row_fill = False
+            
+            perplexity_queries = {q.get("query", ""): q for q in perplexity_queries_list}
+            
+            for query_data in data["queries"][:12]:
+                query = query_data.get("query", "")
+                query_short = query[:40] + "..." if len(query) > 40 else query
+                openai_score = query_data.get("score", 0)
+                
+                perp_data = perplexity_queries.get(query, {})
+                perp_parsed = perp_data.get("data", {})
+                perp_mentioned = perp_parsed.get("target_business_found", False) if perp_parsed else False
+                perp_score = "Yes" if perp_mentioned else "No"
+                
+                competitors = query_data.get("competitors", [])[:2]
+                comp_str = ", ".join(competitors)[:35] if competitors else "-"
+                
+                if row_fill:
+                    pdf.set_fill_color(*ACCENT_BG)
+                else:
+                    pdf.set_fill_color(*WHITE)
+                
+                pdf.set_text_color(*DARK_TEXT)
+                pdf.cell(70, 6, query_short, border=0, align="L", fill=True)
+                
+                if openai_score == 2:
+                    pdf.set_text_color(*SUCCESS_GREEN)
+                    openai_str = "Primary"
+                elif openai_score == 1:
+                    pdf.set_text_color(*WARNING_YELLOW)
+                    openai_str = "Mentioned"
+                else:
+                    pdf.set_text_color(*ERROR_RED)
+                    openai_str = "Not Found"
+                pdf.cell(30, 6, openai_str, border=0, align="C", fill=True)
+                
+                if perp_mentioned:
+                    pdf.set_text_color(*SUCCESS_GREEN)
+                else:
+                    pdf.set_text_color(*ERROR_RED)
+                pdf.cell(30, 6, perp_score, border=0, align="C", fill=True)
+                
+                pdf.set_text_color(*MEDIUM_TEXT)
+                pdf.cell(60, 6, comp_str, border=0, align="L", fill=True)
+                pdf.ln()
+                
+                row_fill = not row_fill
     else:
         pdf.set_fill_color(*ACCENT_BG)
         pdf.set_draw_color(*BRAND_BLUE)
-        pdf.rect(10, pdf.get_y(), 190, 25, style="FD")
+        pdf.rect(10, pdf.get_y(), 190, 30, style="FD")
         
         pdf.set_xy(15, pdf.get_y() + 5)
         pdf.set_font("Helvetica", "B", 10)
         pdf.set_text_color(*BRAND_BLUE)
-        pdf.cell(0, 6, "Perplexity Web-Grounded Visibility", align="L")
+        pdf.cell(0, 6, "Multi-LLM Visibility Analysis", align="L")
         
         pdf.set_xy(15, pdf.get_y() + 10)
         pdf.set_font("Helvetica", "", 9)
         pdf.set_text_color(*MEDIUM_TEXT)
-        pdf.multi_cell(180, 4, "Perplexity visibility probing was not enabled for this analysis. Enable it to see real-time web search visibility data.")
+        pdf.multi_cell(180, 4, "Multi-provider visibility analysis was not available for this audit. Enable Perplexity and/or Gemini API keys to see cross-platform visibility data from multiple AI assistants.")
         
-        pdf.ln(15)
+        pdf.ln(20)
     
     pdf.ln(10)
     pdf.set_font("Helvetica", "B", 11)

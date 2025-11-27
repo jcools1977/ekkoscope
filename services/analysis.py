@@ -7,7 +7,8 @@ from openai import OpenAI
 from services.genius import generate_genius_insights
 from services.site_inspector import fetch_site_snapshot
 from services.perplexity_visibility import run_perplexity_visibility_probe
-from services.config import PERPLEXITY_ENABLED
+from services.visibility_hub import run_multi_llm_visibility, format_multi_llm_visibility_for_genius
+from services.config import PERPLEXITY_ENABLED, OPENAI_ENABLED, GEMINI_ENABLED
 
 logger = logging.getLogger(__name__)
 
@@ -201,24 +202,45 @@ def run_analysis(tenant_config: Dict[str, Any]) -> Dict[str, Any]:
     
     primary_domain = domains[0] if domains else ""
     
+    queries_with_intent = [
+        {
+            "query": q,
+            "intent": query_intent_map.get(q, {}).get("intent_type", "informational"),
+            "intent_value": query_intent_map.get(q, {}).get("intent_value", 5)
+        }
+        for q in queries
+    ]
+    
+    multi_llm_visibility = None
     perplexity_visibility = None
-    if PERPLEXITY_ENABLED:
-        logger.info("Running Perplexity visibility probe for %s", tenant_name)
-        try:
+    
+    logger.info("Running multi-LLM visibility probe for %s", tenant_name)
+    try:
+        multi_llm_visibility = run_multi_llm_visibility(
+            business_name=tenant_name,
+            primary_domain=primary_domain,
+            regions=geo_focus,
+            queries_with_intent=queries_with_intent,
+            run_openai=True,
+            run_perplexity=PERPLEXITY_ENABLED,
+            run_gemini=GEMINI_ENABLED
+        )
+        logger.info(
+            "Multi-LLM visibility complete: %d queries, providers: %s",
+            len(multi_llm_visibility.queries),
+            ", ".join(multi_llm_visibility.providers_used)
+        )
+        
+        if PERPLEXITY_ENABLED:
             perplexity_visibility = run_perplexity_visibility_probe(
                 business_name=tenant_name,
                 primary_domain=primary_domain,
                 regions=geo_focus,
                 queries=queries
             )
-            summary = (perplexity_visibility or {}).get("summary") or {}
-            successful = summary.get("successful_probes", 0)
-            logger.info("Perplexity probe complete: %d/%d queries successful", successful, len(queries))
-        except Exception as e:
-            logger.warning("Perplexity visibility probe failed (non-fatal): %s", e)
-            perplexity_visibility = {"enabled": False, "queries": [], "summary": None}
-    else:
-        logger.info("Perplexity not enabled, skipping visibility probe")
+    except Exception as e:
+        logger.warning("Multi-LLM visibility probe failed (non-fatal): %s", e)
+        multi_llm_visibility = None
     
     results = []
     
@@ -249,6 +271,14 @@ def run_analysis(tenant_config: Dict[str, Any]) -> Dict[str, Any]:
     primary_count = sum(1 for r in results if r["primary_recommendation"])
     avg_score = sum(r["score"] for r in results) / total_queries if total_queries > 0 else 0
     
+    multi_llm_data = None
+    if multi_llm_visibility:
+        multi_llm_data = {
+            "queries": [q.model_dump() for q in multi_llm_visibility.queries],
+            "summary": multi_llm_visibility.summary.model_dump(),
+            "providers_used": multi_llm_visibility.providers_used
+        }
+    
     summary = {
         "tenant_id": tenant_id,
         "tenant_name": tenant_name,
@@ -258,7 +288,8 @@ def run_analysis(tenant_config: Dict[str, Any]) -> Dict[str, Any]:
         "primary_count": primary_count,
         "avg_score": round(avg_score, 2),
         "results": results,
-        "perplexity_visibility": perplexity_visibility
+        "perplexity_visibility": perplexity_visibility,
+        "multi_llm_visibility": multi_llm_data
     }
     
     suggestions_data = generate_suggestions(tenant_config, summary)
@@ -278,7 +309,8 @@ def run_analysis(tenant_config: Dict[str, Any]) -> Dict[str, Any]:
             tenant_config, 
             summary, 
             site_snapshot,
-            perplexity_visibility=perplexity_visibility
+            perplexity_visibility=perplexity_visibility,
+            multi_llm_visibility=multi_llm_visibility
         )
         summary["genius_insights"] = genius_data
     except Exception as e:

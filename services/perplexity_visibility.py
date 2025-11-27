@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional
 
 from services.perplexity_client import call_perplexity_chat
 from services.config import PERPLEXITY_ENABLED
+from services.visibility_models import BrandHit, ProviderVisibility
 
 logger = logging.getLogger(__name__)
 
@@ -265,3 +266,98 @@ def format_perplexity_visibility_for_genius(
         lines.append("")
     
     return "\n".join(lines)
+
+
+def run_perplexity_visibility_for_queries(
+    business_name: str,
+    primary_domain: str,
+    regions: List[str],
+    queries_with_intent: List[Dict[str, Any]]
+) -> List[ProviderVisibility]:
+    """
+    Run Perplexity web-grounded visibility probe for each query.
+    Returns ProviderVisibility objects for the unified visibility system.
+    
+    Args:
+        business_name: Name of the target business
+        primary_domain: Business website URL
+        regions: Geographic regions
+        queries_with_intent: List of dicts with 'query' and 'intent' keys
+    
+    Returns:
+        List of ProviderVisibility objects
+    """
+    if not PERPLEXITY_ENABLED:
+        logger.info("Perplexity visibility probe skipped - not enabled")
+        return []
+    
+    results: List[ProviderVisibility] = []
+    
+    for item in queries_with_intent:
+        query = item.get("query", "")
+        intent = item.get("intent")
+        
+        if not query:
+            continue
+        
+        messages = build_perplexity_visibility_prompt(
+            business_name, primary_domain, regions, query
+        )
+        raw = call_perplexity_chat(messages)
+        
+        if raw is None:
+            results.append(ProviderVisibility(
+                provider="perplexity_web",
+                query=query,
+                intent=intent,
+                recommended_brands=[],
+                target_found=False,
+                success=False
+            ))
+            continue
+        
+        parsed = parse_perplexity_response(raw)
+        
+        if parsed is None:
+            results.append(ProviderVisibility(
+                provider="perplexity_web",
+                query=query,
+                intent=intent,
+                recommended_brands=[],
+                target_found=False,
+                raw_response=raw,
+                success=False
+            ))
+            continue
+        
+        recommended_brands = [
+            BrandHit(
+                name=rec.get("name", "Unknown"),
+                url=rec.get("url"),
+                reason=rec.get("reason")
+            )
+            for rec in parsed.get("recommended_brands", [])
+        ]
+        
+        target_found = parsed.get("target_business_found", False)
+        target_position = parsed.get("target_position")
+        
+        if not target_found and recommended_brands:
+            for i, brand in enumerate(recommended_brands):
+                if business_name.lower() in brand.name.lower():
+                    target_found = True
+                    target_position = i + 1
+                    break
+        
+        results.append(ProviderVisibility(
+            provider="perplexity_web",
+            query=query,
+            intent=intent,
+            recommended_brands=recommended_brands,
+            target_found=target_found,
+            target_position=target_position,
+            raw_response=raw,
+            success=True
+        ))
+    
+    return results
