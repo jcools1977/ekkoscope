@@ -109,9 +109,23 @@
             border-color: var(--brand-teal);
         }
         
+        .business-info {
+            flex: 1;
+        }
+        
+        .business-info a {
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .business-info a:hover h3 {
+            color: var(--brand-teal);
+        }
+        
         .business-info h3 {
             font-size: 1.2rem;
             margin-bottom: 0.25rem;
+            transition: color 0.2s;
         }
         
         .business-info .domain {
@@ -275,8 +289,10 @@
             {% for business in businesses %}
             <div class="business-card">
                 <div class="business-info">
-                    <h3>{{ business.name }}</h3>
-                    <div class="domain">{{ business.primary_domain }}</div>
+                    <a href="/dashboard/business/{{ business.id }}">
+                        <h3>{{ business.name }}</h3>
+                        <div class="domain">{{ business.primary_domain }}</div>
+                    </a>
                 </div>
                 <div class="business-status">
                     {% if business.subscription_active and business.plan == 'ongoing' %}
@@ -288,8 +304,9 @@
                     {% endif %}
                     
                     <div class="business-actions">
+                        <a href="/dashboard/business/{{ business.id }}" class="action-btn secondary">Manage</a>
                         {% if business.audits %}
-                        <a href="/dashboard/business/{{ business.id }}/audits" class="action-btn secondary">View Audits</a>
+                        <a href="/dashboard/business/{{ business.id }}/audits" class="action-btn secondary">Audits</a>
                         {% endif %}
                         {% if not business.subscription_active %}
                         <a href="/dashboard/business/{{ business.id }}/upgrade" class="action-btn primary">Get Audit</a>

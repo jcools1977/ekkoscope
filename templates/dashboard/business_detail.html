@@ -376,10 +376,23 @@
             cursor: pointer;
             font-size: 0.75rem;
             transition: all 0.2s;
-            margin-left: 0.5rem;
         }
         .btn-delete:hover {
             background: rgba(239, 68, 68, 0.2);
+        }
+        
+        .btn-stop {
+            background: transparent;
+            border: 1px solid #f59e0b;
+            color: #f59e0b;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+        .btn-stop:hover {
+            background: rgba(245, 158, 11, 0.2);
         }
         
         .audit-actions {
@@ -509,6 +522,11 @@
                     <div class="audit-channel">Channel: {{ audit.channel | replace('_', ' ') | title }}</div>
                 </a>
                 <div class="audit-actions">
+                    {% if audit.status in ['running', 'pending'] %}
+                    <form method="POST" action="/dashboard/business/{{ business.id }}/audit/{{ audit.id }}/stop" style="display:inline;" onsubmit="return confirm('Stop this running audit?');">
+                        <button type="submit" class="btn-stop">Stop</button>
+                    </form>
+                    {% endif %}
                     <form method="POST" action="/dashboard/business/{{ business.id }}/audit/{{ audit.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this audit? This cannot be undone.');">
                         <button type="submit" class="btn-delete">Delete</button>
                     </form>
