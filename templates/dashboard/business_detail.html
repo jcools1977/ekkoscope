@@ -366,6 +366,29 @@
             color: var(--text-secondary);
             margin-bottom: 1.5rem;
         }
+        
+        .btn-delete {
+            background: transparent;
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+            margin-left: 0.5rem;
+        }
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+        
+        .audit-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -402,6 +425,9 @@
             </div>
             
             <div class="action-buttons">
+                <a href="/dashboard/business/{{ business.id }}/edit" class="admin-link" style="margin-right: 0.5rem;">
+                    Edit Profile
+                </a>
                 {% if user.is_admin %}
                 <form action="/dashboard/business/{{ business.id }}/run-audit" method="post" style="display:inline;" id="auditForm">
                     <button type="submit" class="radar-button" id="radarBtn">
@@ -482,6 +508,11 @@
                     {% endif %}
                     <div class="audit-channel">Channel: {{ audit.channel | replace('_', ' ') | title }}</div>
                 </a>
+                <div class="audit-actions">
+                    <form method="POST" action="/dashboard/business/{{ business.id }}/audit/{{ audit.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this audit? This cannot be undone.');">
+                        <button type="submit" class="btn-delete">Delete</button>
+                    </form>
+                </div>
             </div>
             {% endfor %}
         </div>

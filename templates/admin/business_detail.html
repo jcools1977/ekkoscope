@@ -104,14 +104,59 @@
     </div>
     
     <div class="actions">
-        <form method="POST" action="/admin/business/{{ business.id }}/run" style="display: inline;">
-            <button type="submit" class="btn btn-primary">Run EkkoScope Audit (Admin)</button>
+        <form method="POST" action="/admin/business/{{ business.id }}/run" style="display: inline;" class="audit-form">
+            <button type="submit" class="radar-button">
+                <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="radarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#2EE6A8"/>
+                            <stop offset="100%" style="stop-color:#18A3FF"/>
+                        </linearGradient>
+                    </defs>
+                    <g class="radar-grid">
+                        <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGrad)" stroke-width="1.5" opacity="0.3"/>
+                        <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGrad)" stroke-width="1.2" opacity="0.4"/>
+                        <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGrad)" stroke-width="1" opacity="0.5"/>
+                    </g>
+                    <g class="radar-sweep">
+                        <path d="M 40 40 L 40 5 A 35 35 0 0 1 72 55 Z" fill="url(#radarGrad)" opacity="0.15"/>
+                    </g>
+                    <g class="radar-arcs">
+                        <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                        <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                    </g>
+                    <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGrad)"/>
+                    <circle class="radar-pulse" cx="40" cy="40" r="5" fill="none" stroke="#2EE6A8" stroke-width="1.5" opacity="0.8"/>
+                </svg>
+                <span class="radar-text">Run Audit</span>
+                <span class="radar-loading-text">Running...</span>
+            </button>
         </form>
         {% if business.subscription_active and (business.plan == 'ongoing') %}
-        <form method="POST" action="/admin/business/{{ business.id }}/refresh" style="display: inline;">
-            <button type="submit" class="btn btn-secondary">Run Monthly Refresh Audit</button>
+        <form method="POST" action="/admin/business/{{ business.id }}/refresh" style="display: inline;" class="audit-form">
+            <button type="submit" class="radar-button">
+                <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="radarGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#2EE6A8"/>
+                            <stop offset="100%" style="stop-color:#18A3FF"/>
+                        </linearGradient>
+                    </defs>
+                    <g class="radar-grid">
+                        <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGrad2)" stroke-width="1.5" opacity="0.3"/>
+                        <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGrad2)" stroke-width="1.2" opacity="0.4"/>
+                    </g>
+                    <g class="radar-sweep">
+                        <path d="M 40 40 L 40 5 A 35 35 0 0 1 72 55 Z" fill="url(#radarGrad2)" opacity="0.15"/>
+                    </g>
+                    <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGrad2)"/>
+                </svg>
+                <span class="radar-text">Refresh Audit</span>
+                <span class="radar-loading-text">Running...</span>
+            </button>
         </form>
         {% endif %}
+        <a href="/admin/business/{{ business.id }}/edit" class="btn btn-secondary">Edit Business</a>
     </div>
 </div>
 
@@ -145,6 +190,9 @@
                 <td>
                     <a href="/admin/audit/{{ audit.id }}">View</a>
                     {% if audit.has_pdf %} | <a href="/admin/audit/{{ audit.id }}/download">PDF</a>{% endif %}
+                    | <form method="POST" action="/admin/audit/{{ audit.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this audit? This cannot be undone.');">
+                        <button type="submit" class="btn-delete">Delete</button>
+                    </form>
                 </td>
             </tr>
             {% endfor %}
@@ -156,4 +204,16 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+document.querySelectorAll('.audit-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const btn = this.querySelector('.radar-button');
+        if (btn) {
+            btn.classList.add('loading');
+            btn.disabled = true;
+        }
+    });
+});
+</script>
 {% endblock %}

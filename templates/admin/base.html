@@ -364,6 +364,113 @@
         .empty-state p {
             margin-bottom: 15px;
         }
+        
+        /* Radar Button Styles */
+        .radar-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            background: transparent;
+            border: 2px solid var(--brand-teal);
+            border-radius: 60px;
+            padding: 0.6rem 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+        }
+        
+        .radar-button::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 30% 50%, rgba(46, 230, 168, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .radar-button:hover::before { opacity: 1; }
+        .radar-button:hover {
+            border-color: var(--brand-teal);
+            box-shadow: 0 0 30px rgba(46, 230, 168, 0.3), inset 0 0 20px rgba(46, 230, 168, 0.05);
+            transform: scale(1.02);
+        }
+        
+        .radar-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.9;
+            pointer-events: none;
+        }
+        
+        .radar-icon {
+            width: 32px;
+            height: 32px;
+            transition: all 0.3s ease;
+        }
+        
+        .radar-button:hover .radar-icon {
+            filter: drop-shadow(0 0 8px rgba(46, 230, 168, 0.6));
+        }
+        
+        .radar-sweep { transform-origin: 40px 40px; }
+        .radar-button:hover .radar-sweep { animation: sweep-hover 2s linear infinite; }
+        .radar-button.loading .radar-sweep { animation: sweep-spin 1s linear infinite; }
+        
+        .radar-pulse { transform-origin: 40px 40px; }
+        .radar-button:hover .radar-pulse { animation: pulse-glow 1.5s ease-in-out infinite; }
+        .radar-button.loading .radar-pulse { animation: pulse-glow 0.8s ease-in-out infinite; }
+        
+        .radar-button.loading .radar-arcs { animation: arcs-pulse 1.2s ease-in-out infinite; }
+        
+        @keyframes sweep-hover { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes sweep-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse-glow { 0%, 100% { r: 5; opacity: 0.8; } 50% { r: 12; opacity: 0; } }
+        @keyframes arcs-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        
+        .radar-text {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: 0.5px;
+        }
+        
+        .radar-button:hover .radar-text {
+            color: var(--brand-teal);
+            text-shadow: 0 0 10px rgba(46, 230, 168, 0.5);
+        }
+        
+        .radar-loading-text {
+            display: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--brand-teal);
+            animation: text-pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes text-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        .radar-button.loading .radar-text { display: none; }
+        .radar-button.loading .radar-loading-text { display: inline; }
+        .radar-button.loading {
+            border-color: var(--brand-teal);
+            box-shadow: 0 0 40px rgba(46, 230, 168, 0.4), inset 0 0 30px rgba(46, 230, 168, 0.08);
+        }
+        
+        .btn-delete {
+            background: transparent;
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
     </style>
 </head>
 <body>

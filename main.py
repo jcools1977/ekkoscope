@@ -396,6 +396,127 @@ async def dashboard_audit_detail(request: Request, business_id: int, audit_id: i
         db.close()
 
 
+@app.get("/dashboard/business/{business_id}/edit", response_class=HTMLResponse)
+async def dashboard_business_edit_page(request: Request, business_id: int):
+    """Show edit form for a business."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        if user.is_admin:
+            business = db.query(Business).filter(Business.id == business_id).first()
+        else:
+            business = db.query(Business).filter(
+                Business.id == business_id,
+                Business.owner_user_id == user.id
+            ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        return templates.TemplateResponse(
+            "dashboard/business_edit.html",
+            {"request": request, "user": user, "business": business, "error": None}
+        )
+    finally:
+        db.close()
+
+
+@app.post("/dashboard/business/{business_id}/edit")
+async def dashboard_business_edit(
+    request: Request,
+    business_id: int,
+    name: str = Form(...),
+    primary_domain: str = Form(...),
+    business_type: str = Form("local_service"),
+    categories: Optional[str] = Form(None),
+    regions: Optional[str] = Form(None),
+    contact_name: Optional[str] = Form(None),
+    contact_email: Optional[str] = Form(None)
+):
+    """Update business details."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        if user.is_admin:
+            business = db.query(Business).filter(Business.id == business_id).first()
+        else:
+            business = db.query(Business).filter(
+                Business.id == business_id,
+                Business.owner_user_id == user.id
+            ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        business.name = name.strip()
+        business.primary_domain = primary_domain.lower().strip().replace("http://", "").replace("https://", "").split("/")[0]
+        business.business_type = business_type
+        business.contact_name = contact_name
+        business.contact_email = contact_email
+        
+        if categories:
+            cats = [c.strip() for c in categories.split(",") if c.strip()]
+            business.set_categories(cats)
+        else:
+            business.set_categories([])
+        
+        if regions:
+            regs = [r.strip() for r in regions.split(",") if r.strip()]
+            business.set_regions(regs)
+        else:
+            business.set_regions([])
+        
+        db.commit()
+        return RedirectResponse(url=f"/dashboard/business/{business.id}", status_code=302)
+    except Exception as e:
+        return templates.TemplateResponse(
+            "dashboard/business_edit.html",
+            {"request": request, "user": user, "business": business, "error": str(e)}
+        )
+    finally:
+        db.close()
+
+
+@app.post("/dashboard/business/{business_id}/audit/{audit_id}/delete")
+async def dashboard_delete_audit(request: Request, business_id: int, audit_id: int):
+    """Delete an audit."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        if user.is_admin:
+            business = db.query(Business).filter(Business.id == business_id).first()
+        else:
+            business = db.query(Business).filter(
+                Business.id == business_id,
+                Business.owner_user_id == user.id
+            ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        audit = db.query(Audit).filter(Audit.id == audit_id, Audit.business_id == business_id).first()
+        if audit:
+            if audit.pdf_path:
+                import os as osmod
+                if osmod.path.exists(audit.pdf_path):
+                    osmod.remove(audit.pdf_path)
+            db.delete(audit)
+            db.commit()
+        
+        return RedirectResponse(url=f"/dashboard/business/{business_id}", status_code=302)
+    finally:
+        db.close()
+
+
 @app.get("/dashboard/business/{business_id}/upgrade", response_class=HTMLResponse)
 async def dashboard_business_upgrade(request: Request, business_id: int):
     user = get_current_user(request)
@@ -968,6 +1089,121 @@ async def admin_refresh_audit(request: Request, business_id: int):
             audit.set_visibility_summary({"error": str(e)})
             db.commit()
             return RedirectResponse(url=f"/admin/audit/{audit.id}", status_code=302)
+    finally:
+        db.close()
+
+
+@app.get("/admin/business/{business_id}/edit", response_class=HTMLResponse)
+async def admin_business_edit_page(request: Request, business_id: int):
+    """Show edit form for a business."""
+    if not is_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return RedirectResponse(url="/admin/businesses", status_code=302)
+        
+        return templates.TemplateResponse(
+            "admin/business_edit.html",
+            {
+                "request": request,
+                "business": {
+                    "id": business.id,
+                    "name": business.name,
+                    "primary_domain": business.primary_domain,
+                    "extra_domains": business.get_extra_domains(),
+                    "business_type": business.business_type,
+                    "regions": business.get_regions(),
+                    "categories": business.get_categories(),
+                    "contact_name": business.contact_name,
+                    "contact_email": business.contact_email
+                },
+                "error": None
+            }
+        )
+    finally:
+        db.close()
+
+
+@app.post("/admin/business/{business_id}/edit")
+async def admin_business_edit(
+    request: Request,
+    business_id: int,
+    name: str = Form(...),
+    primary_domain: str = Form(...),
+    extra_domains: Optional[str] = Form(None),
+    business_type: str = Form("local_service"),
+    categories: Optional[str] = Form(None),
+    regions: Optional[str] = Form(None),
+    contact_name: Optional[str] = Form(None),
+    contact_email: Optional[str] = Form(None)
+):
+    """Update business details (Admin)."""
+    if not is_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return RedirectResponse(url="/admin/businesses", status_code=302)
+        
+        business.name = name.strip()
+        business.primary_domain = primary_domain.lower().strip().replace("http://", "").replace("https://", "").split("/")[0]
+        business.business_type = business_type
+        business.contact_name = contact_name
+        business.contact_email = contact_email
+        
+        if extra_domains:
+            eds = [d.strip().lower().replace("http://", "").replace("https://", "").split("/")[0] for d in extra_domains.split(",") if d.strip()]
+            business.set_extra_domains(eds)
+        else:
+            business.set_extra_domains([])
+        
+        if categories:
+            cats = [c.strip() for c in categories.split(",") if c.strip()]
+            business.set_categories(cats)
+        else:
+            business.set_categories([])
+        
+        if regions:
+            regs = [r.strip() for r in regions.split(",") if r.strip()]
+            business.set_regions(regs)
+        else:
+            business.set_regions([])
+        
+        db.commit()
+        return RedirectResponse(url=f"/admin/business/{business.id}", status_code=302)
+    except Exception as e:
+        return templates.TemplateResponse(
+            "admin/business_edit.html",
+            {"request": request, "business": {"id": business_id}, "error": str(e)}
+        )
+    finally:
+        db.close()
+
+
+@app.post("/admin/audit/{audit_id}/delete")
+async def admin_delete_audit(request: Request, audit_id: int):
+    """Delete an audit (Admin)."""
+    if not is_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        audit = db.query(Audit).filter(Audit.id == audit_id).first()
+        if audit:
+            business_id = audit.business_id
+            if audit.pdf_path:
+                import os as osmod
+                if osmod.path.exists(audit.pdf_path):
+                    osmod.remove(audit.pdf_path)
+            db.delete(audit)
+            db.commit()
+            return RedirectResponse(url=f"/admin/business/{business_id}", status_code=302)
+        return RedirectResponse(url="/admin/businesses", status_code=302)
     finally:
         db.close()
 

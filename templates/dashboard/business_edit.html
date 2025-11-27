@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit {{ business.name }} - EkkoScope</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .dashboard-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+        
+        .nav-logo img.full-logo {
+            height: 32px;
+            width: auto;
+        }
+        
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-name {
+            color: var(--text-secondary);
+        }
+        
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        
+        .logout-btn:hover {
+            border-color: var(--brand-teal);
+            color: var(--brand-teal);
+        }
+        
+        .dashboard-container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .breadcrumb {
+            margin-bottom: 1.5rem;
+        }
+        
+        .breadcrumb a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            color: #2EE6A8;
+        }
+        
+        .breadcrumb span {
+            color: var(--text-secondary);
+            margin: 0 0.5rem;
+        }
+        
+        .page-title {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+        
+        .form-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--brand-teal);
+        }
+        
+        .form-group small {
+            display: block;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .btn-primary {
+            padding: 0.75rem 1.5rem;
+            background: var(--brand-teal);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: #25c991;
+        }
+        
+        .btn-secondary {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        
+        .btn-secondary:hover {
+            border-color: var(--brand-teal);
+            color: var(--brand-teal);
+        }
+        
+        .alert-error {
+            padding: 1rem;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            color: #ef4444;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="dashboard-nav">
+        <a href="/dashboard" class="nav-logo">
+            <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope" class="full-logo">
+        </a>
+        <div class="nav-user">
+            <span class="user-name">{{ user.full_name }}</span>
+            <a href="/auth/logout" class="logout-btn">Log Out</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="breadcrumb">
+            <a href="/dashboard">Dashboard</a>
+            <span>&rsaquo;</span>
+            <a href="/dashboard/business/{{ business.id }}">{{ business.name }}</a>
+            <span>&rsaquo;</span>
+            Edit
+        </div>
+        
+        <h1 class="page-title">Edit Company Profile</h1>
+        
+        {% if error %}
+        <div class="alert-error">{{ error }}</div>
+        {% endif %}
+        
+        <div class="form-card">
+            <form method="POST" action="/dashboard/business/{{ business.id }}/edit">
+                <div class="form-group">
+                    <label for="name">Company Name</label>
+                    <input type="text" id="name" name="name" value="{{ business.name }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="primary_domain">Primary Domain</label>
+                    <input type="text" id="primary_domain" name="primary_domain" value="{{ business.primary_domain }}" required>
+                    <small>Your main website domain (e.g., example.com)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="business_type">Business Type</label>
+                    <select id="business_type" name="business_type">
+                        <option value="local_service" {% if business.business_type == 'local_service' %}selected{% endif %}>Local Service</option>
+                        <option value="ecommerce" {% if business.business_type == 'ecommerce' %}selected{% endif %}>E-commerce</option>
+                        <option value="saas" {% if business.business_type == 'saas' %}selected{% endif %}>SaaS</option>
+                        <option value="agency" {% if business.business_type == 'agency' %}selected{% endif %}>Agency</option>
+                        <option value="manufacturer" {% if business.business_type == 'manufacturer' %}selected{% endif %}>Manufacturer</option>
+                        <option value="distributor" {% if business.business_type == 'distributor' %}selected{% endif %}>Distributor</option>
+                        <option value="professional_service" {% if business.business_type == 'professional_service' %}selected{% endif %}>Professional Service</option>
+                        <option value="other" {% if business.business_type == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="categories">Categories / Products / Services</label>
+                    <input type="text" id="categories" name="categories" value="{{ business.get_categories() | join(', ') if business.get_categories() else '' }}">
+                    <small>Comma-separated list (e.g., Roofing, Metal Roofs, Roof Repair)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="regions">Service Regions</label>
+                    <input type="text" id="regions" name="regions" value="{{ business.get_regions() | join(', ') if business.get_regions() else '' }}">
+                    <small>Comma-separated list (e.g., Morehead City NC, Atlantic Beach NC)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact_name">Contact Name</label>
+                    <input type="text" id="contact_name" name="contact_name" value="{{ business.contact_name or '' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact_email">Contact Email</label>
+                    <input type="email" id="contact_email" name="contact_email" value="{{ business.contact_email or '' }}">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                    <a href="/dashboard/business/{{ business.id }}" class="btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
