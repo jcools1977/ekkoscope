@@ -165,31 +165,46 @@ def get_audit_analysis_data(audit: Audit) -> Optional[dict]:
     """
     Reconstruct analysis data from stored audit for display.
     Returns data in the format expected by templates.
+    Also returns error information for failed audits.
     """
-    if audit.status != "done":
-        return None
-    
     visibility = audit.get_visibility_summary()
     suggestions = audit.get_suggestions()
+    
+    if audit.status in ("error", "stopped"):
+        return {
+            "visibility": {
+                "error": visibility.get("error") if visibility else "Unknown error",
+                "error_type": visibility.get("error_type") if visibility else None,
+                "error_details": visibility.get("error_details") if visibility else None
+            },
+            "suggestions": None
+        }
+    
+    if audit.status != "done":
+        return None
     
     if not visibility:
         return None
     
     analysis = {
-        "tenant_id": visibility.get("tenant_id"),
-        "tenant_name": visibility.get("tenant_name"),
-        "run_at": visibility.get("run_at"),
-        "total_queries": visibility.get("total_queries", 0),
-        "mentioned_count": visibility.get("mentioned_count", 0),
-        "primary_count": visibility.get("primary_count", 0),
-        "avg_score": visibility.get("avg_score", 0),
-        "visibility_summary": visibility.get("visibility_summary", ""),
-        "results": visibility.get("results", [])
+        "visibility": {
+            "tenant_id": visibility.get("tenant_id"),
+            "tenant_name": visibility.get("tenant_name"),
+            "run_at": visibility.get("run_at"),
+            "total_queries": visibility.get("total_queries", 0),
+            "mentioned_count": visibility.get("mentioned_count", 0),
+            "primary_count": visibility.get("primary_count", 0),
+            "avg_score": visibility.get("avg_score", 0),
+            "visibility_summary": visibility.get("visibility_summary", ""),
+            "visibility_score": round(visibility.get("avg_score", 0) * 50, 1),
+            "results": visibility.get("results", [])
+        },
+        "suggestions": {}
     }
     
     if suggestions:
-        analysis["suggestions"] = suggestions.get("suggestions", [])
-        analysis["genius_insights"] = suggestions.get("genius_insights")
-        analysis["site_snapshot"] = suggestions.get("site_snapshot")
+        analysis["suggestions"]["suggestions"] = suggestions.get("suggestions", [])
+        analysis["suggestions"]["genius_insights"] = suggestions.get("genius_insights")
+        analysis["suggestions"]["site_snapshot"] = suggestions.get("site_snapshot")
     
     return analysis

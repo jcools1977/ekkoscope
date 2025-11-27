@@ -304,6 +304,44 @@
             padding: 1rem;
             border-radius: 8px;
         }
+        
+        .error-details-toggle {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 82, 82, 0.3);
+            border-radius: 6px;
+            color: #ff5252;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        
+        .error-details-toggle:hover {
+            background: rgba(255, 82, 82, 0.1);
+        }
+        
+        .error-traceback {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            color: #ff8888;
+            display: none;
+        }
+        
+        .error-traceback.show {
+            display: block;
+        }
+        
+        .error-type {
+            font-size: 0.85rem;
+            color: #ffaaaa;
+            margin-top: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -444,6 +482,15 @@
                 <strong>Audit Error</strong><br>
                 {% if analysis and analysis.visibility and analysis.visibility.error %}
                 {{ analysis.visibility.error }}
+                {% if analysis.visibility.error_type %}
+                <div class="error-type">Error Type: {{ analysis.visibility.error_type }}</div>
+                {% endif %}
+                {% if user.is_admin and analysis.visibility.error_details %}
+                <button class="error-details-toggle" onclick="document.getElementById('error-traceback').classList.toggle('show')">
+                    Show Technical Details
+                </button>
+                <pre id="error-traceback" class="error-traceback">{{ analysis.visibility.error_details }}</pre>
+                {% endif %}
                 {% else %}
                 An error occurred while running this audit. Please try running a new audit.
                 {% endif %}

@@ -354,10 +354,15 @@ async def dashboard_run_audit(request: Request, business_id: int):
             run_audit_for_business(business, audit, db)
             return RedirectResponse(url=f"/dashboard/business/{business.id}/audit/{audit.id}", status_code=302)
         except Exception as e:
+            import traceback
             audit.status = "error"
-            audit.set_visibility_summary({"error": str(e)})
+            audit.set_visibility_summary({
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "error_details": traceback.format_exc()
+            })
             db.commit()
-            return RedirectResponse(url=f"/dashboard/business/{business.id}", status_code=302)
+            return RedirectResponse(url=f"/dashboard/business/{business.id}/audit/{audit.id}", status_code=302)
     finally:
         db.close()
 
@@ -1080,8 +1085,13 @@ async def admin_run_audit(request: Request, business_id: int):
             run_audit_for_business(business, audit, db)
             return RedirectResponse(url=f"/admin/audit/{audit.id}", status_code=302)
         except Exception as e:
+            import traceback
             audit.status = "error"
-            audit.set_visibility_summary({"error": str(e)})
+            audit.set_visibility_summary({
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "error_details": traceback.format_exc()
+            })
             db.commit()
             return RedirectResponse(url=f"/admin/audit/{audit.id}", status_code=302)
     finally:
@@ -1116,8 +1126,13 @@ async def admin_refresh_audit(request: Request, business_id: int):
             run_audit_for_business(business, audit, db)
             return RedirectResponse(url=f"/admin/audit/{audit.id}", status_code=302)
         except Exception as e:
+            import traceback
             audit.status = "error"
-            audit.set_visibility_summary({"error": str(e)})
+            audit.set_visibility_summary({
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "error_details": traceback.format_exc()
+            })
             db.commit()
             return RedirectResponse(url=f"/admin/audit/{audit.id}", status_code=302)
     finally:
@@ -1917,8 +1932,13 @@ def run_audit_background(business_id: int, audit_id: int):
             try:
                 run_audit_for_business(business, audit, db)
             except Exception as e:
+                import traceback
                 audit.status = "error"
-                audit.set_visibility_summary({"error": str(e)})
+                audit.set_visibility_summary({
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "error_details": traceback.format_exc()
+                })
                 db.commit()
                 print(f"Audit {audit_id} failed: {e}")
     finally:
