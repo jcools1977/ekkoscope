@@ -190,6 +190,15 @@ def run_analysis(tenant_config: Dict[str, Any]) -> Dict[str, Any]:
     domains = tenant_config.get("domains", [])
     geo_focus = tenant_config.get("geo_focus", [])
     
+    from services.query_generator import get_query_intent_map
+    query_intent_map = get_query_intent_map(
+        name=tenant_name,
+        categories=tenant_config.get("categories", []),
+        regions=geo_focus,
+        business_type=tenant_config.get("business_type", ""),
+        max_queries=len(queries)
+    )
+    
     primary_domain = domains[0] if domains else ""
     
     perplexity_visibility = None
@@ -218,6 +227,8 @@ def run_analysis(tenant_config: Dict[str, Any]) -> Dict[str, Any]:
         
         scoring = score_query_result(brand_aliases, recommendations)
         
+        intent_info = query_intent_map.get(query, {})
+        
         result = {
             "query": query,
             "mentioned": scoring["mentioned"],
@@ -225,7 +236,10 @@ def run_analysis(tenant_config: Dict[str, Any]) -> Dict[str, Any]:
             "score": scoring["score"],
             "our_names": scoring["our_names"],
             "competitors": scoring["competitors"],
-            "raw_recommendations": recommendations
+            "raw_recommendations": recommendations,
+            "intent_type": intent_info.get("intent_type", "informational"),
+            "intent_value": intent_info.get("intent_value", 5),
+            "category_focus": intent_info.get("category_focus", "")
         }
         
         results.append(result)

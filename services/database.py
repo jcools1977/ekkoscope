@@ -161,7 +161,9 @@ class Business(Base):
             "domains": self.get_all_domains(),
             "brand_aliases": brand_aliases,
             "geo_focus": geo_focus,
-            "priority_queries": queries
+            "priority_queries": queries,
+            "categories": categories,
+            "business_type": self.business_type
         }
 
 
@@ -210,42 +212,19 @@ def generate_default_queries(
     regions: List[str],
     business_type: str
 ) -> List[str]:
-    """Generate default search queries based on business profile."""
-    queries = []
+    """
+    Generate comprehensive search queries based on business profile.
+    Uses advanced query generator for 20-30 industry-specific queries.
+    """
+    from services.query_generator import generate_query_strings
     
-    primary_region = regions[0] if regions else "United States"
-    primary_category = categories[0] if categories else "services"
-    
-    if business_type == "local_service":
-        queries = [
-            f"best {primary_category} in {primary_region}",
-            f"{primary_category} contractor near {primary_region}",
-            f"top rated {primary_category} company in {primary_region}",
-            f"where to find {primary_category} services in {primary_region}",
-        ]
-    elif business_type == "ecom":
-        queries = [
-            f"best place to buy {primary_category} online",
-            f"bulk {primary_category} supplier in {primary_region}",
-            f"wholesale {primary_category} for businesses",
-            f"where to order {primary_category} online",
-        ]
-    elif business_type == "b2b_service":
-        queries = [
-            f"best {primary_category} company for businesses",
-            f"top {primary_category} service providers in {primary_region}",
-            f"enterprise {primary_category} solutions",
-            f"professional {primary_category} services for companies",
-        ]
-    else:
-        queries = [
-            f"best {primary_category} in {primary_region}",
-            f"top {primary_category} provider",
-            f"where to find {primary_category} services",
-            f"recommended {primary_category} company",
-        ]
-    
-    return queries[:4]
+    return generate_query_strings(
+        name=name,
+        categories=categories,
+        regions=regions,
+        business_type=business_type,
+        max_queries=25
+    )
 
 
 def migrate_db():

@@ -1,0 +1,218 @@
+You are Replit AI working inside my AN2B Ekkoscope (EkkoScope) FastAPI app.
+
+CONTEXT
+
+This app generates an AI Visibility Report PDF for each business. I just uploaded a sample PDF:
+  ekkoscope_Better_Pak_Inc__1_20251127_124659.pdf
+
+This PDF is a good first draft but NOT ready for paid use. I need you to:
+  1) Inspect that PDF to understand the current layout, sections, and styling.
+  2) Fix the obvious design/branding flaws.
+  3) Deepen the content so the report feels like a $300–$1,500 quality audit, especially for a business like Better Pak.
+
+Please work with the existing code (likely in some PDF generation module, e.g. services/report_pdf.py or similar). Find it by searching for strings like:
+  "EkkoScope - GEO Engine for AI Visibility"
+  "AI Visibility Report -"
+  "Next 30 Days Focus"
+  "Recommended ActionsStrategic"
+
+=====================================
+PART 1 – FIX CURRENT DESIGN / BRANDING FLAWS
+=====================================
+
+After inspecting ekkoscope_Better_Pak_Inc__1_20251127_124659.pdf, fix the following issues:
+
+1) Naming consistency problems
+   - On Page 1 the title shows “Ekko Scope” while the footer uses “EkkoScope”. This is inconsistent.
+   - Standardize on a consistent brand, e.g.:
+       Product: "AN2B Ekkoscope"
+       Tagline: "GEO Engine for AI Visibility"
+   - Make sure this usage is consistent in:
+       - Cover page title
+       - Footers
+       - Any section headers
+
+2) Generic and misaligned content for Better Pak
+   - The report treats Better Pak as a generic "industrial supplies" business, but they are an industrial PACKAGING supplier (trash liners, bags, film, etc.).
+   - Queries such as "best place to buy Industrial supplies online" and "bulk Industrial supplies supplier in online US" are too generic AND grammatically off.
+   - The “Los Angeles” references (e.g., “Best Industrial Supplies Online | Better Pak Inc. in Los Angeles”) are wrong for Better Pak; region must come from the Business model, not hard-coded.
+   - Fix:
+       - Replace "industrial supplies" with more accurate language for Better Pak: "industrial packaging", "trash can liners", "stretch film", etc., based on the Business and its categories.
+       - Never hard-code city/region strings like "Los Angeles". Use the actual business region(s) from your Business model or fall back to a generic region-neutral version.
+
+3) Formatting glitches in headings and copy
+   - "Genius Insights & Opportunity MapDeep strategic analysis powered by AI..." has no space between the header and subtitle ("MapDeep").
+   - "Recommended ActionsStrategic recommendations to improve your AI visibility..." is missing a space ("ActionsStrategic").
+   - In "Next 30 Days Focus" section, numbering looks like "1.Create..." (no space after the number).
+   - Fix:
+       - Make each main heading a clean line:
+         e.g., "Genius Insights & Opportunity Map" on one line, subtitle on the line below.
+       - Ensure spaces are correct between headings and subtitles.
+       - Ensure numbered lists render as proper bullets or numbered lists, not "1.Create" glued together.
+
+4) Bullet / markdown artifacts
+   - In the Executive Summary on Page 2, lines start with ">" (e.g., ">You are not recommended..."). This looks like raw markdown that was not rendered to bullets.
+   - Fix:
+       - Properly render bullet points as PDF bullets or clean lines, without the ">" characters.
+       - Ensure all bullet-like text in Executive Summary and Recommended Actions uses consistent bullet or number formatting.
+
+5) Missing or weak visual identity / logos
+   - On the cover, there is no clear AN2B/Ekkoscope branding and no client logo. It looks like plain text.
+   - Fix:
+       - Introduce a clean header on the cover page with:
+         - AN2B logo (if available, otherwise a placeholder text logo "AN2B")
+         - Product name: "AN2B Ekkoscope"
+         - Tagline: "GEO Engine for AI Visibility"
+       - Optionally include the client’s logo (Better Pak) if the Business model has a logo_url, or leave space reserved for it.
+       - Use a simple, consistent font hierarchy:
+         - H1: large, bold (report title)
+         - H2: section headers
+         - Body text at a readable size (not too tiny).
+       - Keep footer at the bottom: "AN2B Ekkoscope – GEO Engine for AI Visibility · Page X of Y"
+
+6) Overall layout / readability
+   - Currently everything is just text stacked on each page with minimal hierarchy.
+   - Improve:
+       - Add more white space between sections.
+       - Ensure each section starts with a clear header.
+       - Use consistent alignment for tables and text (e.g., query tables, competitor tables).
+       - Make sure tables and headings don’t run into each other (no merged header/subtitle lines).
+
+=====================================
+PART 2 – UPGRADE REPORT DEPTH & STRUCTURE
+=====================================
+
+Now upgrade the CONTENT structure so this feels like a deep, specific audit for each business.
+Use Better Pak as the example, but design it to be generic across industries.
+
+TARGET STRUCTURE (SECTIONS)
+
+1) Cover Page
+   - AN2B Ekkoscope logo + tagline.
+   - Client name (e.g., “Better Pak Inc.”).
+   - “AI Visibility Analysis Report”.
+   - Generated date/time.
+   - Optional short subtitle: “GEO Engine analysis of how AI assistants talk about your business.”
+
+2) Section 1 – AI Visibility Summary (Dashboard style)
+   - Key metrics:
+     - Total Queries analyzed (should be ~20–30, not just 4).
+     - Percentage of queries where the business is mentioned.
+     - Percentage of queries where the business is the primary recommendation (if applicable).
+     - # of competitors detected and who appears most often.
+   - Score distribution (0/1/2) like you have now, but also:
+     - Group by intent: emergency / high-ticket / replenishment / informational.
+   - Add a short Executive Summary in bullet form:
+     - 3–5 bullets covering:
+       - Overall visibility (e.g., “0/24 queries mention Better Pak.”)
+       - Top competitors (Grainger, Uline, etc.).
+       - Biggest gap categories (e.g., “trash liners for schools”).
+       - A one-line "Next 30 days focus".
+
+3) Section 2 – Query Analysis & Competitor Overview
+   - Expand the query set beyond 4 generic queries.
+     - For each business, query generation should use:
+       - Business categories/industry tags (e.g., “trash can liners”, "stretch film").
+       - Regions (city/region/state).
+       - Use-case language (e.g., “for school districts”, “for warehouses”).
+   - Aim for ~20–30 queries per business, e.g. for Better Pak:
+       - “bulk trash can liners for school districts in {region}”
+       - “industrial trash can liner supplier for schools”
+       - “wholesale can liners 55 gallon”
+       - “industrial packaging supplies for warehouses”
+   - The query table should have columns:
+       - Query
+       - Intent (Informational, High-Ticket, Replenishment, Emergency)
+       - Score (0/1/2)
+       - Top competitor(s) in AI results
+   - Competitor overview should:
+       - Sort competitors by frequency (how many queries they appear in).
+       - Highlight top 3–5 competitors clearly.
+
+4) Section 3 – Multi-Source Visibility Snapshot (OpenAI vs Perplexity)
+   - Use the new Perplexity visibility data.
+   - For each query cluster, show:
+       - Which competitors appear in Perplexity’s web-grounded answers.
+       - Whether the target business appears at all.
+   - Present a small matrix or summary:
+       - “Share of voice”: how often the client vs competitors appear.
+   - This section should explicitly say when Perplexity was used:
+       - “Data sources: site content, OpenAI analysis, Perplexity Sonar web-grounded visibility probe.”
+
+5) Section 4 – Genius Insights & Opportunity Map
+   - Keep the idea of “patterns + priority opportunities” but make them more specific and industry-aware.
+   - Fix the current generic "industrial supplies / Los Angeles" opportunities.
+   - For each priority opportunity:
+       - Link it to a specific query cluster and intent (e.g., “trash can liners for school districts – high-ticket / replenishment”).
+       - Show Impact (1–10), Effort (Low/Medium/High), Intent type.
+       - Include a SHORT explanation referencing:
+           - Actual competitors winning that space.
+           - The client’s current site (what’s missing).
+
+6) Section 5 – Page Blueprints (3–7 pages)
+   - Create detailed page blueprints for the top 3–7 opportunities.
+   - Each blueprint includes:
+       - URL pattern (e.g., `/trash-can-liners-school-districts`)
+       - SEO Title, Meta Description
+       - H1 and 3–6 H2s
+       - Key messaging points tied to the actual industry (for Better Pak: liners, bags, film; for roofers: shingles/metal roofs, emergency repair).
+       - Internal link suggestions:
+           - Which existing pages should link to this new page.
+       - A note on whether the page already exists but needs optimization or is completely new.
+
+   - IMPORTANT: Use actual business context where available:
+       - For Better Pak, avoid saying “industrial supplies in Los Angeles”. Instead, emphasize:
+         - “trash liners”, “industrial packaging”, “school districts”, “janitorial supplies”, etc.
+
+7) Section 6 – 30-Day Action Plan (Implementation Roadmap)
+   - Break into Week 1, Week 2, Week 3, Week 4.
+   - For each week, list 3–5 concrete tasks:
+       - Implement specific page blueprint(s).
+       - Optimize homepage hero text and headings.
+       - Add FAQs specific to the queries where the client is losing.
+       - Configure GMB profile (if relevant).
+   - Each task should have:
+       - Impact (High/Med/Low).
+       - Effort (S/M/L).
+       - Suggested owner (e.g., “Developer”, “Content Writer”, “Owner”).
+
+8) Section 7 – Recommended Actions & Branding
+   - Keep your “New Pages to Create / Pages to Update / FAQ / Authority Building / Branding” leaf, but:
+       - Make it more tightly tied to the specific business.
+       - Avoid generic "industrial supplies" language for a packaging supplier.
+   - Branding subsection:
+       - Make sure advice is specific (e.g., align messaging between `betterpaksupplies.com` and `better-pak.com` around industrial packaging, liner specs, government/school procurement, etc.).
+
+9) Optional Appendix – Raw Query List
+   - Include a concise list of all queries used in the analysis, grouped by cluster.
+
+=====================================
+PART 3 – IMPLEMENTATION NOTES
+=====================================
+
+1) Don’t break the existing pipeline
+   - Keep the current API routes and core audit logic working.
+   - Extend the query generation and PDF generation layers rather than rewriting everything from scratch.
+   - If Perplexity is disabled (no PERPLEXITY_API_KEY), the report should still generate but omit Perplexity-specific sections or mark them as “Not available (Perplexity disabled)”.
+
+2) Make the report layout and depth driven by data
+   - If a business has only 10 queries defined, handle that gracefully (still build sections, just with fewer rows).
+   - If site content is unavailable, don’t output “Site content not available” everywhere; instead:
+       - Add a clear “Site Content Limitation” note in one place and tailor the recommendations accordingly.
+
+3) Keep styling simple and maintainable
+   - Whichever PDF library you are using (ReportLab, fpdf2, etc.), organize styles:
+       - One place for H1/H2/body fonts and sizes.
+       - Helpers for drawing section headings, tables, and bullet lists.
+   - Ensure page numbers and footers are consistent across all pages.
+
+4) After refactor, regenerate the Better Pak report in the repo and ensure:
+   - Queries are specific to industrial PACKAGING, not generic “industrial supplies”.
+   - No hard-coded “Los Angeles” remains.
+   - Bullets and headings look clean and readable.
+   - The PDF is 7–12 pages with clear sections, not just 4 vague queries and a generic SEO checklist.
+
+Finally, summarize for me:
+   - Which files you changed.
+   - How to trigger report generation for a business from the app.
+   - Any new configuration required.
