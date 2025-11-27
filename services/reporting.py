@@ -97,7 +97,7 @@ class EkkoScopePDF(FPDF):
         self.set_font("Helvetica", "", 10)
         self.set_text_color(*BRAND_TEAL)
         self.set_x(indent)
-        self.cell(5, 5, chr(8226), align="L")
+        self.cell(5, 5, ">", align="L")
         self.set_text_color(*DARK_TEXT)
         self.multi_cell(175, 5, text)
         self.ln(2)
