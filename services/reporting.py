@@ -499,7 +499,8 @@ def _add_executive_dashboard(pdf: EkkoScopePDF, data: Dict[str, Any], analysis: 
         
         pdf.set_font("Helvetica", "", 9)
         pdf.set_text_color(*MEDIUM_TEXT)
-        pdf.multi_cell(0, 4, data["visibility_summary"])
+        pdf.set_x(10)
+        pdf.multi_cell(190, 4, data["visibility_summary"])
 
 
 def _add_query_analysis_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant: Dict[str, Any]):
@@ -585,7 +586,7 @@ def _add_query_analysis_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant:
             pdf.set_text_color(*MEDIUM_TEXT)
             pdf.set_x(18)
             comp_str = "Competitors: " + ", ".join(competitors)
-            pdf.multi_cell(0, 4, comp_str)
+            pdf.multi_cell(177, 4, comp_str)
         pdf.ln(3)
         
         if ai_response:
@@ -747,12 +748,14 @@ def _add_multi_source_visibility(pdf: EkkoScopePDF, data: Dict[str, Any]):
             
             pdf.set_font("Helvetica", "B", 9)
             pdf.set_text_color(*DARK_TEXT)
-            pdf.multi_cell(0, 5, query)
+            pdf.set_x(15)
+            pdf.multi_cell(180, 5, query)
             
             if intent:
                 pdf.set_font("Helvetica", "I", 8)
                 pdf.set_text_color(*PURPLE)
                 intent_formatted = intent.replace('_', ' ').title() if intent else ""
+                pdf.set_x(15)
                 pdf.cell(0, 4, f"Intent: {intent_formatted}", align="L")
                 pdf.ln(5)
             else:
@@ -799,7 +802,7 @@ def _add_multi_source_visibility(pdf: EkkoScopePDF, data: Dict[str, Any]):
                 pdf.set_text_color(*MEDIUM_TEXT)
                 pdf.set_x(15)
                 comp_str = "Competitors mentioned: " + ", ".join(all_competitors)
-                pdf.multi_cell(0, 4, comp_str)
+                pdf.multi_cell(180, 4, comp_str)
             
             pdf.ln(6)
         
@@ -865,7 +868,8 @@ def _add_multi_source_visibility(pdf: EkkoScopePDF, data: Dict[str, Any]):
                 
                 pdf.set_font("Helvetica", "B", 9)
                 pdf.set_text_color(*DARK_TEXT)
-                pdf.multi_cell(0, 5, query)
+                pdf.set_x(15)
+                pdf.multi_cell(180, 5, query)
                 pdf.ln(2)
                 
                 pdf.set_font("Helvetica", "", 8)
@@ -903,7 +907,7 @@ def _add_multi_source_visibility(pdf: EkkoScopePDF, data: Dict[str, Any]):
                     pdf.set_text_color(*MEDIUM_TEXT)
                     pdf.set_x(15)
                     comp_str = "Competitors mentioned: " + ", ".join(competitors)
-                    pdf.multi_cell(0, 4, comp_str)
+                    pdf.multi_cell(180, 4, comp_str)
                 
                 pdf.ln(6)
     else:
@@ -937,7 +941,8 @@ def _add_multi_source_visibility(pdf: EkkoScopePDF, data: Dict[str, Any]):
     
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(*MEDIUM_TEXT)
-    pdf.multi_cell(0, 5, f"Your business is missing from {gap_pct:.0f}% of relevant AI-generated recommendations. This represents significant lost visibility and potential customers being directed to competitors instead.")
+    pdf.set_x(10)
+    pdf.multi_cell(190, 5, f"Your business is missing from {gap_pct:.0f}% of relevant AI-generated recommendations. This represents significant lost visibility and potential customers being directed to competitors instead.")
 
 
 def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
@@ -991,7 +996,8 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
                 
                 pdf.set_font("Helvetica", "B", 10)
                 pdf.set_text_color(*DARK_TEXT)
-                pdf.multi_cell(0, 5, f"{idx}. {summary}")
+                pdf.set_x(10)
+                pdf.multi_cell(190, 5, f"{idx}. {summary}")
                 pdf.ln(2)
                 
                 if evidence and isinstance(evidence, list):
@@ -1013,7 +1019,8 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
             else:
                 pdf.set_font("Helvetica", "", 10)
                 pdf.set_text_color(*DARK_TEXT)
-                pdf.multi_cell(0, 5, f"{idx}. {sanitize_text(str(pattern))}")
+                pdf.set_x(10)
+                pdf.multi_cell(190, 5, f"{idx}. {sanitize_text(str(pattern))}")
             
             pdf.ln(5)
     
@@ -1043,7 +1050,7 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
             pdf.set_font("Helvetica", "B", 10)
             pdf.set_text_color(*SUCCESS_GREEN)
             pdf.set_x(12)
-            pdf.multi_cell(0, 5, f"{idx}. {query}")
+            pdf.multi_cell(185, 5, f"{idx}. {query}")
             pdf.ln(2)
             
             pdf.set_font("Helvetica", "B", 9)
@@ -1087,7 +1094,8 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
         
         pdf.set_font("Helvetica", "I", 9)
         pdf.set_text_color(*MEDIUM_TEXT)
-        pdf.multi_cell(0, 4, "Preview of how AI assistants could respond once your visibility improves:")
+        pdf.set_x(10)
+        pdf.multi_cell(190, 4, "Preview of how AI assistants could respond once your visibility improves:")
         pdf.ln(5)
         
         for fa in future_answers:
@@ -1102,7 +1110,8 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
             
             pdf.set_font("Helvetica", "B", 9)
             pdf.set_text_color(*DARK_TEXT)
-            pdf.multi_cell(0, 5, f"Q: {query}")
+            pdf.set_x(10)
+            pdf.multi_cell(190, 5, f"Q: {query}")
             pdf.ln(3)
             
             pdf.set_font("Helvetica", "", 9)
@@ -1153,7 +1162,8 @@ def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant
         pdf.set_fill_color(*BRAND_TEAL)
         pdf.set_text_color(*WHITE)
         pdf.set_font("Helvetica", "B", 11)
-        pdf.multi_cell(0, 8, f"Blueprint {idx}: {query}", fill=True)
+        pdf.set_x(10)
+        pdf.multi_cell(190, 8, f"Blueprint {idx}: {query}", fill=True)
         pdf.ln(3)
         
         pdf.set_font("Helvetica", "", 9)
@@ -1175,7 +1185,8 @@ def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant
             pdf.ln(5)
             pdf.set_font("Helvetica", "", 9)
             pdf.set_text_color(*BRAND_BLUE)
-            pdf.multi_cell(0, 5, slug)
+            pdf.set_x(10)
+            pdf.multi_cell(190, 5, slug)
         
         if seo_title:
             if pdf.get_y() > 260:
@@ -1186,7 +1197,8 @@ def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant
             pdf.ln(5)
             pdf.set_font("Helvetica", "", 9)
             pdf.set_text_color(*MEDIUM_TEXT)
-            pdf.multi_cell(0, 5, seo_title)
+            pdf.set_x(10)
+            pdf.multi_cell(190, 5, seo_title)
         
         if h1:
             if pdf.get_y() > 260:
@@ -1197,7 +1209,8 @@ def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant
             pdf.ln(5)
             pdf.set_font("Helvetica", "", 9)
             pdf.set_text_color(*MEDIUM_TEXT)
-            pdf.multi_cell(0, 5, h1)
+            pdf.set_x(10)
+            pdf.multi_cell(190, 5, h1)
         
         if outline and isinstance(outline, list):
             if pdf.get_y() > 240:
