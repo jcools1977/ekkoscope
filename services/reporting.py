@@ -429,22 +429,26 @@ def _add_query_analysis_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant:
         
         start_y = pdf.get_y()
         
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.set_text_color(*DARK_TEXT)
-        pdf.set_x(18)
-        pdf.multi_cell(150, 5, query)
-        
-        end_y = pdf.get_y()
         pdf.set_draw_color(*border_color)
         pdf.set_line_width(1.5)
-        pdf.line(12, start_y, 12, max(end_y - 2, start_y + 5))
+        pdf.line(12, start_y, 12, start_y + 5)
         
         pdf.set_font("Helvetica", "B", 9)
         pdf.set_text_color(*score_color)
-        pdf.set_x(175)
-        pdf.set_y(start_y)
-        pdf.cell(25, 5, score_label, align="R")
-        pdf.ln(6)
+        pdf.set_xy(170, start_y)
+        pdf.cell(30, 5, score_label, align="R")
+        
+        pdf.set_xy(18, start_y)
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(*DARK_TEXT)
+        pdf.multi_cell(145, 5, query)
+        
+        end_y = pdf.get_y()
+        
+        if end_y > start_y + 6:
+            pdf.set_draw_color(*border_color)
+            pdf.set_line_width(1.5)
+            pdf.line(12, start_y, 12, end_y - 2)
         
         pdf.set_font("Helvetica", "", 8)
         pdf.set_text_color(*PURPLE)
