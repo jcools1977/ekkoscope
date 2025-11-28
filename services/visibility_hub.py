@@ -236,14 +236,18 @@ def run_multi_llm_visibility(
             sys.stdout.flush()
             if gemini_results and len(gemini_results) > 0:
                 successful_count = sum(1 for r in gemini_results if r.success)
+                print(f"[VISIBILITY HUB] Gemini results: {len(gemini_results)} total, {successful_count} successful")
+                sys.stdout.flush()
                 if successful_count > 0:
                     for vis in gemini_results:
                         if vis.query in agg_by_query:
                             agg_by_query[vis.query].providers.append(vis)
                     providers_used.append("gemini_sim")
+                    print(f"[VISIBILITY HUB] Added 'gemini_sim' to providers_used")
+                    sys.stdout.flush()
                     logger.info("Gemini visibility: %d results (%d successful)", len(gemini_results), successful_count)
                 else:
-                    print(f"[VISIBILITY HUB] Gemini: all {len(gemini_results)} probes failed")
+                    print(f"[VISIBILITY HUB] Gemini: all {len(gemini_results)} probes failed (success=False)")
                     sys.stdout.flush()
                     logger.warning("Gemini visibility: all %d probes failed", len(gemini_results))
             else:

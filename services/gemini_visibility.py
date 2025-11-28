@@ -179,8 +179,12 @@ def run_gemini_visibility_for_queries(
                 raw_response=raw,
                 success=True
             ))
+            print(f"[GEMINI VISIBILITY] Query '{query[:30]}...' - SUCCESS")
+            sys.stdout.flush()
             
         except Exception as e:
+            print(f"[GEMINI VISIBILITY] Query '{query[:30]}...' - EXCEPTION: {e}")
+            sys.stdout.flush()
             logger.warning("Gemini visibility probe failed for query '%s': %s", query, e)
             results.append(ProviderVisibility(
                 provider="gemini_sim",
