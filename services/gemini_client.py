@@ -70,19 +70,25 @@ def gemini_generate_content(prompt: str) -> Optional[str]:
     Returns:
         The generated text content, or None on error
     """
+    import sys
+    
     if not gemini_enabled():
         logger.info("Gemini is disabled. Skipping generation.")
         return None
     
     model = get_gemini_model()
     if model is None:
+        print("[GEMINI CLIENT] Model is None")
+        sys.stdout.flush()
         return None
     
     try:
         response = model.generate_content(prompt)
         
         if hasattr(response, 'text'):
-            return response.text
+            text = response.text
+            if text:
+                return text
         
         if hasattr(response, 'candidates') and response.candidates:
             candidate = response.candidates[0]
@@ -91,10 +97,14 @@ def gemini_generate_content(prompt: str) -> Optional[str]:
                 if parts:
                     return parts[0].text
         
+        print(f"[GEMINI CLIENT] Response structure unexpected: {type(response)}")
+        sys.stdout.flush()
         logger.warning("Gemini response had unexpected structure")
         return None
         
     except Exception as e:
+        print(f"[GEMINI CLIENT] Exception: {e}")
+        sys.stdout.flush()
         logger.warning("Gemini generation failed: %s", e)
         return None
 

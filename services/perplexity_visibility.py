@@ -287,9 +287,18 @@ def run_perplexity_visibility_for_queries(
     Returns:
         List of ProviderVisibility objects
     """
+    import sys
+    print(f"[PERPLEXITY VIS] run_perplexity_visibility_for_queries called, {len(queries_with_intent)} queries")
+    sys.stdout.flush()
+    
     if not PERPLEXITY_ENABLED:
+        print("[PERPLEXITY VIS] Skipped - not enabled")
+        sys.stdout.flush()
         logger.info("Perplexity visibility probe skipped - not enabled")
         return []
+    
+    print(f"[PERPLEXITY VIS] Starting for {len(queries_with_intent)} queries")
+    sys.stdout.flush()
     
     results: List[ProviderVisibility] = []
     

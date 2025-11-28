@@ -195,7 +195,12 @@ def run_multi_llm_visibility(
             sys.stdout.flush()
             logger.error("OpenAI visibility probe failed: %s", e)
     
+    print(f"[VISIBILITY HUB] Perplexity check: run={run_perplexity}, ENABLED={PERPLEXITY_ENABLED}")
+    sys.stdout.flush()
+    
     if run_perplexity and PERPLEXITY_ENABLED:
+        print("[VISIBILITY HUB] Starting Perplexity visibility probe...")
+        sys.stdout.flush()
         logger.info("Running Perplexity web-grounded visibility probe...")
         try:
             perplexity_results = run_perplexity_visibility_for_queries(
@@ -215,6 +220,9 @@ def run_multi_llm_visibility(
                 logger.info("Perplexity visibility: no results returned")
         except Exception as e:
             logger.error("Perplexity visibility probe failed: %s", e)
+    
+    print(f"[VISIBILITY HUB] Gemini check: run={run_gemini}, ENABLED={GEMINI_ENABLED}")
+    sys.stdout.flush()
     
     if run_gemini and GEMINI_ENABLED:
         print("[VISIBILITY HUB] Starting Gemini visibility probe...")

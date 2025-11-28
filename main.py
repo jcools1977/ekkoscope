@@ -54,6 +54,12 @@ async def startup():
         TENANTS = json.load(f)
     init_db()
     
+    from services.config import OPENAI_ENABLED, PERPLEXITY_ENABLED, GEMINI_ENABLED, get_enabled_providers
+    print(f"[STARTUP] OpenAI enabled: {OPENAI_ENABLED}")
+    print(f"[STARTUP] Perplexity enabled: {PERPLEXITY_ENABLED}")
+    print(f"[STARTUP] Gemini enabled: {GEMINI_ENABLED}")
+    print(f"[STARTUP] All enabled providers: {get_enabled_providers()}")
+    
     try:
         from services.ekkobrain_pinecone import init_ekkobrain_index
         init_ekkobrain_index()

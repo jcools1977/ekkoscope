@@ -143,6 +143,8 @@ def run_gemini_visibility_for_queries(
             raw = gemini_generate_json(prompt)
             
             if raw is None:
+                print(f"[GEMINI VISIBILITY] Query '{query[:30]}...' - raw is None, marking failed")
+                sys.stdout.flush()
                 results.append(ProviderVisibility(
                     provider="gemini_sim",
                     query=query,
@@ -152,6 +154,9 @@ def run_gemini_visibility_for_queries(
                     success=False
                 ))
                 continue
+            
+            print(f"[GEMINI VISIBILITY] Query '{query[:30]}...' - got response, parsing...")
+            sys.stdout.flush()
             
             parsed = parse_gemini_response(raw, business_name)
             
