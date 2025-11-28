@@ -216,6 +216,7 @@ def normalize_analysis_data(analysis: Dict[str, Any]) -> Dict[str, Any]:
         "visibility_summary": analysis.get("visibility_summary", ""),
         "genius_insights": analysis.get("genius_insights", None),
         "perplexity_visibility": analysis.get("perplexity_visibility", None),
+        "multi_llm_visibility": analysis.get("multi_llm_visibility", None),
         "site_snapshot": analysis.get("site_snapshot", None)
     }
 
