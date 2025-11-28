@@ -26,6 +26,59 @@ PINK = (236, 72, 153)
 SLATE_GRAY = (148, 163, 184)
 
 
+def sanitize_text(text: str) -> str:
+    """
+    Replace Unicode characters not supported by Helvetica with ASCII equivalents.
+    This prevents PDF generation errors for special characters.
+    """
+    if not text:
+        return ""
+    
+    replacements = {
+        '"': '"',
+        '"': '"',
+        ''': "'",
+        ''': "'",
+        '–': '-',
+        '—': '-',
+        '…': '...',
+        '•': '*',
+        '·': '*',
+        '×': 'x',
+        '→': '->',
+        '←': '<-',
+        '↔': '<->',
+        '≤': '<=',
+        '≥': '>=',
+        '≠': '!=',
+        '±': '+/-',
+        '°': ' deg',
+        '™': '(TM)',
+        '®': '(R)',
+        '©': '(C)',
+        '\u00A0': ' ',
+        '\u2002': ' ',
+        '\u2003': ' ',
+        '\u2009': ' ',
+        '\u200b': '',
+        '\u200c': '',
+        '\u200d': '',
+        '\ufeff': '',
+    }
+    
+    for unicode_char, ascii_char in replacements.items():
+        text = text.replace(unicode_char, ascii_char)
+    
+    result = []
+    for char in text:
+        if ord(char) < 128:
+            result.append(char)
+        else:
+            result.append('?')
+    
+    return ''.join(result)
+
+
 class EkkoScopePDF(FPDF):
     """Custom PDF class with EkkoScope branding and automatic page numbering."""
     
@@ -408,11 +461,11 @@ def _add_query_analysis_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant:
         if pdf.get_y() > 240:
             pdf.add_page()
         
-        query = query_data.get("query", "")
+        query = sanitize_text(query_data.get("query", ""))
         score = query_data.get("score", 0)
         intent = query_data.get("intent_type", "informational")
-        competitors = query_data.get("competitors", [])
-        ai_response = query_data.get("response", "")
+        competitors = [sanitize_text(c) for c in query_data.get("competitors", [])]
+        ai_response = sanitize_text(query_data.get("response", ""))
         
         if score == 2:
             score_color = SUCCESS_GREEN
@@ -503,7 +556,7 @@ def _add_competitor_matrix(pdf: EkkoScopePDF, data: Dict[str, Any]):
         if pdf.get_y() > 240:
             pdf.add_page()
         
-        name = comp.get("name", "")
+        name = sanitize_text(comp.get("name", ""))
         freq = comp.get("frequency", 0)
         share = (freq / max(total_queries, 1)) * 100
         
@@ -610,7 +663,7 @@ def _add_multi_source_visibility(pdf: EkkoScopePDF, data: Dict[str, Any]):
             if pdf.get_y() > 220:
                 pdf.add_page()
             
-            query = q_agg.get("query", "")
+            query = sanitize_text(q_agg.get("query", ""))
             intent = q_agg.get("intent", "")
             
             pdf.set_fill_color(*BRAND_TEAL)
@@ -662,6 +715,7 @@ def _add_multi_source_visibility(pdf: EkkoScopePDF, data: Dict[str, Any]):
                     
                     for brand in pv.get("recommended_brands", [])[:3]:
                         name = brand.get("name", "") if isinstance(brand, dict) else str(brand)
+                        name = sanitize_text(name)
                         if name and name not in all_competitors:
                             all_competitors.append(name)
             
@@ -720,14 +774,14 @@ def _add_multi_source_visibility(pdf: EkkoScopePDF, data: Dict[str, Any]):
                 if pdf.get_y() > 220:
                     pdf.add_page()
                 
-                query = query_data.get("query", "")
+                query = sanitize_text(query_data.get("query", ""))
                 openai_score = query_data.get("score", 0)
                 
-                perp_data = perplexity_queries.get(query, {})
+                perp_data = perplexity_queries.get(query_data.get("query", ""), {})
                 perp_parsed = perp_data.get("data", {})
                 perp_mentioned = perp_parsed.get("target_business_found", False) if perp_parsed else False
                 
-                competitors = query_data.get("competitors", [])
+                competitors = [sanitize_text(c) for c in query_data.get("competitors", [])]
                 
                 pdf.set_fill_color(*BRAND_TEAL)
                 pdf.set_text_color(*WHITE)
@@ -851,9 +905,9 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
                 pdf.add_page()
             
             if isinstance(pattern, dict):
-                summary = pattern.get("summary", "")
+                summary = sanitize_text(pattern.get("summary", ""))
                 evidence = pattern.get("evidence", [])
-                implication = pattern.get("implication", "")
+                implication = sanitize_text(pattern.get("implication", ""))
                 
                 pdf.set_font("Helvetica", "B", 10)
                 pdf.set_text_color(*DARK_TEXT)
@@ -867,7 +921,7 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
                         if pdf.get_y() > 260:
                             pdf.add_page()
                         pdf.set_x(15)
-                        pdf.multi_cell(175, 4, f"  > {str(ev)}")
+                        pdf.multi_cell(175, 4, f"  > {sanitize_text(str(ev))}")
                 
                 if implication:
                     if pdf.get_y() > 260:
@@ -879,7 +933,7 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
             else:
                 pdf.set_font("Helvetica", "", 10)
                 pdf.set_text_color(*DARK_TEXT)
-                pdf.multi_cell(0, 5, f"{idx}. {str(pattern)}")
+                pdf.multi_cell(0, 5, f"{idx}. {sanitize_text(str(pattern))}")
             
             pdf.ln(5)
     
@@ -896,11 +950,11 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
             if not isinstance(opp, dict):
                 continue
             
-            query = opp.get("query", "")
+            query = sanitize_text(opp.get("query", ""))
             impact = opp.get("impact_score", opp.get("intent_value", 5))
             effort = opp.get("effort", "medium")
             intent_type = opp.get("intent_type", "")
-            money_reason = opp.get("money_reason", opp.get("reason", ""))
+            money_reason = sanitize_text(opp.get("money_reason", opp.get("reason", "")))
             
             pdf.set_fill_color(236, 253, 245)
             pdf.set_draw_color(*SUCCESS_GREEN)
@@ -940,7 +994,7 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
             if pdf.get_y() > 250:
                 pdf.add_page()
             
-            win_text = str(win) if isinstance(win, str) else str(win)
+            win_text = sanitize_text(str(win) if isinstance(win, str) else str(win))
             pdf.numbered_item(idx, win_text)
     
     if future_answers:
@@ -963,8 +1017,8 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
             if not isinstance(fa, dict):
                 continue
             
-            query = fa.get("query", "")
-            answer = fa.get("example_answer", "")
+            query = sanitize_text(fa.get("query", ""))
+            answer = sanitize_text(fa.get("example_answer", ""))
             
             pdf.set_font("Helvetica", "B", 9)
             pdf.set_text_color(*DARK_TEXT)
@@ -1012,7 +1066,7 @@ def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant
         if pdf.get_y() > 160:
             pdf.add_page()
         
-        query = opp.get("query", "Untitled Page")
+        query = sanitize_text(opp.get("query", "Untitled Page"))
         impact = opp.get("impact_score", 5)
         effort = opp.get("effort", "medium")
         
@@ -1027,12 +1081,12 @@ def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant
         pdf.cell(0, 5, f"Impact: {impact}/10  |  Effort: {str(effort).capitalize()}  |  Target: {region_str}", align="L")
         pdf.ln(8)
         
-        slug = str(recommended_page.get("slug", "") or "")
-        seo_title = str(recommended_page.get("seo_title", "") or "")
-        h1 = str(recommended_page.get("h1", "") or "")
+        slug = sanitize_text(str(recommended_page.get("slug", "") or ""))
+        seo_title = sanitize_text(str(recommended_page.get("seo_title", "") or ""))
+        h1 = sanitize_text(str(recommended_page.get("h1", "") or ""))
         outline = recommended_page.get("outline", [])
         internal_links = recommended_page.get("internal_links", [])
-        note_on_site = recommended_page.get("note_on_current_site", "")
+        note_on_site = sanitize_text(recommended_page.get("note_on_current_site", ""))
         
         if slug:
             pdf.set_font("Helvetica", "B", 9)
@@ -1080,7 +1134,7 @@ def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant
                 if pdf.get_y() > 265:
                     pdf.add_page()
                 pdf.set_x(20)
-                pdf.multi_cell(170, 4, f"> {str(item)}")
+                pdf.multi_cell(170, 4, f"> {sanitize_text(str(item))}")
                 pdf.ln(1)
         
         if internal_links and isinstance(internal_links, list):
@@ -1098,7 +1152,7 @@ def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant
                 if pdf.get_y() > 265:
                     pdf.add_page()
                 pdf.set_x(20)
-                pdf.multi_cell(170, 4, f"> {str(link)}")
+                pdf.multi_cell(170, 4, f"> {sanitize_text(str(link))}")
                 pdf.ln(1)
         
         if note_on_site:
@@ -1203,7 +1257,7 @@ def _add_30_day_action_plan(pdf: EkkoScopePDF, data: Dict[str, Any], tenant: Dic
             pdf.set_font("Helvetica", "", 9)
             pdf.set_text_color(*DARK_TEXT)
             pdf.set_x(12)
-            pdf.multi_cell(110, 5, task["task"])
+            pdf.multi_cell(110, 5, sanitize_text(task["task"]))
             
             task_end_y = pdf.get_y()
             row_height = max(task_end_y - start_y, 5)
@@ -1281,8 +1335,8 @@ def _add_recommendations_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
             if pdf.get_y() > 230:
                 pdf.add_page()
             
-            title = suggestion.get("title", "")
-            details = suggestion.get("details", "")
+            title = sanitize_text(suggestion.get("title", ""))
+            details = sanitize_text(suggestion.get("details", ""))
             
             pdf.set_font("Helvetica", "B", 10)
             pdf.set_text_color(*DARK_TEXT)
