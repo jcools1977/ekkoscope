@@ -319,15 +319,15 @@ def generate_executive_summary(genius_insights: Dict[str, Any] | None, analysis:
             bullets.append(first_pattern["summary"])
     
     quick_wins = genius_insights.get("quick_wins", [])
-    if quick_wins and len(quick_wins) >= 2:
+    if quick_wins and len(quick_wins) >= 1:
         win1 = quick_wins[0] if isinstance(quick_wins[0], str) else str(quick_wins[0])
-        win2 = quick_wins[1] if isinstance(quick_wins[1], str) else str(quick_wins[1])
-        bullets.append(f"Next 30 days focus: {win1[:80]}...")
+        bullets.append(f"Next 30 days focus: {win1}")
     
     priority_opps = genius_insights.get("priority_opportunities", [])
     if priority_opps and len(priority_opps) > 0:
         high_impact = [o for o in priority_opps if isinstance(o, dict) and o.get("impact_score", 0) >= 7]
         if high_impact:
-            bullets.append(f"{len(high_impact)} high-impact opportunity(ies) identified with detailed page blueprints.")
+            opp_word = "opportunity" if len(high_impact) == 1 else "opportunities"
+            bullets.append(f"{len(high_impact)} high-impact {opp_word} identified with detailed page blueprints.")
     
     return bullets[:5]

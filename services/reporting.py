@@ -169,6 +169,58 @@ class EkkoScopePDF(FPDF):
         self.ln(2)
 
 
+def _serialize_multi_llm_visibility(multi_llm: Any) -> Optional[Dict[str, Any]]:
+    """
+    Convert multi-LLM visibility data to a plain dict, handling Pydantic models.
+    Uses JSON-compatible mode to ensure all Enums/complex types are serialized as primitives.
+    Returns None if data is missing or invalid.
+    """
+    if multi_llm is None:
+        return None
+    
+    def to_json_dict(obj):
+        """Convert object to JSON-serializable dict with Enums as strings."""
+        if obj is None:
+            return None
+        if hasattr(obj, "model_dump"):
+            try:
+                return obj.model_dump(mode="json")
+            except TypeError:
+                return obj.model_dump()
+        if hasattr(obj, "dict"):
+            d = obj.dict()
+            return _convert_enums(d)
+        if isinstance(obj, dict):
+            return _convert_enums(dict(obj))
+        return obj
+    
+    def _convert_enums(d):
+        """Recursively convert Enum values to their string representations."""
+        if isinstance(d, dict):
+            return {k: _convert_enums(v) for k, v in d.items()}
+        if isinstance(d, list):
+            return [_convert_enums(item) for item in d]
+        if hasattr(d, "value"):
+            return d.value
+        if hasattr(d, "name") and not callable(d.name):
+            return str(d.name)
+        return d
+    
+    try:
+        result = to_json_dict(multi_llm)
+        if result and isinstance(result, dict):
+            if "queries" in result and result["queries"]:
+                result["queries"] = [
+                    to_json_dict(q) if not isinstance(q, dict) else _convert_enums(q)
+                    for q in result["queries"] if q is not None
+                ]
+            return result
+    except Exception:
+        pass
+    
+    return None
+
+
 def normalize_analysis_data(analysis: Dict[str, Any]) -> Dict[str, Any]:
     """Normalize analysis data to ensure all required fields exist."""
     results = analysis.get("results", [])
@@ -201,6 +253,8 @@ def normalize_analysis_data(analysis: Dict[str, Any]) -> Dict[str, Any]:
             grouped_recommendations[rec_type] = []
         grouped_recommendations[rec_type].append(suggestion)
     
+    multi_llm_normalized = _serialize_multi_llm_visibility(analysis.get("multi_llm_visibility"))
+    
     return {
         "tenant_name": analysis.get("tenant_name", "Unknown"),
         "generated_at": analysis.get("run_at", datetime.utcnow().isoformat() + "Z"),
@@ -216,7 +270,7 @@ def normalize_analysis_data(analysis: Dict[str, Any]) -> Dict[str, Any]:
         "visibility_summary": analysis.get("visibility_summary", ""),
         "genius_insights": analysis.get("genius_insights", None),
         "perplexity_visibility": analysis.get("perplexity_visibility", None),
-        "multi_llm_visibility": analysis.get("multi_llm_visibility", None),
+        "multi_llm_visibility": multi_llm_normalized,
         "site_snapshot": analysis.get("site_snapshot", None)
     }
 
@@ -458,6 +512,14 @@ def _add_query_analysis_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant:
     )
     pdf.ln(5)
     
+    multi_llm = data.get("multi_llm_visibility")
+    multi_llm_queries = {}
+    
+    if multi_llm and isinstance(multi_llm, dict):
+        for q in multi_llm.get("queries", []) or []:
+            if q and isinstance(q, dict) and q.get("query"):
+                multi_llm_queries[q["query"]] = q
+    
     for query_data in data["queries"]:
         if pdf.get_y() > 240:
             pdf.add_page()
@@ -468,10 +530,19 @@ def _add_query_analysis_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant:
         competitors = [sanitize_text(c) for c in query_data.get("competitors", [])]
         ai_response = sanitize_text(query_data.get("response", ""))
         
-        if score == 2:
+        llm_query = multi_llm_queries.get(query_data.get("query", ""), {})
+        providers_data = llm_query.get("providers", [])
+        found_by_any = any(p.get("target_found", False) for p in providers_data) if providers_data else False
+        found_as_primary = any(p.get("is_primary", False) for p in providers_data) if providers_data else False
+        
+        if found_as_primary or score == 2:
             score_color = SUCCESS_GREEN
             score_label = "PRIMARY"
             border_color = SUCCESS_GREEN
+        elif found_by_any:
+            score_color = WARNING_YELLOW
+            score_label = "FOUND"
+            border_color = WARNING_YELLOW
         elif score == 1:
             score_color = WARNING_YELLOW
             score_label = "MENTIONED"
@@ -680,8 +751,9 @@ def _add_multi_source_visibility(pdf: EkkoScopePDF, data: Dict[str, Any]):
             
             if intent:
                 pdf.set_font("Helvetica", "I", 8)
-                pdf.set_text_color(*LIGHT_TEXT)
-                pdf.cell(0, 4, f"Intent: {intent}", align="L")
+                pdf.set_text_color(*PURPLE)
+                intent_formatted = intent.replace('_', ' ').title() if intent else ""
+                pdf.cell(0, 4, f"Intent: {intent_formatted}", align="L")
                 pdf.ln(5)
             else:
                 pdf.ln(2)
@@ -890,12 +962,19 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
         "Deep strategic analysis powered by AI to uncover hidden patterns and high-value opportunities"
     )
     
-    site_note = " with site content analysis" if genius.get("site_analyzed") else ""
-    perp_note = " and Perplexity web visibility" if genius.get("perplexity_used") else ""
-    if site_note or perp_note:
+    analysis_notes = []
+    if genius.get("site_analyzed"):
+        analysis_notes.append("site content analysis")
+    if genius.get("perplexity_used"):
+        analysis_notes.append("Perplexity web visibility")
+    if genius.get("multi_llm_used"):
+        analysis_notes.append("multi-LLM visibility comparison")
+    
+    if analysis_notes:
         pdf.set_font("Helvetica", "I", 9)
         pdf.set_text_color(*LIGHT_TEXT)
-        pdf.cell(0, 5, f"Analysis includes:{site_note}{perp_note}", align="L")
+        notes_text = ", ".join(analysis_notes)
+        pdf.cell(0, 5, f"Analysis includes: {notes_text}", align="L")
         pdf.ln(8)
     
     if patterns:
