@@ -180,11 +180,15 @@ def run_multi_llm_visibility(
             sys.stdout.flush()
             if openai_results and len(openai_results) > 0:
                 successful_count = sum(1 for r in openai_results if r.success)
+                print(f"[VISIBILITY HUB] OpenAI results: {len(openai_results)} total, {successful_count} successful")
+                sys.stdout.flush()
                 if successful_count > 0:
                     for vis in openai_results:
                         if vis.query in agg_by_query:
                             agg_by_query[vis.query].providers.append(vis)
                     providers_used.append("openai_sim")
+                    print(f"[VISIBILITY HUB] Added 'openai_sim' to providers_used")
+                    sys.stdout.flush()
                     logger.info("OpenAI visibility: %d results (%d successful)", len(openai_results), successful_count)
                 else:
                     logger.warning("OpenAI visibility: all %d probes failed", len(openai_results))
@@ -208,11 +212,15 @@ def run_multi_llm_visibility(
             )
             if perplexity_results and len(perplexity_results) > 0:
                 successful_count = sum(1 for r in perplexity_results if r.success)
+                print(f"[VISIBILITY HUB] Perplexity results: {len(perplexity_results)} total, {successful_count} successful")
+                sys.stdout.flush()
                 if successful_count > 0:
                     for vis in perplexity_results:
                         if vis.query in agg_by_query:
                             agg_by_query[vis.query].providers.append(vis)
                     providers_used.append("perplexity_web")
+                    print(f"[VISIBILITY HUB] Added 'perplexity_web' to providers_used")
+                    sys.stdout.flush()
                     logger.info("Perplexity visibility: %d results (%d successful)", len(perplexity_results), successful_count)
                 else:
                     logger.warning("Perplexity visibility: all %d probes failed", len(perplexity_results))
@@ -265,6 +273,9 @@ def run_multi_llm_visibility(
     aggregates = list(agg_by_query.values())
     
     summary = compute_visibility_summary(aggregates, business_name)
+    
+    print(f"[VISIBILITY HUB] FINAL providers_used: {providers_used} (count: {len(providers_used)})")
+    sys.stdout.flush()
     
     return MultiLLMVisibilityResult(
         queries=aggregates,
