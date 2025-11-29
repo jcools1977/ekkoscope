@@ -20,7 +20,7 @@ from services.analysis import run_analysis, MissingAPIKeyError
 from services.reporting import build_ekkoscope_pdf
 from services.database import init_db, get_db_session, Business, Audit, User, Purchase
 from services.audit_runner import run_audit_for_business, get_audit_analysis_data
-from services.stripe_client import load_stripe_config, create_checkout_session, create_subscription_checkout_session, verify_webhook_signature, get_stripe_client
+from services.stripe_client import load_stripe_config, create_checkout_session, create_subscription_checkout_session, create_ekkobrain_addon_checkout_session, verify_webhook_signature, get_stripe_client
 from services.auth import get_current_user, login_user, logout_user, create_user, authenticate_user
 from services.email_service import send_welcome_email, send_followup_email, send_audit_complete_email
 
@@ -66,6 +66,11 @@ async def startup():
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning("EkkoBrain init failed (non-fatal): %s", e)
+    
+    import asyncio
+    from services.audit_scheduler import scheduler_loop
+    asyncio.create_task(scheduler_loop(interval_minutes=60))
+    print("[STARTUP] Audit scheduler started (checks hourly for due audits)")
 
 
 def get_tenant_list():
@@ -615,8 +620,9 @@ async def dashboard_business_upgrade(request: Request, business_id: int):
         db.close()
 
 
-@app.post("/dashboard/business/{business_id}/checkout/snapshot")
-async def dashboard_checkout_snapshot(request: Request, business_id: int):
+@app.post("/dashboard/business/{business_id}/checkout/standard")
+async def dashboard_checkout_standard(request: Request, business_id: int):
+    """Checkout for Standard plan - $99/month with automatic biweekly audits."""
     user = get_current_user(request)
     if not user:
         return RedirectResponse(url="/auth/login", status_code=302)
@@ -631,51 +637,7 @@ async def dashboard_checkout_snapshot(request: Request, business_id: int):
         if not business:
             return RedirectResponse(url="/dashboard", status_code=302)
         
-        request.session["snapshot_business_id"] = business.id
-        
-        domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
-        if not domain:
-            domain = "localhost:5000"
-        
-        protocol = "https" if "replit" in domain else "http"
-        base_url = f"{protocol}://{domain}"
-        
-        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}"
-        cancel_url = f"{base_url}/dashboard/business/{business.id}/upgrade"
-        
-        session = await create_checkout_session(
-            business_id=business.id,
-            success_url=success_url,
-            cancel_url=cancel_url,
-            metadata={"user_id": str(user.id), "plan": "snapshot"}
-        )
-        return RedirectResponse(url=session.url, status_code=303)
-    except Exception as e:
-        return templates.TemplateResponse(
-            "dashboard/upgrade.html",
-            {"request": request, "user": user, "business": business, "error": str(e)}
-        )
-    finally:
-        db.close()
-
-
-@app.post("/dashboard/business/{business_id}/checkout/ongoing")
-async def dashboard_checkout_ongoing(request: Request, business_id: int):
-    user = get_current_user(request)
-    if not user:
-        return RedirectResponse(url="/auth/login", status_code=302)
-    
-    db = get_db_session()
-    try:
-        business = db.query(Business).filter(
-            Business.id == business_id,
-            Business.owner_user_id == user.id
-        ).first()
-        
-        if not business:
-            return RedirectResponse(url="/dashboard", status_code=302)
-        
-        request.session["ongoing_business_id"] = business.id
+        request.session["standard_business_id"] = business.id
         
         domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
         if not domain:
@@ -691,7 +653,54 @@ async def dashboard_checkout_ongoing(request: Request, business_id: int):
             business_id=business.id,
             success_url=success_url,
             cancel_url=cancel_url,
-            metadata={"user_id": str(user.id), "plan": "ongoing"}
+            include_ekkobrain=False,
+            metadata={"user_id": str(user.id), "plan": "standard"}
+        )
+        return RedirectResponse(url=session.url, status_code=303)
+    except Exception as e:
+        return templates.TemplateResponse(
+            "dashboard/upgrade.html",
+            {"request": request, "user": user, "business": business, "error": str(e)}
+        )
+    finally:
+        db.close()
+
+
+@app.post("/dashboard/business/{business_id}/checkout/standard-ekkobrain")
+async def dashboard_checkout_standard_ekkobrain(request: Request, business_id: int):
+    """Checkout for Standard + EkkoBrain plan - $248/month ($99 + $149)."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(
+            Business.id == business_id,
+            Business.owner_user_id == user.id
+        ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        request.session["standard_ekkobrain_business_id"] = business.id
+        
+        domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
+        if not domain:
+            domain = "localhost:5000"
+        
+        protocol = "https" if "replit" in domain else "http"
+        base_url = f"{protocol}://{domain}"
+        
+        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{base_url}/dashboard/business/{business.id}/upgrade"
+        
+        session = await create_subscription_checkout_session(
+            business_id=business.id,
+            success_url=success_url,
+            cancel_url=cancel_url,
+            include_ekkobrain=True,
+            metadata={"user_id": str(user.id), "plan": "standard_ekkobrain"}
         )
         return RedirectResponse(url=session.url, status_code=302)
     except Exception as e:
@@ -699,6 +708,51 @@ async def dashboard_checkout_ongoing(request: Request, business_id: int):
             "dashboard/upgrade.html",
             {"request": request, "user": user, "business": business, "error": str(e)}
         )
+    finally:
+        db.close()
+
+
+@app.post("/dashboard/business/{business_id}/checkout/ekkobrain-addon")
+async def dashboard_checkout_ekkobrain_addon(request: Request, business_id: int):
+    """Checkout for EkkoBrain add-on only - $149/month for existing subscribers."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(
+            Business.id == business_id,
+            Business.owner_user_id == user.id
+        ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        if not business.subscription_active:
+            return RedirectResponse(url=f"/dashboard/business/{business.id}/upgrade", status_code=302)
+        
+        request.session["ekkobrain_addon_business_id"] = business.id
+        
+        domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
+        if not domain:
+            domain = "localhost:5000"
+        
+        protocol = "https" if "replit" in domain else "http"
+        base_url = f"{protocol}://{domain}"
+        
+        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{base_url}/dashboard/business/{business.id}"
+        
+        session = await create_ekkobrain_addon_checkout_session(
+            business_id=business.id,
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={"user_id": str(user.id), "plan": "ekkobrain_addon"}
+        )
+        return RedirectResponse(url=session.url, status_code=302)
+    except Exception as e:
+        return RedirectResponse(url=f"/dashboard/business/{business.id}", status_code=302)
     finally:
         db.close()
 
@@ -2080,42 +2134,65 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
             business_id = data_object.get("metadata", {}).get("business_id")
             product_type = data_object.get("metadata", {}).get("product")
             plan = data_object.get("metadata", {}).get("plan")
+            ekkobrain = data_object.get("metadata", {}).get("ekkobrain")
             subscription_id = data_object.get("subscription")
             
-            if business_id and product_type in ("echoscope_snapshot", "echoscope_ongoing", "ekkoscope_snapshot", "ekkoscope_ongoing"):
+            valid_products = (
+                "echoscope_snapshot", "echoscope_ongoing", "ekkoscope_snapshot", "ekkoscope_ongoing",
+                "ekkoscope_standard", "ekkoscope_ekkobrain_addon"
+            )
+            valid_plans = ("ongoing", "standard", "standard_ekkobrain", "ekkobrain_addon")
+            
+            if business_id and (product_type in valid_products or plan in valid_plans):
                 db = get_db_session()
                 try:
+                    from services.audit_scheduler import schedule_first_audit
+                    
                     business = db.query(Business).filter(Business.id == int(business_id)).first()
                     
                     if business:
-                        if product_type in ("echoscope_ongoing", "ekkoscope_ongoing") or plan == "ongoing":
+                        if plan in ("standard", "standard_ekkobrain", "ongoing"):
                             business.subscription_active = True
-                            business.plan = "ongoing"
+                            business.plan = "standard"
                             if subscription_id:
                                 business.stripe_subscription_id = subscription_id
-                            db.commit()
-                            print(f"Activated ongoing subscription for business {business.id}")
-                        
-                        existing_audit = (
-                            db.query(Audit)
-                            .filter(Audit.business_id == business.id)
-                            .filter(Audit.channel == "self_serve")
-                            .filter(Audit.status.in_(["pending", "done"]))
-                            .first()
-                        )
-                        
-                        if not existing_audit:
-                            audit = Audit(
-                                business_id=business.id,
-                                channel="self_serve",
-                                status="pending"
-                            )
-                            db.add(audit)
-                            db.commit()
-                            db.refresh(audit)
                             
-                            background_tasks.add_task(run_audit_background, business.id, audit.id)
-                            print(f"Created self_serve audit {audit.id} for business {business.id} (plan: {business.plan})")
+                            if plan == "standard_ekkobrain" or ekkobrain == "true":
+                                business.ekkobrain_access = True
+                            
+                            db.commit()
+                            
+                            schedule_first_audit(business.id)
+                            print(f"Activated standard subscription for business {business.id} (EkkoBrain: {business.ekkobrain_access})")
+                        
+                        elif plan == "ekkobrain_addon":
+                            business.ekkobrain_access = True
+                            if subscription_id:
+                                business.stripe_ekkobrain_subscription_id = subscription_id
+                            db.commit()
+                            print(f"Activated EkkoBrain add-on for business {business.id}")
+                        
+                        if plan in ("standard", "standard_ekkobrain"):
+                            existing_audit = (
+                                db.query(Audit)
+                                .filter(Audit.business_id == business.id)
+                                .filter(Audit.channel.in_(["self_serve", "scheduled"]))
+                                .filter(Audit.status.in_(["pending", "running"]))
+                                .first()
+                            )
+                            
+                            if not existing_audit:
+                                audit = Audit(
+                                    business_id=business.id,
+                                    channel="self_serve",
+                                    status="pending"
+                                )
+                                db.add(audit)
+                                db.commit()
+                                db.refresh(audit)
+                                
+                                background_tasks.add_task(run_audit_background, business.id, audit.id)
+                                print(f"Created initial audit {audit.id} for new subscriber {business.id}")
                 finally:
                     db.close()
         

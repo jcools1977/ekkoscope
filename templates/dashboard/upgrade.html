@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Choose Plan - EkkoScope</title>
+    <title>Subscribe - EkkoScope</title>
     <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
     <link rel="stylesheet" href="/static/styles.css">
     <style>
@@ -26,11 +26,6 @@
         .nav-logo img {
             width: 36px;
             height: 36px;
-        }
-        
-        .nav-logo span {
-            font-size: 1.25rem;
-            font-weight: 600;
         }
         
         .back-link {
@@ -110,7 +105,7 @@
         }
         
         .plan-card.featured::before {
-            content: "BEST VALUE";
+            content: "RECOMMENDED";
             position: absolute;
             top: -12px;
             left: 50%;
@@ -149,7 +144,7 @@
             font-size: 1rem;
         }
         
-        .plan-price .setup-note {
+        .plan-price .commitment-note {
             color: var(--text-muted);
             font-size: 0.85rem;
             margin-top: 0.5rem;
@@ -177,6 +172,11 @@
         .plan-features .check {
             color: var(--brand-teal);
             flex-shrink: 0;
+        }
+        
+        .plan-features .highlight {
+            color: var(--brand-teal);
+            font-weight: 600;
         }
         
         .plan-cta {
@@ -208,6 +208,20 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(46, 230, 168, 0.2);
         }
+        
+        .addon-note {
+            text-align: center;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(46, 230, 168, 0.05);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .addon-note strong {
+            color: var(--brand-teal);
+        }
     </style>
 </head>
 <body>
@@ -222,8 +236,8 @@
 
     <main class="upgrade-container">
         <div class="upgrade-header">
-            <h1>Choose Your <span class="teal">GEO Plan</span></h1>
-            <p>Discover how AI sees your business and get actionable recommendations</p>
+            <h1>Unlock <span class="teal">Automatic AI Monitoring</span></h1>
+            <p>Get continuous AI visibility tracking with reports delivered every 2 weeks</p>
             
             <div class="business-badge">
                 <span class="name">{{ business.name }}</span>
@@ -232,23 +246,28 @@
         </div>
         
         <div class="plans-grid">
-            <div class="plan-card">
-                <div class="plan-name">Snapshot Audit</div>
-                <div class="plan-tagline">One-time visibility check</div>
+            <div class="plan-card featured">
+                <div class="plan-name">Standard</div>
+                <div class="plan-tagline">Automatic AI visibility monitoring</div>
                 
                 <div class="plan-price">
-                    <span class="amount">$497</span>
-                    <span class="period">one-time</span>
+                    <span class="amount">$99</span>
+                    <span class="period">/month</span>
+                    <div class="commitment-note">3-month minimum commitment</div>
                 </div>
                 
                 <ul class="plan-features">
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Complete AI visibility analysis</span>
+                        <span><span class="highlight">2 automatic audits per month</span> (every 2 weeks)</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Competitor identification</span>
+                        <span>Multi-AI visibility analysis (ChatGPT, Gemini, Perplexity)</span>
+                    </li>
+                    <li>
+                        <span class="check">&#10003;</span>
+                        <span>Competitor tracking and alerts</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
@@ -256,41 +275,49 @@
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Professional PDF report</span>
+                        <span>Professional PDF reports</span>
+                    </li>
+                    <li>
+                        <span class="check">&#10003;</span>
+                        <span>Track visibility improvements over time</span>
                     </li>
                 </ul>
                 
-                <form method="POST" action="/dashboard/business/{{ business.id }}/checkout/snapshot">
-                    <button type="submit" class="plan-cta secondary">Get Snapshot</button>
+                <form method="POST" action="/dashboard/business/{{ business.id }}/checkout/standard">
+                    <button type="submit" class="plan-cta primary">Start Monitoring</button>
                 </form>
             </div>
             
-            <div class="plan-card featured">
-                <div class="plan-name">Ongoing Monitoring</div>
-                <div class="plan-tagline">Monthly visibility tracking</div>
+            <div class="plan-card">
+                <div class="plan-name">Standard + EkkoBrain</div>
+                <div class="plan-tagline">Everything in Standard plus AI pattern insights</div>
                 
                 <div class="plan-price">
-                    <span class="amount">$99</span>
+                    <span class="amount">$248</span>
                     <span class="period">/month</span>
-                    <div class="setup-note">+ $197 setup fee (includes first audit)</div>
+                    <div class="commitment-note">$99 Standard + $149 EkkoBrain</div>
                 </div>
                 
                 <ul class="plan-features">
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Everything in Snapshot</span>
+                        <span>Everything in Standard</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Monthly refresh audits</span>
+                        <span><span class="highlight">EkkoBrain pattern memory access</span></span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Track visibility improvements</span>
+                        <span>Historical AI recommendation trends</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Updated recommendations</span>
+                        <span>Cross-industry pattern insights</span>
+                    </li>
+                    <li>
+                        <span class="check">&#10003;</span>
+                        <span>Predictive visibility recommendations</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
@@ -298,10 +325,14 @@
                     </li>
                 </ul>
                 
-                <form method="POST" action="/dashboard/business/{{ business.id }}/checkout/ongoing">
-                    <button type="submit" class="plan-cta primary">Start Ongoing</button>
+                <form method="POST" action="/dashboard/business/{{ business.id }}/checkout/standard-ekkobrain">
+                    <button type="submit" class="plan-cta secondary">Start with EkkoBrain</button>
                 </form>
             </div>
+        </div>
+        
+        <div class="addon-note">
+            <strong>Already a subscriber?</strong> You can add EkkoBrain ($149/mo) anytime from your dashboard.
         </div>
     </main>
 </body>
