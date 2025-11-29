@@ -17,6 +17,7 @@ class StripeConfig:
     price_id: Optional[str] = None
     price_ongoing_setup: Optional[str] = None
     price_ongoing_monthly: Optional[str] = None
+    price_ekkobrain_monthly: Optional[str] = None
 
 _cached_config: Optional[StripeConfig] = None
 
@@ -97,6 +98,7 @@ async def load_stripe_config() -> StripeConfig:
     price_id = os.getenv("STRIPE_PRICE_SNAPSHOT")
     price_ongoing_setup = os.getenv("STRIPE_PRICE_ONGOING_SETUP")
     price_ongoing_monthly = os.getenv("STRIPE_PRICE_ONGOING_MONTHLY")
+    price_ekkobrain_monthly = os.getenv("STRIPE_PRICE_EKKOBRAIN_MONTHLY")
     
     if not api_key:
         raise ValueError("Stripe API key not configured. Set up Stripe connection or STRIPE_SECRET_KEY environment variable.")
@@ -107,7 +109,8 @@ async def load_stripe_config() -> StripeConfig:
         webhook_secret=webhook_secret,
         price_id=price_id,
         price_ongoing_setup=price_ongoing_setup,
-        price_ongoing_monthly=price_ongoing_monthly
+        price_ongoing_monthly=price_ongoing_monthly,
+        price_ekkobrain_monthly=price_ekkobrain_monthly
     )
     
     stripe.api_key = api_key
@@ -163,11 +166,12 @@ async def create_subscription_checkout_session(
     business_id: int,
     success_url: str,
     cancel_url: str,
+    include_ekkobrain: bool = False,
     metadata: Optional[dict] = None
 ) -> stripe.checkout.Session:
     """
-    Create a Stripe Checkout session for the Ongoing subscription plan.
-    Includes optional setup fee and recurring monthly price.
+    Create a Stripe Checkout session for the Standard subscription plan.
+    $99/month with 3-month minimum commitment. Optional EkkoBrain add-on $149/month.
     """
     config = await load_stripe_config()
     
@@ -176,23 +180,22 @@ async def create_subscription_checkout_session(
     
     stripe.api_key = config.api_key
     
-    line_items = []
+    line_items = [{
+        "price": config.price_ongoing_monthly,
+        "quantity": 1
+    }]
     
-    if config.price_ongoing_setup:
+    if include_ekkobrain and config.price_ekkobrain_monthly:
         line_items.append({
-            "price": config.price_ongoing_setup,
+            "price": config.price_ekkobrain_monthly,
             "quantity": 1
         })
     
-    line_items.append({
-        "price": config.price_ongoing_monthly,
-        "quantity": 1
-    })
-    
     session_metadata = {
         "business_id": str(business_id),
-        "product": "ekkoscope_ongoing",
-        "plan": "ongoing"
+        "product": "ekkoscope_standard",
+        "plan": "standard",
+        "ekkobrain": "true" if include_ekkobrain else "false"
     }
     if metadata:
         session_metadata.update(metadata)
@@ -200,6 +203,49 @@ async def create_subscription_checkout_session(
     session = stripe.checkout.Session.create(
         mode="subscription",
         line_items=line_items,
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata=session_metadata,
+        subscription_data={
+            "metadata": session_metadata,
+            "description": "EkkoScope AI Visibility - 3 month minimum commitment"
+        }
+    )
+    
+    return session
+
+
+async def create_ekkobrain_addon_checkout_session(
+    business_id: int,
+    success_url: str,
+    cancel_url: str,
+    metadata: Optional[dict] = None
+) -> stripe.checkout.Session:
+    """
+    Create a Stripe Checkout session for EkkoBrain add-on only ($149/month).
+    For users who already have a standard subscription.
+    """
+    config = await load_stripe_config()
+    
+    if not config.price_ekkobrain_monthly:
+        raise ValueError("STRIPE_PRICE_EKKOBRAIN_MONTHLY environment variable not set")
+    
+    stripe.api_key = config.api_key
+    
+    session_metadata = {
+        "business_id": str(business_id),
+        "product": "ekkoscope_ekkobrain_addon",
+        "plan": "ekkobrain_addon"
+    }
+    if metadata:
+        session_metadata.update(metadata)
+    
+    session = stripe.checkout.Session.create(
+        mode="subscription",
+        line_items=[{
+            "price": config.price_ekkobrain_monthly,
+            "quantity": 1
+        }],
         success_url=success_url,
         cancel_url=cancel_url,
         metadata=session_metadata

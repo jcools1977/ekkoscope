@@ -98,7 +98,12 @@ class Business(Base):
     source = Column(String(20), default="public")
     subscription_active = Column(Boolean, default=False)
     stripe_subscription_id = Column(String(255), nullable=True)
-    plan = Column(String(20), default="snapshot")
+    stripe_ekkobrain_subscription_id = Column(String(255), nullable=True)
+    plan = Column(String(20), default="free")
+    ekkobrain_access = Column(Boolean, default=False)
+    subscription_start_at = Column(DateTime, nullable=True)
+    next_audit_at = Column(DateTime, nullable=True)
+    last_audit_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     owner = relationship("User", back_populates="businesses")
