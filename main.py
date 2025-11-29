@@ -67,8 +67,30 @@ async def startup():
         import logging
         logging.getLogger(__name__).warning("EkkoBrain init failed (non-fatal): %s", e)
     
+    from datetime import datetime, timedelta
+    from services.audit_scheduler import scheduler_loop, get_next_audit_date
+    
+    db = get_db_session()
+    try:
+        active_subs_without_schedule = db.query(Business).filter(
+            Business.subscription_active == True,
+            Business.next_audit_at == None
+        ).all()
+        
+        if active_subs_without_schedule:
+            print(f"[STARTUP] Backfilling next_audit_at for {len(active_subs_without_schedule)} active subscribers")
+            for business in active_subs_without_schedule:
+                business.next_audit_at = get_next_audit_date()
+                if not business.subscription_start_at:
+                    business.subscription_start_at = datetime.utcnow()
+            db.commit()
+            print(f"[STARTUP] Backfill complete")
+    except Exception as e:
+        print(f"[STARTUP] Backfill error (non-fatal): {e}")
+    finally:
+        db.close()
+    
     import asyncio
-    from services.audit_scheduler import scheduler_loop
     asyncio.create_task(scheduler_loop(interval_minutes=60))
     print("[STARTUP] Audit scheduler started (checks hourly for due audits)")
 
@@ -2116,19 +2138,16 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
         config = await load_stripe_config()
         
         if not config.webhook_secret:
-            print("Warning: STRIPE_WEBHOOK_SECRET not configured, skipping verification")
-            import json as json_module
-            event_data = json_module.loads(payload)
-            event_type = event_data.get("type")
-            data_object = event_data.get("data", {}).get("object", {})
-        else:
-            try:
-                event = verify_webhook_signature(payload, sig_header, config.webhook_secret)
-                event_type = event.type
-                data_object = event.data.object
-            except Exception as e:
-                print(f"Webhook signature verification failed: {e}")
-                return Response(content="Invalid signature", status_code=400)
+            print("ERROR: STRIPE_WEBHOOK_SECRET not configured - rejecting webhook for security")
+            return Response(content="Webhook secret not configured", status_code=500)
+        
+        try:
+            event = verify_webhook_signature(payload, sig_header, config.webhook_secret)
+            event_type = event.type
+            data_object = event.data.object
+        except Exception as e:
+            print(f"Webhook signature verification failed: {e}")
+            return Response(content="Invalid signature", status_code=400)
         
         if event_type == "checkout.session.completed":
             business_id = data_object.get("metadata", {}).get("business_id")

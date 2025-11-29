@@ -6,12 +6,26 @@ EkkoScope is a premium SaaS web application designed to analyze and improve "AI 
 
 ## Recent Changes (November 2025)
 
+### Subscription Model Pivot (v1.5)
+- **New Pricing**: $99/month standard subscription with 3-month minimum commitment, +$149/month optional EkkoBrain access
+- **Automatic Biweekly Audits**: Subscribers receive automatic AI visibility audits every 2 weeks (no manual triggering)
+- **Scheduler Service**: Background scheduler runs hourly checking for due audits and scheduling future ones
+- **EkkoBrain Add-on**: Users can add EkkoBrain pattern insights for +$149/month at any time
+- **Dashboard Updates**: Shows subscription status, next audit date, and EkkoBrain access status
+- **Admin Override**: Admin users retain ability to manually run audits for any business
+- **Webhook Security**: Stripe webhooks now require signature verification (no bypass when secret missing)
+
+### New/Updated Files for Subscription Model
+- `services/audit_scheduler.py` - Background scheduler for automatic biweekly audits
+- `templates/dashboard/upgrade.html` - Updated with new pricing and plan options
+- `templates/dashboard/business_detail.html` - Subscription status section and EkkoBrain toggle
+
 ### Free First Report Feature (v1.4)
 - **One-Time Free Audit**: Every new user gets one free AI visibility report upon signup
 - **User Model Update**: Added `free_audit_used` boolean field to track free report usage
 - **Dashboard Integration**: "Run FREE Report" button shows for users who haven't used their free audit
 - **Same Full Pipeline**: Free reports use identical analysis and PDF generation as paid reports
-- **Seamless UX**: After free report, users see upgrade options for Snapshot ($497) or Ongoing ($99/mo)
+- **Seamless UX**: After free report, users see upgrade options to subscribe
 
 ### EkkoBrain Memory System (v1.3)
 - **Persistent Pattern Learning**: EkkoBrain stores anonymized patterns from completed audits to enhance future recommendations
