@@ -395,6 +395,130 @@
             background: rgba(245, 158, 11, 0.2);
         }
         
+        .subscription-status {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .subscription-status.active {
+            border-color: #2EE6A8;
+            background: linear-gradient(135deg, rgba(46, 230, 168, 0.05), rgba(24, 163, 255, 0.05));
+        }
+        
+        .subscription-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .subscription-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .subscription-badge.active {
+            background: rgba(46, 230, 168, 0.15);
+            color: #2EE6A8;
+        }
+        
+        .subscription-badge.inactive {
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+        }
+        
+        .ekkobrain-badge {
+            background: linear-gradient(135deg, #9b59b6, #3498db);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .subscription-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .subscription-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .subscription-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .subscription-value {
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .subscription-value.highlight {
+            color: #2EE6A8;
+        }
+        
+        .subscription-cta {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn-subscribe {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #2EE6A8, #18A3FF);
+            border: none;
+            border-radius: 8px;
+            color: #0a1628;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-subscribe:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(46, 230, 168, 0.3);
+        }
+        
+        .btn-addon {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: 1px solid #9b59b6;
+            border-radius: 8px;
+            color: #9b59b6;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        
+        .btn-addon:hover {
+            background: rgba(155, 89, 182, 0.1);
+        }
+        
         .audit-actions {
             display: flex;
             align-items: center;
@@ -655,62 +779,87 @@
                 <a href="/admin/business/{{ business.id }}" class="admin-link">
                     Admin View
                 </a>
-                {% elif not user.free_audit_used %}
-                <form action="/dashboard/business/{{ business.id }}/run-free-audit" method="post" style="display:inline;" id="freeAuditForm">
-                    <button type="submit" class="radar-button" id="freeRadarBtn" style="background: linear-gradient(135deg, rgba(46, 230, 168, 0.15), rgba(24, 163, 255, 0.15));">
-                        <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <linearGradient id="radarGradBtn2" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#2EE6A8"/>
-                                    <stop offset="100%" style="stop-color:#18A3FF"/>
-                                </linearGradient>
-                            </defs>
-                            <g class="radar-grid">
-                                <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGradBtn2)" stroke-width="1.5" opacity="0.3"/>
-                                <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGradBtn2)" stroke-width="1.2" opacity="0.4"/>
-                                <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGradBtn2)" stroke-width="1" opacity="0.5"/>
-                            </g>
-                            <g class="radar-sweep">
-                                <path d="M 40 40 L 40 5 A 35 35 0 0 1 72 55 Z" fill="url(#radarGradBtn2)" opacity="0.15"/>
-                            </g>
-                            <g class="radar-arcs">
-                                <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
-                                <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
-                            </g>
-                            <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn2)"/>
-                            <circle class="radar-pulse" cx="40" cy="40" r="5" fill="none" stroke="#2EE6A8" stroke-width="1.5" opacity="0.8"/>
-                        </svg>
-                        <span class="radar-text">Run FREE Report</span>
-                        <span class="radar-loading-text">Running Audit...</span>
-                    </button>
-                </form>
-                {% else %}
-                <a href="/dashboard/business/{{ business.id }}/upgrade" class="radar-button" style="text-decoration: none;">
-                    <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="radarGradBtn2b" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:#2EE6A8"/>
-                                <stop offset="100%" style="stop-color:#18A3FF"/>
-                            </linearGradient>
-                        </defs>
-                        <g class="radar-grid">
-                            <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGradBtn2b)" stroke-width="1.5" opacity="0.3"/>
-                            <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGradBtn2b)" stroke-width="1.2" opacity="0.4"/>
-                            <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGradBtn2b)" stroke-width="1" opacity="0.5"/>
-                        </g>
-                        <g class="radar-arcs">
-                            <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
-                            <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
-                        </g>
-                        <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn2b)"/>
-                    </svg>
-                    <span class="radar-text">Get Audit</span>
-                </a>
                 {% endif %}
             </div>
         </div>
         
-        <h2 class="section-title">&#x1F4CA; Audit History</h2>
+        {% if not user.is_admin %}
+        <div class="subscription-status {{ 'active' if business.subscription_active else '' }}">
+            <div class="subscription-header">
+                <div>
+                    <span class="subscription-badge {{ 'active' if business.subscription_active else 'inactive' }}">
+                        {% if business.subscription_active %}
+                        Active Subscription
+                        {% else %}
+                        No Subscription
+                        {% endif %}
+                    </span>
+                    {% if business.ekkobrain_access %}
+                    <span class="ekkobrain-badge">EkkoBrain</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if business.subscription_active %}
+            <div class="subscription-details">
+                <div class="subscription-item">
+                    <span class="subscription-label">Plan</span>
+                    <span class="subscription-value">Standard ($99/month)</span>
+                </div>
+                <div class="subscription-item">
+                    <span class="subscription-label">Next Automatic Audit</span>
+                    <span class="subscription-value highlight">
+                        {% if business.next_audit_at %}
+                        {{ business.next_audit_at.strftime('%B %d, %Y') }}
+                        {% else %}
+                        Scheduled soon
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="subscription-item">
+                    <span class="subscription-label">Last Audit</span>
+                    <span class="subscription-value">
+                        {% if business.last_audit_at %}
+                        {{ business.last_audit_at.strftime('%B %d, %Y') }}
+                        {% else %}
+                        Not yet run
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% if not business.ekkobrain_access %}
+            <div class="subscription-cta">
+                <form action="/dashboard/business/{{ business.id }}/checkout/ekkobrain-addon" method="post" style="display: inline;">
+                    <button type="submit" class="btn-addon">
+                        Add EkkoBrain (+$149/mo)
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="subscription-details">
+                <div class="subscription-item">
+                    <span class="subscription-label">Audits run automatically</span>
+                    <span class="subscription-value">Every 2 weeks with active subscription</span>
+                </div>
+            </div>
+            <div class="subscription-cta">
+                {% if not user.free_audit_used %}
+                <form action="/dashboard/business/{{ business.id }}/run-free-audit" method="post" style="display:inline;" id="freeAuditForm">
+                    <button type="submit" class="btn-subscribe" id="freeRadarBtn">
+                        Run FREE Report First
+                    </button>
+                </form>
+                {% endif %}
+                <a href="/dashboard/business/{{ business.id }}/upgrade" class="btn-subscribe" style="text-decoration: none;">
+                    Subscribe Now - $99/month
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <h2 class="section-title">Audit History</h2>
         
         {% if audits %}
         <div class="audits-list">
@@ -774,58 +923,10 @@
                     <span class="radar-loading-text">Running Audit...</span>
                 </button>
             </form>
-            {% elif not user.free_audit_used %}
-            <p style="color: #2EE6A8; margin-bottom: 1rem; font-weight: 600;">Your first report is FREE!</p>
-            <form action="/dashboard/business/{{ business.id }}/run-free-audit" method="post" class="audit-form">
-                <button type="submit" class="radar-button" style="background: linear-gradient(135deg, rgba(46, 230, 168, 0.15), rgba(24, 163, 255, 0.15));">
-                    <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="radarGradBtn4" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:#2EE6A8"/>
-                                <stop offset="100%" style="stop-color:#18A3FF"/>
-                            </linearGradient>
-                        </defs>
-                        <g class="radar-grid">
-                            <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGradBtn4)" stroke-width="1.5" opacity="0.3"/>
-                            <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGradBtn4)" stroke-width="1.2" opacity="0.4"/>
-                            <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGradBtn4)" stroke-width="1" opacity="0.5"/>
-                        </g>
-                        <g class="radar-sweep">
-                            <path d="M 40 40 L 40 5 A 35 35 0 0 1 72 55 Z" fill="url(#radarGradBtn4)" opacity="0.15"/>
-                        </g>
-                        <g class="radar-arcs">
-                            <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
-                            <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
-                        </g>
-                        <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn4)"/>
-                        <circle class="radar-pulse" cx="40" cy="40" r="5" fill="none" stroke="#2EE6A8" stroke-width="1.5" opacity="0.8"/>
-                    </svg>
-                    <span class="radar-text">Run Your FREE Report</span>
-                    <span class="radar-loading-text">Running Audit...</span>
-                </button>
-            </form>
+            {% elif business.subscription_active %}
+            <p style="color: #2EE6A8;">Your first automatic audit will run soon!</p>
             {% else %}
-            <a href="/dashboard/business/{{ business.id }}/upgrade" class="radar-button" style="text-decoration: none;">
-                <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="radarGradBtn4b" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#2EE6A8"/>
-                            <stop offset="100%" style="stop-color:#18A3FF"/>
-                        </linearGradient>
-                    </defs>
-                    <g class="radar-grid">
-                        <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGradBtn4b)" stroke-width="1.5" opacity="0.3"/>
-                        <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGradBtn4b)" stroke-width="1.2" opacity="0.4"/>
-                        <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGradBtn4b)" stroke-width="1" opacity="0.5"/>
-                    </g>
-                    <g class="radar-arcs">
-                        <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
-                        <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
-                    </g>
-                    <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn4b)"/>
-                </svg>
-                <span class="radar-text">Get Your First Audit</span>
-            </a>
+            <p style="color: var(--text-secondary);">Subscribe to start receiving automatic audits every 2 weeks.</p>
             {% endif %}
         </div>
         {% endif %}
