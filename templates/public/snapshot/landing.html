@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EkkoScope Snapshot - One-Time GEO Audit</title>
+    <title>EkkoScope - AI Visibility Monitoring</title>
     <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
     <link rel="stylesheet" href="/static/styles.css">
     <style>
@@ -60,18 +60,38 @@
             border-radius: 16px;
             padding: 2rem;
             margin: 2rem auto;
-            max-width: 400px;
+            max-width: 450px;
+        }
+        
+        .price-box .free-label {
+            font-size: 1rem;
+            color: var(--brand-teal);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
         }
         
         .price-box .price {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: bold;
+            color: var(--text-primary);
+        }
+        
+        .price-box .price .teal {
             color: var(--brand-teal);
         }
         
         .price-box .price-note {
             color: var(--text-secondary);
             margin-top: 0.5rem;
+        }
+        
+        .price-box .then-note {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
         }
         
         .cta-button {
@@ -140,8 +160,8 @@
 
     <main class="container">
         <div class="snapshot-hero">
-            <h1>EkkoScope <span class="teal">Snapshot</span></h1>
-            <p class="tagline">Discover how AI assistants see your business with a one-time GEO audit</p>
+            <h1>Your First <span class="teal">AI Visibility</span> Report is Free</h1>
+            <p class="tagline">Discover how AI assistants like ChatGPT, Gemini, and Perplexity see your business</p>
             
             <div class="features-grid">
                 <div class="feature-card">
@@ -180,40 +200,42 @@
             </div>
             
             <div class="price-box">
-                <div class="price">$497</div>
-                <div class="price-note">One-time payment • No subscription</div>
-                <a href="/snapshot/business" class="cta-button">Start My Snapshot Audit</a>
+                <div class="free-label">Your First Report</div>
+                <div class="price"><span class="teal">FREE</span></div>
+                <div class="price-note">No credit card required</div>
+                <a href="/auth/signup" class="cta-button">Get Your Free Report</a>
+                <div class="then-note">Then $99/month for automatic biweekly monitoring (3-month commitment)</div>
             </div>
             
             <div class="what-you-get">
                 <h2>What You'll Get</h2>
                 <ul>
                     <li>
-                        <span class="check-icon">✓</span>
-                        <span>Complete AI visibility analysis across 10+ relevant queries</span>
+                        <span class="check-icon">&#10003;</span>
+                        <span>Complete AI visibility analysis across 20+ relevant queries</span>
                     </li>
                     <li>
-                        <span class="check-icon">✓</span>
-                        <span>Detailed scoring: How prominently you're recommended (0-2 scale)</span>
+                        <span class="check-icon">&#10003;</span>
+                        <span>Multi-AI analysis: ChatGPT, Gemini, and Perplexity</span>
                     </li>
                     <li>
-                        <span class="check-icon">✓</span>
+                        <span class="check-icon">&#10003;</span>
                         <span>Top competitor identification and frequency analysis</span>
                     </li>
                     <li>
-                        <span class="check-icon">✓</span>
+                        <span class="check-icon">&#10003;</span>
                         <span>Site content analysis with gap identification</span>
                     </li>
                     <li>
-                        <span class="check-icon">✓</span>
+                        <span class="check-icon">&#10003;</span>
                         <span>Priority opportunities ranked by impact and effort</span>
                     </li>
                     <li>
-                        <span class="check-icon">✓</span>
+                        <span class="check-icon">&#10003;</span>
                         <span>Quick wins: Concrete 30-day action items</span>
                     </li>
                     <li>
-                        <span class="check-icon">✓</span>
+                        <span class="check-icon">&#10003;</span>
                         <span>Professional PDF report for your records</span>
                     </li>
                 </ul>
@@ -222,7 +244,7 @@
     </main>
     
     <footer style="text-align: center; padding: 2rem; color: var(--text-muted);">
-        <p>Powered by EkkoScope • GEO Engine for AI Visibility</p>
+        <p>Powered by EkkoScope - GEO Engine for AI Visibility</p>
     </footer>
 </body>
 </html>

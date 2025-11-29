@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EkkoScope Ongoing - Monthly GEO Monitoring</title>
+    <title>EkkoScope Standard - Automatic AI Visibility Monitoring</title>
     <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
     <link rel="stylesheet" href="/static/styles.css">
     <style>
@@ -60,7 +60,7 @@
             border-radius: 16px;
             padding: 2rem;
             margin: 2rem auto;
-            max-width: 400px;
+            max-width: 450px;
         }
         
         .price-box .price {
@@ -74,7 +74,7 @@
             font-size: 1.25rem;
         }
         
-        .price-box .setup-note {
+        .price-box .commitment-note {
             color: var(--text-muted);
             font-size: 0.9rem;
             margin-top: 0.5rem;
@@ -134,19 +134,40 @@
             font-size: 1.25rem;
         }
         
-        .alt-link {
-            color: var(--text-secondary);
+        .free-trial-note {
+            background: rgba(46, 230, 168, 0.1);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
             margin-top: 1.5rem;
-            display: block;
+            color: var(--text-secondary);
         }
         
-        .alt-link a {
+        .free-trial-note strong {
             color: var(--brand-teal);
-            text-decoration: none;
         }
         
-        .alt-link a:hover {
-            text-decoration: underline;
+        .addon-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+        
+        .addon-section h3 {
+            color: var(--brand-teal);
+            margin-bottom: 0.5rem;
+        }
+        
+        .addon-section .addon-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        
+        .addon-section p {
+            color: var(--text-secondary);
         }
     </style>
 </head>
@@ -161,8 +182,8 @@
 
     <main class="container">
         <div class="ongoing-hero">
-            <h1>EkkoScope <span class="teal">Ongoing</span></h1>
-            <p class="tagline">Continuous monitoring of your AI visibility with monthly refresh audits</p>
+            <h1>EkkoScope <span class="teal">Standard</span></h1>
+            <p class="tagline">Automatic biweekly AI visibility monitoring - reports delivered every 2 weeks</p>
             
             <div class="features-grid">
                 <div class="feature-card">
@@ -177,9 +198,9 @@
                             <path d="M2 12h4"></path>
                             <path d="m4.93 4.93 2.83 2.83"></path>
                         </svg>
-                        Monthly Refresh
+                        Automatic Biweekly Audits
                     </h3>
-                    <p>Regular audits to track your AI visibility improvements over time.</p>
+                    <p>No action required - your AI visibility reports are generated automatically every 2 weeks.</p>
                 </div>
                 
                 <div class="feature-card">
@@ -198,56 +219,62 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                         </svg>
-                        Updated Insights
+                        Multi-AI Analysis
                     </h3>
-                    <p>Fresh recommendations based on AI's evolving responses to your queries.</p>
+                    <p>Track your visibility across ChatGPT, Gemini, and Perplexity simultaneously.</p>
                 </div>
             </div>
             
             <div class="price-box">
                 <div class="price">$99<span class="price-period">/mo</span></div>
-                <div class="setup-note">+ $197 one-time setup fee (includes initial audit)</div>
-                <a href="/ongoing/business" class="cta-button">Start Ongoing Monitoring</a>
+                <div class="commitment-note">3-month minimum commitment</div>
+                <a href="/auth/signup" class="cta-button">Get Started</a>
+            </div>
+            
+            <div class="free-trial-note">
+                <strong>Start with a FREE report!</strong> Every new account gets one free AI visibility audit before subscribing.
             </div>
             
             <div class="what-you-get">
                 <h2>What's Included</h2>
                 <ul>
                     <li>
-                        <span class="check-icon">✓</span>
-                        <span>Full initial GEO audit with visibility scores</span>
+                        <span class="check-icon">&#10003;</span>
+                        <span>2 automatic AI visibility audits per month (every 2 weeks)</span>
                     </li>
                     <li>
-                        <span class="check-icon">✓</span>
-                        <span>Competitor analysis and recommendations</span>
+                        <span class="check-icon">&#10003;</span>
+                        <span>Multi-AI analysis: ChatGPT, Gemini, and Perplexity</span>
                     </li>
                     <li>
-                        <span class="check-icon">✓</span>
-                        <span>Monthly refresh audits to track progress</span>
+                        <span class="check-icon">&#10003;</span>
+                        <span>Competitor tracking and identification</span>
                     </li>
                     <li>
-                        <span class="check-icon">✓</span>
-                        <span>Updated Genius Insights each month</span>
+                        <span class="check-icon">&#10003;</span>
+                        <span>Genius Insights with actionable recommendations</span>
                     </li>
                     <li>
-                        <span class="check-icon">✓</span>
-                        <span>PDF reports for every audit</span>
+                        <span class="check-icon">&#10003;</span>
+                        <span>Professional PDF reports for every audit</span>
                     </li>
                     <li>
-                        <span class="check-icon">✓</span>
-                        <span>Priority support for visibility questions</span>
+                        <span class="check-icon">&#10003;</span>
+                        <span>Track visibility improvements over time</span>
                     </li>
                 </ul>
             </div>
             
-            <p class="alt-link">
-                Just need a one-time check? <a href="/snapshot">Try EkkoScope Snapshot</a>
-            </p>
+            <div class="addon-section">
+                <h3>Add EkkoBrain Pattern Insights</h3>
+                <div class="addon-price">+$149/mo</div>
+                <p>Access cross-industry patterns, historical trends, and predictive recommendations powered by our AI memory system.</p>
+            </div>
         </div>
     </main>
     
     <footer style="text-align: center; padding: 2rem; color: var(--text-muted);">
-        <p>Powered by EkkoScope • GEO Engine for AI Visibility</p>
+        <p>Powered by EkkoScope - GEO Engine for AI Visibility</p>
     </footer>
 </body>
 </html>

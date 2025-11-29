@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Info - EkkoScope Ongoing</title>
+    <title>Business Info - EkkoScope Standard</title>
     <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
     <link rel="stylesheet" href="/static/styles.css">
     <style>
@@ -145,6 +145,20 @@
             color: var(--brand-teal);
             font-weight: 600;
         }
+        
+        .free-note {
+            text-align: center;
+            padding: 0.75rem;
+            background: rgba(46, 230, 168, 0.05);
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .free-note strong {
+            color: var(--brand-teal);
+        }
     </style>
 </head>
 <body>
@@ -158,12 +172,12 @@
 
     <main class="form-container">
         <div class="form-card">
-            <span class="plan-badge">ONGOING PLAN</span>
+            <span class="plan-badge">STANDARD PLAN</span>
             <h1>Tell Us About Your <span class="teal">Business</span></h1>
             <p class="subtitle">We'll use this information to analyze your AI visibility</p>
             
             <div class="price-summary">
-                You're signing up for <span class="amount">$99/month</span> + <span class="amount">$197 setup fee</span> (includes your initial full GEO audit)
+                EkkoScope Standard: <span class="amount">$99/month</span> with 3-month commitment. Automatic audits every 2 weeks.
             </div>
             
             {% if error %}
@@ -228,8 +242,12 @@
                 </div>
                 
                 <button type="submit" class="submit-button">Continue to Payment</button>
-                <a href="/ongoing" class="back-link">← Back to Ongoing info</a>
+                <a href="/ongoing" class="back-link">← Back to plan info</a>
             </form>
+            
+            <div class="free-note">
+                <strong>Tip:</strong> Not ready to commit? <a href="/auth/signup" style="color: var(--brand-teal);">Sign up for a free account</a> to get your first report free!
+            </div>
         </div>
     </main>
 </body>

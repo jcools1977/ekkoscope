@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EkkoScope Pricing - GEO Audits for AI Visibility</title>
+    <title>EkkoScope Pricing - AI Visibility Monitoring</title>
     <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
     <link rel="stylesheet" href="/static/styles.css">
     <style>
@@ -23,6 +23,26 @@
             color: var(--text-secondary);
             font-size: 1.25rem;
             margin-bottom: 3rem;
+        }
+        
+        .free-banner {
+            background: linear-gradient(135deg, rgba(46, 230, 168, 0.15), rgba(24, 163, 255, 0.15));
+            border: 1px solid var(--brand-teal);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+        
+        .free-banner h3 {
+            color: var(--brand-teal);
+            margin-bottom: 0.5rem;
+            font-size: 1.25rem;
+        }
+        
+        .free-banner p {
+            color: var(--text-secondary);
+            margin: 0;
         }
         
         .pricing-grid {
@@ -52,7 +72,7 @@
         }
         
         .pricing-card.featured::before {
-            content: "BEST VALUE";
+            content: "MOST POPULAR";
             position: absolute;
             top: -12px;
             left: 50%;
@@ -96,7 +116,7 @@
             font-size: 1rem;
         }
         
-        .plan-price .setup-note {
+        .plan-price .commitment-note {
             color: var(--text-muted);
             font-size: 0.85rem;
             margin-top: 0.5rem;
@@ -124,6 +144,11 @@
         .plan-features .check {
             color: var(--brand-teal);
             flex-shrink: 0;
+        }
+        
+        .plan-features .highlight {
+            color: var(--brand-teal);
+            font-weight: 600;
         }
         
         .plan-cta {
@@ -200,6 +225,18 @@
         .x-mark {
             color: var(--text-muted);
         }
+        
+        .addon-note {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(46, 230, 168, 0.05);
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .addon-note strong {
+            color: var(--brand-teal);
+        }
     </style>
 </head>
 <body>
@@ -212,84 +249,98 @@
 
     <main class="container">
         <div class="pricing-hero">
-            <h1>Choose Your <span class="teal">GEO Plan</span></h1>
-            <p class="tagline">Discover and improve how AI assistants recommend your business</p>
+            <h1>Choose Your <span class="teal">AI Visibility</span> Plan</h1>
+            <p class="tagline">Automatic biweekly audits to track and improve how AI recommends your business</p>
+            
+            <div class="free-banner">
+                <h3>Start with a FREE Audit</h3>
+                <p>Every new account gets one free AI visibility report - no credit card required</p>
+            </div>
             
             <div class="pricing-grid">
-                <div class="pricing-card">
-                    <div class="plan-name">Ekko<span class="teal">Scope</span> Snapshot</div>
-                    <div class="plan-tagline">One-time visibility check</div>
-                    
-                    <div class="plan-price">
-                        <span class="amount">$497</span>
-                        <span class="period">one-time</span>
-                    </div>
-                    
-                    <ul class="plan-features">
-                        <li>
-                            <span class="check">✓</span>
-                            <span>Complete AI visibility analysis</span>
-                        </li>
-                        <li>
-                            <span class="check">✓</span>
-                            <span>Competitor identification</span>
-                        </li>
-                        <li>
-                            <span class="check">✓</span>
-                            <span>Genius Insights with action items</span>
-                        </li>
-                        <li>
-                            <span class="check">✓</span>
-                            <span>Professional PDF report</span>
-                        </li>
-                        <li>
-                            <span class="check">✓</span>
-                            <span>Site content gap analysis</span>
-                        </li>
-                    </ul>
-                    
-                    <a href="/snapshot" class="plan-cta secondary">Get Snapshot</a>
-                </div>
-                
                 <div class="pricing-card featured">
-                    <div class="plan-name">Ekko<span class="teal">Scope</span> Ongoing</div>
-                    <div class="plan-tagline">Monthly visibility monitoring</div>
+                    <div class="plan-name">Ekko<span class="teal">Scope</span> Standard</div>
+                    <div class="plan-tagline">Automatic AI visibility monitoring</div>
                     
                     <div class="plan-price">
                         <span class="amount">$99</span>
                         <span class="period">/month</span>
-                        <div class="setup-note">+ $197 setup fee (includes first audit)</div>
+                        <div class="commitment-note">3-month minimum commitment</div>
                     </div>
                     
                     <ul class="plan-features">
                         <li>
-                            <span class="check">✓</span>
-                            <span>Everything in Snapshot</span>
+                            <span class="check">&#10003;</span>
+                            <span><span class="highlight">2 automatic audits per month</span> (every 2 weeks)</span>
                         </li>
                         <li>
-                            <span class="check">✓</span>
-                            <span>Initial full GEO audit included</span>
+                            <span class="check">&#10003;</span>
+                            <span>Multi-AI visibility analysis (ChatGPT, Gemini, Perplexity)</span>
                         </li>
                         <li>
-                            <span class="check">✓</span>
-                            <span>Monthly refresh audits</span>
+                            <span class="check">&#10003;</span>
+                            <span>Competitor tracking and alerts</span>
                         </li>
                         <li>
-                            <span class="check">✓</span>
-                            <span>Track visibility improvements</span>
+                            <span class="check">&#10003;</span>
+                            <span>Genius Insights with action items</span>
                         </li>
                         <li>
-                            <span class="check">✓</span>
-                            <span>Updated recommendations</span>
+                            <span class="check">&#10003;</span>
+                            <span>Professional PDF reports</span>
                         </li>
                         <li>
-                            <span class="check">✓</span>
+                            <span class="check">&#10003;</span>
+                            <span>Track visibility improvements over time</span>
+                        </li>
+                    </ul>
+                    
+                    <a href="/auth/signup" class="plan-cta primary">Get Started</a>
+                </div>
+                
+                <div class="pricing-card">
+                    <div class="plan-name">Standard + <span class="teal">EkkoBrain</span></div>
+                    <div class="plan-tagline">Everything in Standard plus AI pattern insights</div>
+                    
+                    <div class="plan-price">
+                        <span class="amount">$248</span>
+                        <span class="period">/month</span>
+                        <div class="commitment-note">$99 Standard + $149 EkkoBrain</div>
+                    </div>
+                    
+                    <ul class="plan-features">
+                        <li>
+                            <span class="check">&#10003;</span>
+                            <span>Everything in Standard</span>
+                        </li>
+                        <li>
+                            <span class="check">&#10003;</span>
+                            <span><span class="highlight">EkkoBrain pattern memory access</span></span>
+                        </li>
+                        <li>
+                            <span class="check">&#10003;</span>
+                            <span>Historical AI recommendation trends</span>
+                        </li>
+                        <li>
+                            <span class="check">&#10003;</span>
+                            <span>Cross-industry pattern insights</span>
+                        </li>
+                        <li>
+                            <span class="check">&#10003;</span>
+                            <span>Predictive visibility recommendations</span>
+                        </li>
+                        <li>
+                            <span class="check">&#10003;</span>
                             <span>Priority support</span>
                         </li>
                     </ul>
                     
-                    <a href="/ongoing" class="plan-cta primary">Start Ongoing</a>
+                    <a href="/auth/signup" class="plan-cta secondary">Get Started</a>
                 </div>
+            </div>
+            
+            <div class="addon-note">
+                <strong>Add EkkoBrain anytime!</strong> Existing Standard subscribers can add EkkoBrain ($149/mo) from their dashboard.
             </div>
             
             <div class="comparison-section">
@@ -298,45 +349,55 @@
                     <thead>
                         <tr>
                             <th>Feature</th>
-                            <th>Snapshot</th>
-                            <th>Ongoing</th>
+                            <th>Standard</th>
+                            <th>+ EkkoBrain</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Initial AI Visibility Audit</td>
-                            <td><span class="check-mark">✓</span></td>
-                            <td><span class="check-mark">✓</span></td>
+                            <td>Automatic Biweekly Audits</td>
+                            <td><span class="check-mark">&#10003;</span></td>
+                            <td><span class="check-mark">&#10003;</span></td>
+                        </tr>
+                        <tr>
+                            <td>Multi-AI Analysis (3 platforms)</td>
+                            <td><span class="check-mark">&#10003;</span></td>
+                            <td><span class="check-mark">&#10003;</span></td>
                         </tr>
                         <tr>
                             <td>Competitor Analysis</td>
-                            <td><span class="check-mark">✓</span></td>
-                            <td><span class="check-mark">✓</span></td>
+                            <td><span class="check-mark">&#10003;</span></td>
+                            <td><span class="check-mark">&#10003;</span></td>
                         </tr>
                         <tr>
                             <td>Genius Insights & Recommendations</td>
-                            <td><span class="check-mark">✓</span></td>
-                            <td><span class="check-mark">✓</span></td>
+                            <td><span class="check-mark">&#10003;</span></td>
+                            <td><span class="check-mark">&#10003;</span></td>
                         </tr>
                         <tr>
-                            <td>PDF Report</td>
-                            <td><span class="check-mark">✓</span></td>
-                            <td><span class="check-mark">✓</span></td>
+                            <td>PDF Reports</td>
+                            <td><span class="check-mark">&#10003;</span></td>
+                            <td><span class="check-mark">&#10003;</span></td>
                         </tr>
                         <tr>
-                            <td>Monthly Refresh Audits</td>
-                            <td><span class="x-mark">—</span></td>
-                            <td><span class="check-mark">✓</span></td>
+                            <td>EkkoBrain Pattern Memory</td>
+                            <td><span class="x-mark">&mdash;</span></td>
+                            <td><span class="check-mark">&#10003;</span></td>
                         </tr>
                         <tr>
-                            <td>Visibility Trend Tracking</td>
-                            <td><span class="x-mark">—</span></td>
-                            <td><span class="check-mark">✓</span></td>
+                            <td>Historical Trend Analysis</td>
+                            <td><span class="x-mark">&mdash;</span></td>
+                            <td><span class="check-mark">&#10003;</span></td>
+                        </tr>
+                        <tr>
+                            <td>Cross-Industry Insights</td>
+                            <td><span class="x-mark">&mdash;</span></td>
+                            <td><span class="check-mark">&#10003;</span></td>
                         </tr>
                         <tr>
                             <td>Priority Support</td>
-                            <td><span class="x-mark">—</span></td>
-                            <td><span class="check-mark">✓</span></td>
+                            <td><span class="x-mark">&mdash;</span></td>
+                            <td><span class="check-mark">&#10003;</span></td>
                         </tr>
                     </tbody>
                 </table>
@@ -345,7 +406,7 @@
     </main>
     
     <footer style="text-align: center; padding: 2rem; color: var(--text-muted);">
-        <p>Powered by EkkoScope • GEO Engine for AI Visibility</p>
+        <p>Powered by EkkoScope - GEO Engine for AI Visibility</p>
     </footer>
 </body>
 </html>
