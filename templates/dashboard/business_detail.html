@@ -655,25 +655,54 @@
                 <a href="/admin/business/{{ business.id }}" class="admin-link">
                     Admin View
                 </a>
+                {% elif not user.free_audit_used %}
+                <form action="/dashboard/business/{{ business.id }}/run-free-audit" method="post" style="display:inline;" id="freeAuditForm">
+                    <button type="submit" class="radar-button" id="freeRadarBtn" style="background: linear-gradient(135deg, rgba(46, 230, 168, 0.15), rgba(24, 163, 255, 0.15));">
+                        <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="radarGradBtn2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#2EE6A8"/>
+                                    <stop offset="100%" style="stop-color:#18A3FF"/>
+                                </linearGradient>
+                            </defs>
+                            <g class="radar-grid">
+                                <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGradBtn2)" stroke-width="1.5" opacity="0.3"/>
+                                <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGradBtn2)" stroke-width="1.2" opacity="0.4"/>
+                                <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGradBtn2)" stroke-width="1" opacity="0.5"/>
+                            </g>
+                            <g class="radar-sweep">
+                                <path d="M 40 40 L 40 5 A 35 35 0 0 1 72 55 Z" fill="url(#radarGradBtn2)" opacity="0.15"/>
+                            </g>
+                            <g class="radar-arcs">
+                                <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                                <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                            </g>
+                            <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn2)"/>
+                            <circle class="radar-pulse" cx="40" cy="40" r="5" fill="none" stroke="#2EE6A8" stroke-width="1.5" opacity="0.8"/>
+                        </svg>
+                        <span class="radar-text">Run FREE Report</span>
+                        <span class="radar-loading-text">Running Audit...</span>
+                    </button>
+                </form>
                 {% else %}
                 <a href="/dashboard/business/{{ business.id }}/upgrade" class="radar-button" style="text-decoration: none;">
                     <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
                         <defs>
-                            <linearGradient id="radarGradBtn2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <linearGradient id="radarGradBtn2b" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <stop offset="0%" style="stop-color:#2EE6A8"/>
                                 <stop offset="100%" style="stop-color:#18A3FF"/>
                             </linearGradient>
                         </defs>
                         <g class="radar-grid">
-                            <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGradBtn2)" stroke-width="1.5" opacity="0.3"/>
-                            <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGradBtn2)" stroke-width="1.2" opacity="0.4"/>
-                            <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGradBtn2)" stroke-width="1" opacity="0.5"/>
+                            <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGradBtn2b)" stroke-width="1.5" opacity="0.3"/>
+                            <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGradBtn2b)" stroke-width="1.2" opacity="0.4"/>
+                            <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGradBtn2b)" stroke-width="1" opacity="0.5"/>
                         </g>
                         <g class="radar-arcs">
                             <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
                             <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
                         </g>
-                        <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn2)"/>
+                        <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn2b)"/>
                     </svg>
                     <span class="radar-text">Get Audit</span>
                 </a>
@@ -745,25 +774,55 @@
                     <span class="radar-loading-text">Running Audit...</span>
                 </button>
             </form>
+            {% elif not user.free_audit_used %}
+            <p style="color: #2EE6A8; margin-bottom: 1rem; font-weight: 600;">Your first report is FREE!</p>
+            <form action="/dashboard/business/{{ business.id }}/run-free-audit" method="post" class="audit-form">
+                <button type="submit" class="radar-button" style="background: linear-gradient(135deg, rgba(46, 230, 168, 0.15), rgba(24, 163, 255, 0.15));">
+                    <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="radarGradBtn4" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#2EE6A8"/>
+                                <stop offset="100%" style="stop-color:#18A3FF"/>
+                            </linearGradient>
+                        </defs>
+                        <g class="radar-grid">
+                            <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGradBtn4)" stroke-width="1.5" opacity="0.3"/>
+                            <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGradBtn4)" stroke-width="1.2" opacity="0.4"/>
+                            <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGradBtn4)" stroke-width="1" opacity="0.5"/>
+                        </g>
+                        <g class="radar-sweep">
+                            <path d="M 40 40 L 40 5 A 35 35 0 0 1 72 55 Z" fill="url(#radarGradBtn4)" opacity="0.15"/>
+                        </g>
+                        <g class="radar-arcs">
+                            <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                            <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                        </g>
+                        <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn4)"/>
+                        <circle class="radar-pulse" cx="40" cy="40" r="5" fill="none" stroke="#2EE6A8" stroke-width="1.5" opacity="0.8"/>
+                    </svg>
+                    <span class="radar-text">Run Your FREE Report</span>
+                    <span class="radar-loading-text">Running Audit...</span>
+                </button>
+            </form>
             {% else %}
             <a href="/dashboard/business/{{ business.id }}/upgrade" class="radar-button" style="text-decoration: none;">
                 <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
                     <defs>
-                        <linearGradient id="radarGradBtn4" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <linearGradient id="radarGradBtn4b" x1="0%" y1="0%" x2="100%" y2="100%">
                             <stop offset="0%" style="stop-color:#2EE6A8"/>
                             <stop offset="100%" style="stop-color:#18A3FF"/>
                         </linearGradient>
                     </defs>
                     <g class="radar-grid">
-                        <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGradBtn4)" stroke-width="1.5" opacity="0.3"/>
-                        <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGradBtn4)" stroke-width="1.2" opacity="0.4"/>
-                        <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGradBtn4)" stroke-width="1" opacity="0.5"/>
+                        <circle cx="40" cy="40" r="35" fill="none" stroke="url(#radarGradBtn4b)" stroke-width="1.5" opacity="0.3"/>
+                        <circle cx="40" cy="40" r="25" fill="none" stroke="url(#radarGradBtn4b)" stroke-width="1.2" opacity="0.4"/>
+                        <circle cx="40" cy="40" r="15" fill="none" stroke="url(#radarGradBtn4b)" stroke-width="1" opacity="0.5"/>
                     </g>
                     <g class="radar-arcs">
                         <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
                         <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
                     </g>
-                    <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn4)"/>
+                    <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn4b)"/>
                 </svg>
                 <span class="radar-text">Get Your First Audit</span>
             </a>
@@ -873,7 +932,7 @@
             }
         }
         
-        document.querySelectorAll('.audit-form, #auditForm').forEach(form => {
+        document.querySelectorAll('.audit-form, #auditForm, #freeAuditForm').forEach(form => {
             form.addEventListener('submit', function(e) {
                 const btn = this.querySelector('.radar-button');
                 if (btn) {

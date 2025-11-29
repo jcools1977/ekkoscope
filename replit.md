@@ -6,6 +6,13 @@ EkkoScope is a premium SaaS web application designed to analyze and improve "AI 
 
 ## Recent Changes (November 2025)
 
+### Free First Report Feature (v1.4)
+- **One-Time Free Audit**: Every new user gets one free AI visibility report upon signup
+- **User Model Update**: Added `free_audit_used` boolean field to track free report usage
+- **Dashboard Integration**: "Run FREE Report" button shows for users who haven't used their free audit
+- **Same Full Pipeline**: Free reports use identical analysis and PDF generation as paid reports
+- **Seamless UX**: After free report, users see upgrade options for Snapshot ($497) or Ongoing ($99/mo)
+
 ### EkkoBrain Memory System (v1.3)
 - **Persistent Pattern Learning**: EkkoBrain stores anonymized patterns from completed audits to enhance future recommendations
 - **Two-Layer Architecture**: Structured DB storage (audit artifacts) + Pinecone vector search (semantic pattern retrieval)

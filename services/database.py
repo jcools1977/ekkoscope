@@ -35,6 +35,7 @@ class User(Base):
     last_name = Column(String(100), nullable=True)
     is_admin = Column(Boolean, default=False)
     email_verified = Column(Boolean, default=False)
+    free_audit_used = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     last_login_at = Column(DateTime, nullable=True)
     follow_up_sent_at = Column(DateTime, nullable=True)

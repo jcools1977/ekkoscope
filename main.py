@@ -363,6 +363,48 @@ async def dashboard_run_audit(request: Request, business_id: int, background_tas
         db.close()
 
 
+@app.post("/dashboard/business/{business_id}/run-free-audit")
+async def dashboard_run_free_audit(request: Request, business_id: int, background_tasks: BackgroundTasks):
+    """Run a free first audit for the user (one-time only)."""
+    session_user = get_current_user(request)
+    if not session_user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        db_user = db.query(User).filter(User.id == session_user.id).first()
+        if not db_user:
+            return RedirectResponse(url="/auth/login", status_code=302)
+        
+        if db_user.free_audit_used:
+            return RedirectResponse(url=f"/dashboard/business/{business_id}/upgrade", status_code=302)
+        
+        business = db.query(Business).filter(
+            Business.id == business_id,
+            Business.owner_user_id == db_user.id
+        ).first()
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        db_user.free_audit_used = True
+        db.commit()
+        
+        audit = Audit(
+            business_id=business.id,
+            channel="free_report",
+            status="pending"
+        )
+        db.add(audit)
+        db.commit()
+        db.refresh(audit)
+        
+        background_tasks.add_task(run_audit_background, business.id, audit.id)
+        
+        return RedirectResponse(url=f"/dashboard/business/{business.id}", status_code=302)
+    finally:
+        db.close()
+
+
 @app.get("/dashboard/business/{business_id}/audit/{audit_id}", response_class=HTMLResponse)
 async def dashboard_audit_detail(request: Request, business_id: int, audit_id: int):
     """View audit results."""
