@@ -1185,7 +1185,8 @@ async def admin_demo_pdf(request: Request):
     from services.reporting_demo import generate_demo_pdf
     from fastapi.responses import Response
     
-    pdf_bytes = generate_demo_pdf()
+    pdf_output = generate_demo_pdf()
+    pdf_bytes = bytes(pdf_output) if isinstance(pdf_output, bytearray) else pdf_output
     
     filename = f"EkkoScope_Demo_Report_{datetime.now().strftime('%Y%m%d')}.pdf"
     
