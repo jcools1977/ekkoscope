@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EkkoScope - AI Visibility Reports</title>
+    <title>EkkoScope - GEO Engine for AI Visibility</title>
     <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -16,115 +16,109 @@
         
         body {
             background: #0d0d0d;
-            color: #ffffff;
-            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            color: #00f0ff;
+            text-align: center;
+            padding: 8rem 2rem;
+            font-family: 'JetBrains Mono', monospace;
             min-height: 100vh;
         }
         
-        .pricing-hero {
-            text-align: center;
-            padding: 5rem 1rem;
-            max-width: 1000px;
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tagline {
+            font-size: 2rem;
+            margin-bottom: 6rem;
+            opacity: 0.9;
+        }
+        
+        .pricing-card {
+            display: inline-block;
+            background: #111;
+            padding: 3rem;
+            border: 2px solid #00f0ff;
+            border-radius: 16px;
             margin: 0 auto;
         }
         
-        .pricing-hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            color: #ffffff;
-        }
-        
-        .pricing-hero h1 .cyan {
-            color: #00f0ff;
-        }
-        
-        .price-main {
+        .pricing-card h2 {
             font-size: 5rem;
-            font-weight: bold;
-            margin: 2rem 0;
-            color: #00f0ff;
+            margin: 1rem 0;
+            color: #fff;
         }
         
-        .price-desc {
+        .pricing-card.secondary h2 {
+            font-size: 4rem;
+        }
+        
+        .pricing-card p {
             font-size: 1.8rem;
-            max-width: 900px;
-            margin: 0 auto 3rem;
-            line-height: 1.5;
+            line-height: 1.6;
+            color: #fff;
         }
         
-        .cta-button {
-            display: inline-block;
+        .pricing-card.secondary p {
+            font-size: 1.6rem;
+        }
+        
+        .cta-btn {
             background: #00f0ff;
             color: #000;
             padding: 1.5rem 4rem;
-            font-size: 2.2rem;
-            font-weight: bold;
+            font-size: 2rem;
+            margin: 2rem 0;
+            display: inline-block;
             text-decoration: none;
             border-radius: 12px;
-            transition: transform 0.2s, box-shadow 0.2s;
             font-family: inherit;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         
-        .cta-button:hover {
+        .cta-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 10px 40px rgba(0, 240, 255, 0.4);
         }
         
-        .upgrade-section {
-            margin-top: 4rem;
-            font-size: 1.3rem;
+        .divider {
+            margin: 6rem 0 2rem;
+            font-size: 2rem;
             opacity: 0.8;
-            line-height: 1.8;
         }
         
-        .upgrade-section .price-highlight {
-            color: #00f0ff;
-            font-weight: bold;
-        }
-        
-        .footer {
-            margin-top: 3rem;
-            font-size: 1rem;
+        .footer-note {
+            margin: 8rem 0 2rem;
+            font-size: 1.2rem;
             opacity: 0.6;
-        }
-        
-        .slots-badge {
-            display: inline-block;
-            background: rgba(0, 240, 255, 0.1);
-            border: 1px solid #00f0ff;
-            padding: 0.5rem 1.5rem;
-            border-radius: 20px;
-            margin-bottom: 2rem;
-            font-size: 1rem;
+            color: #fff;
         }
     </style>
 </head>
 <body>
-    <div class="pricing-hero">
-        <h1>Your Business Is <span class="cyan">Invisible to AI</span></h1>
-        
-        <div class="slots-badge">Only 12 slots available this month</div>
-        
-        <div class="price-main">$490</div>
-        
-        <p class="price-desc">
-            One-time payment → Full 19-page EkkoScope GEO Report<br>
-            See exactly who is taking 100% of your AI leads right now.
-        </p>
-        
-        <a href="/checkout/report" class="cta-button">
-            Get My Report → 12 slots this month
-        </a>
-        
-        <div class="upgrade-section">
-            Want us to fix it for you?<br>
-            After your report, upgrade to <span class="price-highlight">30-Day Agentic Fix → $990 one-time</span><br>
-            We autonomously deploy every page your report diagnosed.
-        </div>
-        
-        <p class="footer">
-            Powered by EkkoScope GEO Engine | From Any to Business
-        </p>
+    <h1>EkkoScope</h1>
+    <p class="tagline">GEO Engine for AI Visibility</p>
+    
+    <div class="pricing-card">
+        <h2>$490</h2>
+        <p>One-time &rarr; Full 19-page report<br>See exactly who is taking 100% of your AI leads</p>
+        <a href="/checkout/report" class="cta-btn">Get My Report &mdash; 12 slots</a>
     </div>
+    
+    <p class="divider">or</p>
+    
+    <div class="pricing-card secondary">
+        <h2>$290 / month</h2>
+        <p>Continuous &rarr; New report every 14 days<br>Watch your visibility (or lack of it) in real time</p>
+        <a href="/checkout/continuous" class="cta-btn">Start Continuous Monitoring</a>
+    </div>
+    
+    <p class="footer-note">
+        Want us to actually fix it?<br>
+        After your first report, reply "FIX" &mdash; first 5 only.
+    </p>
 </body>
 </html>

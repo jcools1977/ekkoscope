@@ -1,0 +1,60 @@
+EKKOSCOPE FINAL PRICING — SHIPS TONIGHT
+OBJECTIVE: One public offer + one recurring + one private FIX tier
+
+1. DELETE ALL OLD PRICING AND STRIPE PRODUCTS
+
+2. CREATE TWO PUBLIC STRIPE PRODUCTS
+   Product A — One-Time
+     Name: EkkoScope Full GEO Report
+     Price: $490 one-time
+     Limit: 12 this month
+     Link → save as ONE_TIME_490
+
+   Product B — Recurring
+     Name: EkkoScope Continuous
+     Price: $290 / month (billed monthly)
+     Description: Full report every 14 days + visibility delta + email summary
+     Link → save as CONTINUOUS_290
+
+3. REPLACE PRICING PAGE (an2b.com/ekko) WITH THIS EXACT HTML:
+
+<div style="background:#0d0d0d;color:#00f0ff;text-align:center;padding:8rem 2rem;font-family:monospace;min-height:100vh">
+  <h1 style="font-size:4rem">EkkoScope</h1>
+  <p style="font-size:2rem;margin-bottom:6rem;opacity:0.9">GEO Engine for AI Visibility</p>
+
+  <div style="display:inline-block;background:#111;padding:3rem;border:2px solid #00f0ff;border-radius:16px">
+    <h2 style="font-size:5rem;margin:1rem 0">$490</h2>
+    <p style="font-size:1.8rem">One-time → Full 19-page report<br>See exactly who is taking 100% of your AI leads</p>
+    <a href="[INSERT ONE_TIME_490]" style="background:#00f0ff;color:#000;padding:1.5rem 4rem;font-size:2rem;margin:2rem 0;display:inline-block;text-decoration:none;border-radius:12px">
+      Get My Report — 12 slots
+    </a>
+  </div>
+
+  <p style="margin:6rem 0 2rem;font-size:2rem;opacity:0.8">or</p>
+
+  <div style="display:inline-block;background:#111;padding:3rem;border:2px solid #00f0ff;border-radius:16px">
+    <h2 style="font-size:4rem;margin:1rem 0">$290 / month</h2>
+    <p style="font-size:1.6rem">Continuous → New report every 14 days<br>Watch your visibility (or lack of it) in real time</p>
+    <a href="[INSERT CONTINUOUS_290]" style="background:#00f0ff;color:#000;padding:1.5rem 4rem;font-size:2rem;margin:2rem 0;display:inline-block;text-decoration:none;border-radius:12px">
+      Start Continuous Monitoring
+    </a>
+  </div>
+
+  <p style="margin:8rem 0 2rem;font-size:1.2rem;opacity:0.6">
+    Want us to actually fix it?<br>
+    After your first report, reply “FIX” — first 5 only.
+  </p>
+</div>
+
+4. UPDATE EVERY PDF — page 19 ends with:
+
+$490 → You just paid for the truth
+$290 / month → Keep watching the truth change (or not)
+Reply “FIX” → We make the red bar disappear (first 5 only)
+
+5. DEPLOY IMMEDIATELY
+   - All old pricing gone
+   - Only what exists today is public
+   - FIX tier stays private/email-only
+
+END PROMPT — THIS IS THE ONE THAT SHIPS

@@ -15,7 +15,7 @@
         }
         
         body {
-            background: #0a0a0f;
+            background: #0d0d0d;
             color: #ffffff;
             font-family: 'JetBrains Mono', 'Courier New', monospace;
             min-height: 100vh;
@@ -75,9 +75,6 @@
         h1 {
             font-size: 2.5rem;
             margin-bottom: 1rem;
-        }
-        
-        h1 .cyan {
             color: #00f0ff;
         }
         
@@ -95,7 +92,7 @@
         }
         
         .plan-card {
-            background: #000;
+            background: #111;
             border: 2px solid #333;
             border-radius: 16px;
             padding: 2.5rem;
@@ -110,21 +107,6 @@
         
         .plan-card.featured {
             border-color: #00f0ff;
-            position: relative;
-        }
-        
-        .plan-card.featured::before {
-            content: "MOST POPULAR";
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #00f0ff;
-            color: #000;
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 0.35rem 1rem;
-            border-radius: 20px;
         }
         
         .plan-name {
@@ -195,17 +177,8 @@
             border: none;
             cursor: pointer;
             font-family: inherit;
-        }
-        
-        .plan-cta.primary {
             background: #00f0ff;
             color: #000;
-        }
-        
-        .plan-cta.secondary {
-            background: transparent;
-            border: 2px solid #00f0ff;
-            color: #00f0ff;
         }
         
         .plan-cta:hover {
@@ -213,14 +186,18 @@
             box-shadow: 0 8px 25px rgba(0, 240, 255, 0.3);
         }
         
-        .slots-note {
+        .footer-note {
             margin-top: 3rem;
-            padding: 1rem;
-            background: rgba(255, 0, 0, 0.1);
-            border: 1px solid #ff0000;
+            padding: 1.5rem;
+            background: #111;
+            border: 1px solid #333;
             border-radius: 8px;
-            color: #ff0000;
-            font-size: 0.9rem;
+            font-size: 1rem;
+            color: #888;
+        }
+        
+        .footer-note strong {
+            color: #00f0ff;
         }
     </style>
 </head>
@@ -240,95 +217,88 @@
             <span class="domain">{{ business.primary_domain }}</span>
         </div>
         
-        <h1>Your Business Is <span class="cyan">Invisible to AI</span></h1>
-        <p class="tagline">See exactly who is taking 100% of your AI leads right now</p>
+        <h1>EkkoScope</h1>
+        <p class="tagline">GEO Engine for AI Visibility</p>
         
         <div class="plans-grid">
             <div class="plan-card featured">
                 <div class="plan-name">Full GEO Report</div>
-                <div class="plan-tagline">19-page AI visibility analysis</div>
+                <div class="plan-tagline">One-time 19-page analysis</div>
                 
                 <div class="plan-price">
                     <span class="amount">$490</span>
-                    <span class="period">one-time payment</span>
+                    <span class="period">one-time</span>
                 </div>
                 
                 <ul class="plan-features">
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Complete AI visibility score across ChatGPT, Gemini, Perplexity</span>
+                        <span>Full 19-page AI visibility report</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Competitor teardown - see who's taking your leads</span>
+                        <span>See exactly who is taking your AI leads</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>20-30 industry-specific query analysis</span>
+                        <span>Multi-AI analysis (ChatGPT, Gemini, Perplexity)</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Page blueprints for missing content</span>
+                        <span>Competitor teardown</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
                         <span>30-day action roadmap</span>
                     </li>
-                    <li>
-                        <span class="check">&#10003;</span>
-                        <span>Professional PDF delivered instantly</span>
-                    </li>
                 </ul>
                 
                 <form method="POST" action="/dashboard/business/{{ business.id }}/checkout/report">
-                    <button type="submit" class="plan-cta primary">Get My Report → $490</button>
+                    <button type="submit" class="plan-cta">Get My Report &mdash; 12 slots</button>
                 </form>
             </div>
             
             <div class="plan-card">
-                <div class="plan-name">Report + 30-Day Agentic Fix</div>
-                <div class="plan-tagline">We build everything for you</div>
+                <div class="plan-name">Continuous Monitoring</div>
+                <div class="plan-tagline">New report every 14 days</div>
                 
                 <div class="plan-price">
-                    <span class="amount">$990</span>
-                    <span class="period">one-time payment</span>
+                    <span class="amount">$290</span>
+                    <span class="period">/ month</span>
                 </div>
                 
                 <ul class="plan-features">
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Everything in Full GEO Report</span>
+                        <span>Full report every 14 days</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>We autonomously build every missing page</span>
+                        <span>Visibility delta tracking</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Content deployed to your website</span>
+                        <span>Email summaries</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Typical outcome: 60-90% visibility in 30-45 days</span>
+                        <span>Watch your visibility change in real time</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Direct Slack/email access to our team</span>
-                    </li>
-                    <li>
-                        <span class="check">&#10003;</span>
-                        <span>Money-back guarantee if no improvement</span>
+                        <span>Cancel anytime</span>
                     </li>
                 </ul>
                 
-                <form method="POST" action="/dashboard/business/{{ business.id }}/checkout/agentic">
-                    <button type="submit" class="plan-cta secondary">Get Report + Fix → $990</button>
+                <form method="POST" action="/dashboard/business/{{ business.id }}/checkout/continuous">
+                    <button type="submit" class="plan-cta">Start Continuous</button>
                 </form>
             </div>
         </div>
         
-        <div class="slots-note">
-            Only 12 slots available this month. Reports are processed in order received.
+        <div class="footer-note">
+            <strong>Want us to actually fix it?</strong><br>
+            After your first report, reply "FIX" &mdash; first 5 only.
         </div>
     </main>
 </body>

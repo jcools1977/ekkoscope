@@ -6,22 +6,20 @@ EkkoScope is a premium SaaS web application designed to analyze and improve "AI 
 
 ## Recent Changes (November 2025)
 
-### Pricing Overhaul v2.0 - One-Time Payment Model
-- **$490 Full GEO Report**: 19-page AI visibility report with competitor teardown, page blueprints, and 30-day action plan
-- **$990 Agentic Fix**: Full report + autonomous page creation and deployment over 30 days (60-90% visibility improvement typical)
-- **Black-Ops PDF Design**: Pure black background (#0a0a0f), JetBrains Mono typography, cyan (#00f0ff) branding, blood-red (#ff0000) for 0% visibility alerts
-- **Slot-Limited Sales**: 12 slots per month messaging throughout
-- **Simplified Checkout**: Direct one-time payment via Stripe, no subscriptions
+### Final Pricing Model (November 30, 2025)
+- **$490 Full GEO Report**: One-time 19-page AI visibility report (12 slots/month)
+- **$290/month Continuous**: New report every 14 days + visibility delta + email summary
+- **FIX tier**: Private/email-only - "Reply FIX after your first report, first 5 only"
+- **Black-Ops PDF Design**: Pure black background, JetBrains Mono, cyan branding, blood-red for 0% visibility
 
-### Key Files for v2.0
-- `templates/public/pricing.html` - New black/cyan pricing page with $490/$990 options
-- `templates/dashboard/upgrade.html` - Business-specific upgrade page with new pricing
-- `templates/dashboard/index.html` - Dashboard banner promoting $490 report
-- `services/reporting.py` - Updated PDF upsell page with new pricing model
+### Key Files
+- `templates/public/pricing.html` - Black/cyan pricing page with $490 + $290/mo options
+- `templates/dashboard/upgrade.html` - Business upgrade page with both tiers
+- `services/reporting.py` - PDF upsell page 19 with final pricing copy
 
-### Stripe Products (v2.0)
+### Stripe Products
 - `STRIPE_PRICE_REPORT_490` - $490 Full GEO Report (one-time)
-- `STRIPE_PRICE_AGENTIC_990` - $990 Agentic Fix (one-time)
+- `STRIPE_PRICE_CONTINUOUS_290` - $290/month Continuous Monitoring (recurring)
 
 ### Free First Report Feature (v1.4)
 - **One-Time Free Audit**: Every new user gets one free AI visibility report upon signup
