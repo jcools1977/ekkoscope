@@ -18,6 +18,7 @@ from services.visibility_models import (
 from services.openai_visibility import run_openai_visibility_for_queries
 from services.perplexity_visibility import run_perplexity_visibility_for_queries
 from services.gemini_visibility import run_gemini_visibility_for_queries
+from services.ekkoscope_sentinel import log_ai_query
 
 logger = logging.getLogger(__name__)
 
@@ -186,6 +187,7 @@ def run_multi_llm_visibility(
                     for vis in openai_results:
                         if vis.query in agg_by_query:
                             agg_by_query[vis.query].providers.append(vis)
+                        log_ai_query(model="chatgpt", prompt=vis.query, business_name=business_name)
                     providers_used.append("openai_sim")
                     print(f"[VISIBILITY HUB] Added 'openai_sim' to providers_used")
                     sys.stdout.flush()
@@ -218,6 +220,7 @@ def run_multi_llm_visibility(
                     for vis in perplexity_results:
                         if vis.query in agg_by_query:
                             agg_by_query[vis.query].providers.append(vis)
+                        log_ai_query(model="perplexity", prompt=vis.query, business_name=business_name)
                     providers_used.append("perplexity_web")
                     print(f"[VISIBILITY HUB] Added 'perplexity_web' to providers_used")
                     sys.stdout.flush()
