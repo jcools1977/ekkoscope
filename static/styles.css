@@ -198,10 +198,10 @@ body {
 .btn-primary,
 .btn-action,
 .cta-glow {
-    background: var(--accent-cyan);
-    color: #0a0a0f;
+    background: transparent;
+    color: var(--accent-cyan);
     padding: 0.875rem 2rem;
-    border: none;
+    border: 2px solid var(--accent-cyan);
     border-radius: 8px;
     font-size: 1rem;
     font-weight: 700;
@@ -211,8 +211,9 @@ body {
     box-shadow: 
         0 0 20px rgba(0, 240, 255, 0.5),
         0 0 40px rgba(0, 240, 255, 0.3),
-        0 0 60px rgba(0, 240, 255, 0.1);
-    text-shadow: none;
+        0 0 60px rgba(0, 240, 255, 0.1),
+        inset 0 0 20px rgba(0, 240, 255, 0.1);
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 0 20px rgba(0, 240, 255, 0.5);
     animation: glow-pulse 2s ease-in-out infinite;
 }
 

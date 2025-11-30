@@ -210,13 +210,16 @@
         }
         
         .action-btn.primary {
-            background: var(--accent-cyan);
-            color: #0a0a0f;
+            background: transparent;
+            color: var(--accent-cyan);
             font-weight: 700;
+            border: 2px solid var(--accent-cyan);
             box-shadow: 
                 0 0 15px rgba(0, 240, 255, 0.5),
                 0 0 30px rgba(0, 240, 255, 0.3),
-                0 0 45px rgba(0, 240, 255, 0.1);
+                0 0 45px rgba(0, 240, 255, 0.1),
+                inset 0 0 15px rgba(0, 240, 255, 0.1);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 0 20px rgba(0, 240, 255, 0.5);
             animation: glow-pulse 2s ease-in-out infinite;
         }
         
@@ -243,10 +246,13 @@
         
         .action-btn.primary:hover {
             transform: translateY(-2px) scale(1.05);
+            background: rgba(0, 240, 255, 0.1);
             box-shadow: 
                 0 0 25px rgba(0, 240, 255, 0.8),
                 0 0 50px rgba(0, 240, 255, 0.5),
-                0 0 75px rgba(0, 240, 255, 0.3);
+                0 0 75px rgba(0, 240, 255, 0.3),
+                inset 0 0 25px rgba(0, 240, 255, 0.15);
+            text-shadow: 0 0 15px rgba(0, 240, 255, 1), 0 0 30px rgba(0, 240, 255, 0.7);
             animation: none;
         }
         
@@ -335,21 +341,27 @@
             text-decoration: none;
             font-weight: 700;
             transition: all 0.3s ease;
-            background: var(--accent-cyan);
-            color: #0a0a0f;
+            background: transparent;
+            color: var(--accent-cyan);
+            border: 2px solid var(--accent-cyan);
             box-shadow: 
                 0 0 15px rgba(0, 240, 255, 0.5),
                 0 0 30px rgba(0, 240, 255, 0.3),
-                0 0 45px rgba(0, 240, 255, 0.1);
+                0 0 45px rgba(0, 240, 255, 0.1),
+                inset 0 0 20px rgba(0, 240, 255, 0.1);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 0 20px rgba(0, 240, 255, 0.5);
             animation: glow-pulse 2s ease-in-out infinite;
         }
         
         .pricing-card .pricing-cta:hover {
             transform: translateY(-2px) scale(1.02);
+            background: rgba(0, 240, 255, 0.1);
             box-shadow: 
                 0 0 25px rgba(0, 240, 255, 0.8),
                 0 0 50px rgba(0, 240, 255, 0.5),
-                0 0 75px rgba(0, 240, 255, 0.3);
+                0 0 75px rgba(0, 240, 255, 0.3),
+                inset 0 0 25px rgba(0, 240, 255, 0.15);
+            text-shadow: 0 0 15px rgba(0, 240, 255, 1), 0 0 30px rgba(0, 240, 255, 0.7);
             animation: none;
         }
         
