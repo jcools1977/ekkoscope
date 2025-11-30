@@ -283,18 +283,62 @@
         .download-btn {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-            color: #0a1628;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: transparent;
+            color: var(--accent-cyan);
+            border: 2px solid var(--accent-cyan);
             border-radius: 8px;
             text-decoration: none;
-            font-weight: 600;
-            transition: transform 0.2s;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 0 20px rgba(0, 240, 255, 0.5),
+                0 0 40px rgba(0, 240, 255, 0.3),
+                inset 0 0 20px rgba(0, 240, 255, 0.1);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 0 20px rgba(0, 240, 255, 0.5);
+            animation: glow-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes glow-pulse {
+            0%, 100% {
+                box-shadow: 
+                    0 0 20px rgba(0, 240, 255, 0.5),
+                    0 0 40px rgba(0, 240, 255, 0.3),
+                    inset 0 0 20px rgba(0, 240, 255, 0.1);
+            }
+            50% {
+                box-shadow: 
+                    0 0 25px rgba(0, 240, 255, 0.7),
+                    0 0 50px rgba(0, 240, 255, 0.4),
+                    inset 0 0 25px rgba(0, 240, 255, 0.15);
+            }
         }
         
         .download-btn:hover {
-            transform: translateY(-2px);
+            transform: translateY(-2px) scale(1.02);
+            background: rgba(0, 240, 255, 0.1);
+            box-shadow: 
+                0 0 30px rgba(0, 240, 255, 0.8),
+                0 0 60px rgba(0, 240, 255, 0.5),
+                inset 0 0 30px rgba(0, 240, 255, 0.15);
+            text-shadow: 0 0 15px rgba(0, 240, 255, 1), 0 0 30px rgba(0, 240, 255, 0.7);
+            animation: none;
+        }
+        
+        .download-btn .btn-logo {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .section-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            margin-right: 0.5rem;
+            vertical-align: middle;
         }
         
         .error-message {
@@ -399,7 +443,7 @@
         </div>
         
         <div class="card">
-            <h2 class="card-title">&#x1F4CA; Overview</h2>
+            <h2 class="card-title"><span class="section-icon"><svg viewBox="0 0 60 60" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ovGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#2EE6A8"/><stop offset="100%" style="stop-color:#00f0ff"/></linearGradient></defs><circle cx="30" cy="30" r="24" fill="none" stroke="url(#ovGrad)" stroke-width="2" opacity="0.3"/><circle cx="30" cy="30" r="16" fill="none" stroke="url(#ovGrad)" stroke-width="1.5" opacity="0.4"/><circle cx="30" cy="30" r="3" fill="url(#ovGrad)"/><path d="M 30 30 L 30 6 A 24 24 0 0 1 51 42 Z" fill="url(#ovGrad)" opacity="0.2"/></svg></span> Overview</h2>
             <div class="stats-grid">
                 <div class="stat-item">
                     <div class="stat-number">{{ visibility.total_queries or 0 }}</div>
@@ -422,7 +466,7 @@
         
         {% if visibility.results %}
         <div class="card">
-            <h2 class="card-title">&#x1F50D; Query Results</h2>
+            <h2 class="card-title"><span class="section-icon"><svg viewBox="0 0 60 60" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="qrGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#2EE6A8"/><stop offset="100%" style="stop-color:#00f0ff"/></linearGradient></defs><circle cx="30" cy="30" r="24" fill="none" stroke="url(#qrGrad)" stroke-width="2" opacity="0.3"/><circle cx="30" cy="30" r="16" fill="none" stroke="url(#qrGrad)" stroke-width="1.5" opacity="0.4"/><circle cx="30" cy="30" r="3" fill="url(#qrGrad)"/><path d="M 8 8 A 30 30 0 0 1 52 8" fill="none" stroke="url(#qrGrad)" stroke-width="2" stroke-linecap="round"/></svg></span> Query Results</h2>
             <table class="results-table">
                 <thead>
                     <tr>
@@ -448,7 +492,7 @@
         
         {% if suggestions and suggestions.suggestions %}
         <div class="card">
-            <h2 class="card-title">&#x1F4A1; Recommendations</h2>
+            <h2 class="card-title"><span class="section-icon"><svg viewBox="0 0 60 60" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="recGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#2EE6A8"/><stop offset="100%" style="stop-color:#00f0ff"/></linearGradient></defs><circle cx="30" cy="30" r="24" fill="none" stroke="url(#recGrad)" stroke-width="2" opacity="0.3"/><circle cx="30" cy="30" r="16" fill="none" stroke="url(#recGrad)" stroke-width="1.5" opacity="0.4"/><circle cx="30" cy="30" r="3" fill="url(#recGrad)"/><path d="M 8 8 A 30 30 0 0 1 52 8" fill="none" stroke="url(#recGrad)" stroke-width="2" stroke-linecap="round"/></svg></span> Recommendations</h2>
             {% for suggestion in suggestions.suggestions[:5] %}
             <div class="suggestion-item">
                 <div class="suggestion-title">{{ suggestion.title }}</div>
@@ -461,10 +505,11 @@
         
         {% if audit.pdf_path %}
         <div class="card">
-            <h2 class="card-title">&#x1F4C4; Download Report</h2>
+            <h2 class="card-title"><span class="section-icon"><svg viewBox="0 0 60 60" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="dlGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#2EE6A8"/><stop offset="100%" style="stop-color:#00f0ff"/></linearGradient></defs><circle cx="30" cy="30" r="24" fill="none" stroke="url(#dlGrad)" stroke-width="2" opacity="0.3"/><circle cx="30" cy="30" r="16" fill="none" stroke="url(#dlGrad)" stroke-width="1.5" opacity="0.4"/><circle cx="30" cy="30" r="3" fill="url(#dlGrad)"/><path d="M 8 8 A 30 30 0 0 1 52 8" fill="none" stroke="url(#dlGrad)" stroke-width="2" stroke-linecap="round"/></svg></span> Download Report</h2>
             <p style="color: var(--text-secondary); margin-bottom: 1rem;">Get your full PDF report with detailed insights and recommendations.</p>
             <a href="/admin/audit/{{ audit.id }}/download" class="download-btn">
-                &#x1F4E5; Download PDF
+                <svg class="btn-logo" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="btnGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#2EE6A8"/><stop offset="100%" style="stop-color:#00f0ff"/></linearGradient></defs><circle cx="30" cy="30" r="24" fill="none" stroke="url(#btnGrad)" stroke-width="2" opacity="0.4"/><circle cx="30" cy="30" r="16" fill="none" stroke="url(#btnGrad)" stroke-width="1.5" opacity="0.5"/><circle cx="30" cy="30" r="8" fill="none" stroke="url(#btnGrad)" stroke-width="1" opacity="0.6"/><path d="M 30 30 L 30 6 A 24 24 0 0 1 51 42 Z" fill="url(#btnGrad)" opacity="0.2"/><circle cx="30" cy="30" r="4" fill="url(#btnGrad)"/></svg>
+                Download PDF
             </a>
         </div>
         {% endif %}
