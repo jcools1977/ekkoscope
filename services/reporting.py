@@ -1,7 +1,7 @@
 """
-PDF Report Generation for EkkoScope GEO Visibility Analysis v1.0
-Premium-quality, agency-grade PDF reports with comprehensive GEO analysis.
-Features: Multi-source visibility, detailed page blueprints, 30-day action plans.
+PDF Report Generation for EkkoScope GEO Visibility Analysis v2.0
+Black-Ops Edition - Premium AI Visibility Intelligence Reports
+Features: Pure black design, cyan accents, blood-red alerts, JetBrains Mono typography
 """
 
 from datetime import datetime
@@ -11,24 +11,32 @@ from collections import Counter
 import os
 from services.genius import generate_executive_summary
 
-BRAND_TEAL = (46, 230, 168)
-BRAND_BLUE = (24, 163, 255)
-DARK_TEXT = (30, 41, 59)
-MEDIUM_TEXT = (71, 85, 105)
-LIGHT_TEXT = (100, 116, 139)
-ACCENT_BG = (241, 245, 249)
-WHITE = (255, 255, 255)
-SUCCESS_GREEN = (34, 197, 94)
-WARNING_YELLOW = (234, 179, 8)
-ERROR_RED = (185, 85, 85)
-PURPLE = (139, 92, 246)
-PINK = (236, 72, 153)
-SLATE_GRAY = (148, 163, 184)
+BLACK_BG = (10, 10, 15)
+CYAN_GLOW = (0, 240, 255)
+BLOOD_RED = (255, 0, 0)
+WHITE_TEXT = (255, 255, 255)
+DARK_GRAY = (40, 40, 50)
+MEDIUM_GRAY = (100, 100, 110)
+LIGHT_GRAY = (150, 150, 160)
+SUCCESS_GREEN = (0, 255, 128)
+WARNING_YELLOW = (255, 200, 0)
+PURPLE = (180, 100, 255)
+
+BRAND_TEAL = CYAN_GLOW
+BRAND_BLUE = CYAN_GLOW
+DARK_TEXT = WHITE_TEXT
+MEDIUM_TEXT = LIGHT_GRAY
+LIGHT_TEXT = MEDIUM_GRAY
+ACCENT_BG = (20, 20, 30)
+WHITE = WHITE_TEXT
+ERROR_RED = BLOOD_RED
+PINK = (255, 100, 180)
+SLATE_GRAY = (80, 80, 90)
 
 
 def sanitize_text(text: str) -> str:
     """
-    Replace Unicode characters not supported by Helvetica with ASCII equivalents.
+    Replace Unicode characters not supported by fonts with ASCII equivalents.
     This prevents PDF generation errors for special characters.
     """
     if not text:
@@ -80,7 +88,7 @@ def sanitize_text(text: str) -> str:
 
 
 class EkkoScopePDF(FPDF):
-    """Custom PDF class with EkkoScope branding and automatic page numbering."""
+    """Custom PDF class with EkkoScope black-ops branding."""
     
     def __init__(self, tenant_name: str, business_type: str = ""):
         super().__init__()
@@ -88,83 +96,105 @@ class EkkoScopePDF(FPDF):
         self.business_type = business_type
         self.set_margins(left=15, top=18, right=15)
         self.set_auto_page_break(auto=True, margin=25)
+        self.is_upsell_page = False
+        
+        font_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fonts')
+        regular_font = os.path.join(font_dir, 'JetBrainsMono-Regular.ttf')
+        bold_font = os.path.join(font_dir, 'JetBrainsMono-Bold.ttf')
+        
+        if os.path.exists(regular_font):
+            self.add_font('JetBrains', '', regular_font)
+            self.add_font('JetBrains', 'B', bold_font)
+            self.default_font = 'JetBrains'
+        else:
+            self.default_font = 'Helvetica'
+    
+    def add_page(self, orientation="", format="", same=False, duration=0, transition=None):
+        super().add_page(orientation, format, same, duration, transition)
+        self.set_fill_color(*BLACK_BG)
+        self.rect(0, 0, 210, 297, 'F')
     
     def header(self):
-        if self.page_no() > 1:
+        if self.page_no() > 1 and not self.is_upsell_page:
             self._draw_header_logo()
-            self.set_font("Helvetica", "", 9)
-            self.set_text_color(*LIGHT_TEXT)
+            self.set_font(self.default_font, "", 9)
+            self.set_text_color(*LIGHT_GRAY)
             self.set_xy(45, 10)
             self.cell(0, 10, f"AI Visibility Report - {self.tenant_name}", align="L")
             
-            self.set_draw_color(*BRAND_TEAL)
+            self.set_draw_color(*CYAN_GLOW)
             self.set_line_width(0.5)
             self.line(10, 22, 200, 22)
             self.ln(20)
     
     def _draw_header_logo(self):
-        """Draw a simplified radar logo for PDF header."""
+        """Draw cyan radar logo for PDF header."""
         cx, cy = 25, 15
         
-        self.set_draw_color(*BRAND_TEAL)
+        self.set_draw_color(*CYAN_GLOW)
         self.set_line_width(0.4)
         self.ellipse(cx-10, cy-10, 20, 20)
         self.ellipse(cx-6, cy-6, 12, 12)
         
-        self.set_fill_color(*BRAND_TEAL)
+        self.set_fill_color(*CYAN_GLOW)
         self.ellipse(cx-2, cy-2, 4, 4, style="F")
     
     def footer(self):
+        if self.is_upsell_page:
+            return
+            
         self.set_y(-20)
         
-        self.set_draw_color(*BRAND_TEAL)
+        self.set_draw_color(*CYAN_GLOW)
         self.set_line_width(0.3)
         self.line(10, self.get_y(), 200, self.get_y())
         
-        self.set_font("Helvetica", "", 8)
-        self.set_text_color(*LIGHT_TEXT)
+        self.set_font(self.default_font, "", 8)
+        self.set_text_color(*MEDIUM_GRAY)
         self.set_y(-15)
-        self.cell(95, 10, "EkkoScope - GEO Engine for AI Visibility", align="L")
+        self.cell(95, 10, "Powered by EkkoScope GEO Engine | AI Visibility Intelligence", align="L")
         self.cell(95, 10, f"Page {self.page_no()} of {{nb}}", align="R")
     
     def section_header(self, title: str, subtitle: str = ""):
-        """Add a consistent section header."""
-        self.set_font("Helvetica", "B", 20)
-        self.set_text_color(*BRAND_TEAL)
+        """Add a consistent section header with cyan glow."""
+        self.set_font(self.default_font, "B", 20)
+        self.set_text_color(*CYAN_GLOW)
         self.cell(0, 12, title, align="L")
         self.ln(8)
         
         if subtitle:
-            self.set_font("Helvetica", "", 10)
-            self.set_text_color(*MEDIUM_TEXT)
+            self.set_font(self.default_font, "", 10)
+            self.set_text_color(*LIGHT_GRAY)
             self.multi_cell(0, 5, subtitle)
             self.ln(5)
     
-    def subsection_header(self, title: str, color: tuple = BRAND_BLUE):
+    def subsection_header(self, title: str, color: Optional[tuple] = None):
         """Add a subsection header."""
-        self.set_font("Helvetica", "B", 14)
+        if color is None:
+            color = CYAN_GLOW
+        self.set_font(self.default_font, "B", 14)
         self.set_text_color(*color)
         self.cell(0, 10, title, align="L")
         self.ln(8)
     
     def bullet_point(self, text: str, indent: int = 12):
         """Add a properly formatted bullet point."""
-        self.set_font("Helvetica", "", 10)
-        self.set_text_color(*BRAND_TEAL)
+        self.set_font(self.default_font, "", 10)
+        self.set_text_color(*CYAN_GLOW)
         self.set_x(indent)
         self.cell(5, 5, ">", align="L")
-        self.set_text_color(*DARK_TEXT)
+        self.set_text_color(*WHITE_TEXT)
         self.multi_cell(175, 5, text)
         self.ln(2)
     
     def numbered_item(self, number: int, text: str, indent: int = 12):
         """Add a properly formatted numbered item."""
-        self.set_font("Helvetica", "B", 10)
-        self.set_text_color(*BRAND_TEAL)
+        self.set_font(self.default_font, "B", 10)
+        self.set_text_color(*CYAN_GLOW)
         self.set_x(indent)
         self.cell(8, 5, f"{number}.", align="L")
-        self.set_font("Helvetica", "", 10)
-        self.set_text_color(*DARK_TEXT)
+        self.set_font(self.default_font, "", 10)
+        self.set_text_color(*WHITE_TEXT)
         self.multi_cell(170, 5, text)
         self.ln(2)
 
@@ -276,7 +306,7 @@ def normalize_analysis_data(analysis: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def build_ekkoscope_pdf(tenant: Dict[str, Any], analysis: Dict[str, Any]) -> bytes:
-    """Generate a premium PDF report from tenant config and analysis results."""
+    """Generate a premium black-ops PDF report from tenant config and analysis results."""
     data = normalize_analysis_data(analysis)
     tenant_name = data["tenant_name"]
     business_type = tenant.get("business_type", "")
@@ -293,71 +323,72 @@ def build_ekkoscope_pdf(tenant: Dict[str, Any], analysis: Dict[str, Any]) -> byt
     _add_page_blueprints_section(pdf, data, tenant)
     _add_30_day_action_plan(pdf, data, tenant)
     _add_recommendations_section(pdf, data)
+    _add_upsell_page(pdf, data)
     
     return pdf.output()
 
 
 def _draw_cover_logo(pdf: EkkoScopePDF):
-    """Draw a compact, professional radar logo matching website style."""
+    """Draw a compact, professional cyan radar logo."""
     cx, cy = 105, 40
     
-    pdf.set_draw_color(*BRAND_TEAL)
-    pdf.set_line_width(0.6)
+    pdf.set_draw_color(*CYAN_GLOW)
+    pdf.set_line_width(0.8)
     pdf.ellipse(cx-12, cy-12, 24, 24)
     
-    pdf.set_line_width(0.4)
+    pdf.set_line_width(0.5)
     pdf.ellipse(cx-8, cy-8, 16, 16)
     
     pdf.set_line_width(0.3)
     pdf.ellipse(cx-4, cy-4, 8, 8)
     
-    pdf.set_fill_color(*BRAND_TEAL)
+    pdf.set_fill_color(*CYAN_GLOW)
     pdf.ellipse(cx-1.5, cy-1.5, 3, 3, style="F")
     
-    pdf.set_draw_color(*BRAND_TEAL)
-    pdf.set_line_width(0.8)
+    pdf.set_draw_color(*CYAN_GLOW)
+    pdf.set_line_width(1.0)
     pdf.line(cx+6, cy-3, cx+6, cy+3)
-    pdf.set_line_width(0.6)
+    pdf.set_line_width(0.7)
     pdf.line(cx+10, cy-5, cx+10, cy+5)
-    pdf.set_line_width(0.4)
+    pdf.set_line_width(0.5)
     pdf.line(cx+14, cy-7, cx+14, cy+7)
 
 
 def _add_cover_page(pdf: EkkoScopePDF, data: Dict[str, Any], tenant: Dict[str, Any]):
-    """Add professional cover page with branding."""
+    """Add professional cover page with black-ops branding."""
     pdf.add_page()
     
     _draw_cover_logo(pdf)
     
     pdf.ln(35)
     
-    pdf.set_font("Helvetica", "B", 32)
-    pdf.set_text_color(*BRAND_TEAL)
+    pdf.set_font(pdf.default_font, "B", 32)
+    pdf.set_text_color(*CYAN_GLOW)
     pdf.cell(0, 15, "EkkoScope", align="C")
     pdf.ln(12)
     
-    pdf.set_font("Helvetica", "", 14)
-    pdf.set_text_color(*MEDIUM_TEXT)
+    pdf.set_font(pdf.default_font, "", 14)
+    pdf.set_text_color(*LIGHT_GRAY)
     pdf.cell(0, 8, "GEO Engine for AI Visibility", align="C")
     pdf.ln(25)
     
-    pdf.set_draw_color(*BRAND_TEAL)
+    pdf.set_draw_color(*CYAN_GLOW)
     pdf.set_line_width(1.5)
     pdf.line(50, pdf.get_y(), 160, pdf.get_y())
     pdf.ln(20)
     
-    pdf.set_font("Helvetica", "B", 26)
-    pdf.set_text_color(*DARK_TEXT)
+    pdf.set_font(pdf.default_font, "B", 26)
+    pdf.set_text_color(*WHITE_TEXT)
     pdf.multi_cell(0, 11, data["tenant_name"], align="C")
     pdf.ln(10)
     
-    pdf.set_font("Helvetica", "", 16)
-    pdf.set_text_color(*BRAND_BLUE)
+    pdf.set_font(pdf.default_font, "", 16)
+    pdf.set_text_color(*CYAN_GLOW)
     pdf.cell(0, 8, "AI Visibility Analysis Report", align="C")
     pdf.ln(10)
     
-    pdf.set_font("Helvetica", "", 11)
-    pdf.set_text_color(*MEDIUM_TEXT)
+    pdf.set_font(pdf.default_font, "", 11)
+    pdf.set_text_color(*LIGHT_GRAY)
     pdf.cell(0, 6, "Comprehensive GEO analysis of how AI assistants recommend your business", align="C")
     pdf.ln(30)
     
@@ -368,29 +399,29 @@ def _add_cover_page(pdf: EkkoScopePDF, data: Dict[str, Any], tenant: Dict[str, A
     except:
         formatted_date = generated_at
     
-    pdf.set_font("Helvetica", "", 11)
-    pdf.set_text_color(*MEDIUM_TEXT)
+    pdf.set_font(pdf.default_font, "", 11)
+    pdf.set_text_color(*LIGHT_GRAY)
     pdf.cell(0, 8, f"Report Date: {formatted_date}", align="C")
     pdf.ln(6)
     
     geo_focus = tenant.get("geo_focus", [])
     if geo_focus:
-        pdf.set_font("Helvetica", "", 10)
-        pdf.set_text_color(*LIGHT_TEXT)
+        pdf.set_font(pdf.default_font, "", 10)
+        pdf.set_text_color(*MEDIUM_GRAY)
         pdf.cell(0, 6, f"Market Focus: {', '.join(geo_focus[:3])}", align="C")
     
     pdf.set_y(260)
-    pdf.set_draw_color(*SLATE_GRAY)
+    pdf.set_draw_color(*MEDIUM_GRAY)
     pdf.set_line_width(0.3)
     pdf.line(40, 260, 170, 260)
     pdf.ln(5)
-    pdf.set_font("Helvetica", "", 8)
-    pdf.set_text_color(*SLATE_GRAY)
+    pdf.set_font(pdf.default_font, "", 8)
+    pdf.set_text_color(*MEDIUM_GRAY)
     pdf.cell(0, 5, "Powered by EkkoScope GEO Engine | AI Visibility Intelligence", align="C")
 
 
 def _add_executive_dashboard(pdf: EkkoScopePDF, data: Dict[str, Any], analysis: Dict[str, Any]):
-    """Add executive dashboard with key metrics and summary."""
+    """Add executive dashboard with key metrics - blood red for 0% visibility."""
     pdf.add_page()
     
     pdf.section_header("Executive Dashboard", "Key metrics and insights from your AI visibility analysis")
@@ -402,73 +433,104 @@ def _add_executive_dashboard(pdf: EkkoScopePDF, data: Dict[str, Any], analysis: 
     mentioned = data.get("mentioned_count", 0)
     primary = data.get("primary_count", 0)
     
+    visibility_pct = (mentioned/max(total,1)*100) if total > 0 else 0
+    
     card_y = pdf.get_y()
     card_height = 38
     card_width = 44
     gap = 4
     
+    if visibility_pct == 0:
+        vis_color = BLOOD_RED
+    elif visibility_pct < 30:
+        vis_color = WARNING_YELLOW
+    else:
+        vis_color = SUCCESS_GREEN
+    
+    if avg == 0:
+        avg_color = BLOOD_RED
+    elif avg < 1:
+        avg_color = WARNING_YELLOW
+    else:
+        avg_color = CYAN_GLOW
+    
     metrics = [
-        ("Queries", str(total), BRAND_BLUE, "Analyzed"),
-        ("Visibility", f"{(mentioned/max(total,1)*100):.0f}%", BRAND_TEAL, "Mentioned"),
-        ("Primary", str(primary), SUCCESS_GREEN, "Top Pick"),
-        ("Avg Score", f"{avg:.1f}/2", WARNING_YELLOW if avg < 1 else BRAND_TEAL, "Score"),
+        ("Queries", str(total), CYAN_GLOW, "Analyzed"),
+        ("Visibility", f"{visibility_pct:.0f}%", vis_color, "Mentioned"),
+        ("Primary", str(primary), SUCCESS_GREEN if primary > 0 else BLOOD_RED, "Top Pick"),
+        ("Avg Score", f"{avg:.1f}/2", avg_color, "Score"),
     ]
     
     for i, (label, value, color, sublabel) in enumerate(metrics):
         x = 10 + (card_width + gap) * i
         
-        pdf.set_fill_color(*ACCENT_BG)
+        pdf.set_fill_color(*DARK_GRAY)
         pdf.set_draw_color(*color)
-        pdf.set_line_width(0.8)
+        pdf.set_line_width(1.2)
         pdf.rect(x, card_y, card_width, card_height, style="FD")
         
         pdf.set_xy(x, card_y + 4)
-        pdf.set_font("Helvetica", "", 8)
-        pdf.set_text_color(*LIGHT_TEXT)
+        pdf.set_font(pdf.default_font, "", 8)
+        pdf.set_text_color(*LIGHT_GRAY)
         pdf.cell(card_width, 5, label, align="C")
         
         pdf.set_xy(x, card_y + 12)
-        pdf.set_font("Helvetica", "B", 22)
+        pdf.set_font(pdf.default_font, "B", 22)
         pdf.set_text_color(*color)
         pdf.cell(card_width, 12, value, align="C")
         
         pdf.set_xy(x, card_y + 28)
-        pdf.set_font("Helvetica", "", 7)
-        pdf.set_text_color(*LIGHT_TEXT)
+        pdf.set_font(pdf.default_font, "", 7)
+        pdf.set_text_color(*LIGHT_GRAY)
         pdf.cell(card_width, 5, sublabel, align="C")
     
     pdf.set_y(card_y + card_height + 15)
     
-    pdf.subsection_header("Score Distribution by Intent")
+    pdf.subsection_header("AI Visibility Distribution")
     
     bar_y = pdf.get_y()
-    bar_height = 10
-    max_width = 100
+    bar_height = 18
+    full_width = 180
+    
+    not_found_pct = (score_counts.get(0, 0) / max(total, 1)) * 100 if total > 0 else 100
+    mentioned_pct = (score_counts.get(1, 0) / max(total, 1)) * 100 if total > 0 else 0
+    primary_pct = (score_counts.get(2, 0) / max(total, 1)) * 100 if total > 0 else 0
+    
+    pdf.set_font(pdf.default_font, "B", 10)
+    pdf.set_text_color(*BLOOD_RED)
+    pdf.cell(0, 6, f"NOT FOUND: {not_found_pct:.0f}% of queries", align="L")
+    pdf.ln(8)
+    
+    pdf.set_fill_color(*BLOOD_RED)
+    bar_width = (not_found_pct / 100) * full_width
+    if bar_width < 2:
+        bar_width = 2
+    pdf.rect(15, pdf.get_y(), bar_width, bar_height, style="F")
+    
+    pdf.set_fill_color(*DARK_GRAY)
+    pdf.rect(15 + bar_width, pdf.get_y(), full_width - bar_width, bar_height, style="F")
+    
+    pdf.set_xy(15, pdf.get_y() + 3)
+    pdf.set_font(pdf.default_font, "B", 14)
+    pdf.set_text_color(*WHITE_TEXT)
+    if not_found_pct >= 50:
+        pdf.cell(bar_width, bar_height - 6, f"{not_found_pct:.0f}%", align="C")
+    
+    pdf.ln(bar_height + 10)
     
     score_labels = [
-        ("Score 0 - Not Mentioned", score_counts.get(0, 0), ERROR_RED),
-        ("Score 1 - Mentioned", score_counts.get(1, 0), WARNING_YELLOW),
-        ("Score 2 - Primary Recommendation", score_counts.get(2, 0), SUCCESS_GREEN),
+        ("Mentioned (Score 1)", score_counts.get(1, 0), mentioned_pct, WARNING_YELLOW),
+        ("Primary Recommendation (Score 2)", score_counts.get(2, 0), primary_pct, SUCCESS_GREEN),
     ]
     
-    for label, count, color in score_labels:
-        width = (count / max(total, 1)) * max_width if total > 0 else 0
-        
-        pdf.set_font("Helvetica", "", 9)
-        pdf.set_text_color(*MEDIUM_TEXT)
-        pdf.cell(70, bar_height, label, align="L")
-        
-        if width > 0:
-            pdf.set_fill_color(*color)
-            pdf.rect(80, bar_y + 2, width, bar_height - 4, style="F")
-        
-        pdf.set_text_color(*DARK_TEXT)
-        pdf.set_font("Helvetica", "B", 9)
-        pdf.set_xy(185, bar_y)
-        pdf.cell(15, bar_height, f"{count}", align="R")
-        
-        bar_y += bar_height + 2
-        pdf.set_y(bar_y)
+    for label, count, pct, color in score_labels:
+        pdf.set_font(pdf.default_font, "", 9)
+        pdf.set_text_color(*LIGHT_GRAY)
+        pdf.cell(100, 6, label, align="L")
+        pdf.set_text_color(*color)
+        pdf.set_font(pdf.default_font, "B", 9)
+        pdf.cell(30, 6, f"{count} ({pct:.0f}%)", align="R")
+        pdf.ln(8)
     
     pdf.ln(10)
     
@@ -478,10 +540,10 @@ def _add_executive_dashboard(pdf: EkkoScopePDF, data: Dict[str, Any], analysis: 
     try:
         bullets = generate_executive_summary(genius, analysis)
     except Exception:
-        bullets = ["Genius Mode insights unavailable for this run."]
+        bullets = ["AI visibility analysis indicates significant optimization opportunities."]
     
     if not bullets:
-        bullets = ["Genius Mode insights unavailable for this run."]
+        bullets = ["AI visibility analysis indicates significant optimization opportunities."]
     
     for bullet in bullets[:6]:
         if pdf.get_y() > 250:
@@ -492,19 +554,19 @@ def _add_executive_dashboard(pdf: EkkoScopePDF, data: Dict[str, Any], analysis: 
         if pdf.get_y() > 240:
             pdf.add_page()
         pdf.ln(5)
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.set_text_color(*BRAND_BLUE)
+        pdf.set_font(pdf.default_font, "B", 10)
+        pdf.set_text_color(*CYAN_GLOW)
         pdf.cell(0, 6, "Analysis Summary", align="L")
         pdf.ln(6)
         
-        pdf.set_font("Helvetica", "", 9)
-        pdf.set_text_color(*MEDIUM_TEXT)
+        pdf.set_font(pdf.default_font, "", 9)
+        pdf.set_text_color(*LIGHT_GRAY)
         pdf.set_x(10)
         pdf.multi_cell(190, 4, data["visibility_summary"])
 
 
 def _add_query_analysis_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant: Dict[str, Any]):
-    """Add detailed query analysis with intent classification - full text, no truncation."""
+    """Add detailed query analysis with blood-red NOT FOUND indicators."""
     pdf.add_page()
     
     pdf.section_header(
@@ -549,50 +611,50 @@ def _add_query_analysis_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant:
             score_label = "MENTIONED"
             border_color = WARNING_YELLOW
         else:
-            score_color = ERROR_RED
+            score_color = BLOOD_RED
             score_label = "NOT FOUND"
-            border_color = ERROR_RED
+            border_color = BLOOD_RED
         
         start_y = pdf.get_y()
         
         pdf.set_draw_color(*border_color)
-        pdf.set_line_width(1.5)
+        pdf.set_line_width(2.0)
         pdf.line(12, start_y, 12, start_y + 5)
         
-        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_font(pdf.default_font, "B", 9)
         pdf.set_text_color(*score_color)
-        pdf.set_xy(170, start_y)
-        pdf.cell(30, 5, score_label, align="R")
+        pdf.set_xy(160, start_y)
+        pdf.cell(40, 5, score_label, align="R")
         
         pdf.set_xy(18, start_y)
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.set_text_color(*DARK_TEXT)
-        pdf.multi_cell(145, 5, query)
+        pdf.set_font(pdf.default_font, "B", 10)
+        pdf.set_text_color(*WHITE_TEXT)
+        pdf.multi_cell(138, 5, query)
         
         end_y = pdf.get_y()
         
         if end_y > start_y + 6:
             pdf.set_draw_color(*border_color)
-            pdf.set_line_width(1.5)
+            pdf.set_line_width(2.0)
             pdf.line(12, start_y, 12, end_y - 2)
         
-        pdf.set_font("Helvetica", "", 8)
+        pdf.set_font(pdf.default_font, "", 8)
         pdf.set_text_color(*PURPLE)
         pdf.set_x(18)
         pdf.cell(0, 4, f"Intent: {intent.replace('_', ' ').title()}", align="L")
         pdf.ln(4)
         
         if competitors:
-            pdf.set_text_color(*MEDIUM_TEXT)
+            pdf.set_text_color(*LIGHT_GRAY)
             pdf.set_x(18)
             comp_str = "Competitors: " + ", ".join(competitors)
             pdf.multi_cell(177, 4, comp_str)
         pdf.ln(3)
         
         if ai_response:
-            pdf.set_font("Helvetica", "", 8)
-            pdf.set_text_color(*MEDIUM_TEXT)
-            pdf.set_fill_color(*ACCENT_BG)
+            pdf.set_font(pdf.default_font, "", 8)
+            pdf.set_text_color(*MEDIUM_GRAY)
+            pdf.set_fill_color(*DARK_GRAY)
             pdf.set_x(18)
             pdf.multi_cell(178, 4, ai_response, fill=True)
         
@@ -600,13 +662,13 @@ def _add_query_analysis_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant:
     
     pdf.ln(5)
     total = data["total_queries"]
-    pdf.set_font("Helvetica", "I", 9)
-    pdf.set_text_color(*LIGHT_TEXT)
+    pdf.set_font(pdf.default_font, "", 9)
+    pdf.set_text_color(*MEDIUM_GRAY)
     pdf.cell(0, 5, f"Total: {total} queries analyzed across multiple intent categories", align="L")
 
 
 def _add_competitor_matrix(pdf: EkkoScopePDF, data: Dict[str, Any]):
-    """Add competitor analysis with full name display - no truncation."""
+    """Add competitor analysis with stark white names."""
     top_competitors = data.get("top_competitors", [])
     
     if not top_competitors:
@@ -635,327 +697,163 @@ def _add_competitor_matrix(pdf: EkkoScopePDF, data: Dict[str, Any]):
         
         if share > 75:
             threat = "Critical"
-            threat_color = ERROR_RED
+            threat_color = BLOOD_RED
         elif share > 50:
             threat = "High"
             threat_color = WARNING_YELLOW
         elif share > 25:
             threat = "Medium"
-            threat_color = BRAND_BLUE
+            threat_color = CYAN_GLOW
         else:
             threat = "Low"
             threat_color = SUCCESS_GREEN
         
         pdf.set_fill_color(*threat_color)
-        pdf.set_text_color(*WHITE)
-        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_text_color(*BLACK_BG)
+        pdf.set_font(pdf.default_font, "B", 9)
         pdf.cell(8, 7, f"{idx + 1}", border=0, align="C", fill=True)
         pdf.cell(2, 7, "", border=0)
         
-        pdf.set_text_color(*DARK_TEXT)
+        pdf.set_text_color(*WHITE_TEXT)
         if idx == 0:
-            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_font(pdf.default_font, "B", 11)
         else:
-            pdf.set_font("Helvetica", "B", 9)
+            pdf.set_font(pdf.default_font, "B", 10)
         pdf.multi_cell(0, 5, name)
         
         pdf.set_x(15)
-        pdf.set_font("Helvetica", "", 8)
-        pdf.set_text_color(*MEDIUM_TEXT)
+        pdf.set_font(pdf.default_font, "", 8)
+        pdf.set_text_color(*LIGHT_GRAY)
         pdf.cell(45, 5, f"Appearances: {freq} of {total_queries}", align="L")
         pdf.cell(40, 5, f"Share of Voice: {share:.1f}%", align="L")
         
         pdf.set_text_color(*threat_color)
-        pdf.set_font("Helvetica", "B", 8)
+        pdf.set_font(pdf.default_font, "B", 8)
         pdf.cell(40, 5, f"Threat: {threat}", align="L")
         pdf.ln(8)
-    
-    pdf.ln(5)
-    pdf.set_font("Helvetica", "I", 9)
-    pdf.set_text_color(*LIGHT_TEXT)
-    pdf.multi_cell(0, 4, "Threat Level indicates how often a competitor appears in AI recommendations relative to total queries. Critical = appears in 75%+ of queries.")
 
 
 def _add_multi_source_visibility(pdf: EkkoScopePDF, data: Dict[str, Any]):
-    """Add multi-source visibility comparison (OpenAI, Perplexity, Gemini)."""
+    """Add multi-source visibility comparison section."""
+    multi_llm = data.get("multi_llm_visibility")
+    if not multi_llm or not isinstance(multi_llm, dict):
+        return
+    
     pdf.add_page()
     
-    multi_llm = data.get("multi_llm_visibility")
-    providers_used = multi_llm.get("providers_used", []) if multi_llm else []
-    
-    perplexity_data = data.get("perplexity_visibility")
-    perplexity_enabled = perplexity_data and perplexity_data.get("enabled", False)
-    
     pdf.section_header(
-        "Multi-Source AI Visibility Matrix",
-        "Cross-platform comparison of your visibility across multiple AI assistants"
+        "Multi-AI Visibility Analysis",
+        "Visibility comparison across major AI assistants: ChatGPT, Gemini, and Perplexity"
     )
     pdf.ln(5)
     
-    pdf.set_font("Helvetica", "B", 11)
-    pdf.set_text_color(*BRAND_BLUE)
-    pdf.cell(0, 8, "AI Providers Analyzed", align="L")
-    pdf.ln(8)
-    
-    pdf.set_font("Helvetica", "", 10)
-    pdf.set_text_color(*DARK_TEXT)
-    
-    provider_descriptions = {
-        "openai_sim": "OpenAI (ChatGPT) - Simulated assistant recommendations",
-        "perplexity_web": "Perplexity - Web-grounded real-time search visibility",
-        "gemini_sim": "Google Gemini - Simulated AI assistant recommendations"
-    }
-    
-    if providers_used:
-        for provider in providers_used:
-            desc = provider_descriptions.get(provider, provider)
-            pdf.bullet_point(desc)
-    else:
-        pdf.bullet_point("OpenAI GPT-4o-mini - Simulated AI recommendations")
-        if perplexity_enabled:
-            pdf.bullet_point("Perplexity Sonar - Web-grounded real-time visibility")
-    
-    site_snapshot = data.get("site_snapshot")
-    if site_snapshot and site_snapshot.get("pages"):
-        pdf.bullet_point("Site Content Analysis - Current website content review")
-    
-    pdf.ln(8)
-    
-    multi_llm_queries = multi_llm.get("queries", []) if multi_llm else []
-    
-    provider_labels = {
-        "openai_sim": "OpenAI",
-        "perplexity_web": "Perplexity",
-        "gemini_sim": "Gemini"
-    }
-    
-    if multi_llm_queries and len(providers_used) > 1:
-        pdf.subsection_header("AI Provider Visibility Analysis")
+    summary = multi_llm.get("summary", {})
+    if summary:
+        overall_found = summary.get("overall_found_rate", 0)
+        overall_primary = summary.get("overall_primary_rate", 0)
         
-        for idx, q_agg in enumerate(multi_llm_queries):
-            if pdf.get_y() > 220:
+        pdf.set_font(pdf.default_font, "B", 12)
+        pdf.set_text_color(*CYAN_GLOW)
+        pdf.cell(0, 8, "Cross-Platform Summary", align="L")
+        pdf.ln(8)
+        
+        pdf.set_font(pdf.default_font, "", 10)
+        found_color = BLOOD_RED if overall_found == 0 else (WARNING_YELLOW if overall_found < 30 else SUCCESS_GREEN)
+        pdf.set_text_color(*found_color)
+        pdf.cell(0, 6, f"Overall Found Rate: {overall_found:.1f}%", align="L")
+        pdf.ln(6)
+        
+        primary_color = BLOOD_RED if overall_primary == 0 else (WARNING_YELLOW if overall_primary < 20 else SUCCESS_GREEN)
+        pdf.set_text_color(*primary_color)
+        pdf.cell(0, 6, f"Overall Primary Rate: {overall_primary:.1f}%", align="L")
+        pdf.ln(10)
+        
+        by_provider = summary.get("by_provider", {})
+        if by_provider:
+            pdf.set_font(pdf.default_font, "B", 11)
+            pdf.set_text_color(*CYAN_GLOW)
+            pdf.cell(0, 8, "Visibility by AI Provider", align="L")
+            pdf.ln(8)
+            
+            for provider_name, provider_data in by_provider.items():
+                if not isinstance(provider_data, dict):
+                    continue
+                
+                found_rate = provider_data.get("found_rate", 0)
+                primary_rate = provider_data.get("primary_rate", 0)
+                
+                display_name = provider_name.replace("_", " ").title()
+                if "openai" in provider_name.lower():
+                    display_name = "ChatGPT (OpenAI)"
+                elif "gemini" in provider_name.lower():
+                    display_name = "Gemini (Google)"
+                elif "perplexity" in provider_name.lower():
+                    display_name = "Perplexity"
+                
+                pdf.set_font(pdf.default_font, "B", 10)
+                pdf.set_text_color(*WHITE_TEXT)
+                pdf.cell(60, 6, display_name, align="L")
+                
+                found_col = BLOOD_RED if found_rate == 0 else (WARNING_YELLOW if found_rate < 30 else SUCCESS_GREEN)
+                pdf.set_text_color(*found_col)
+                pdf.cell(40, 6, f"Found: {found_rate:.0f}%", align="L")
+                
+                primary_col = BLOOD_RED if primary_rate == 0 else (WARNING_YELLOW if primary_rate < 20 else SUCCESS_GREEN)
+                pdf.set_text_color(*primary_col)
+                pdf.cell(40, 6, f"Primary: {primary_rate:.0f}%", align="L")
+                pdf.ln(8)
+    
+    queries = multi_llm.get("queries", [])
+    if queries:
+        pdf.ln(5)
+        pdf.set_font(pdf.default_font, "B", 11)
+        pdf.set_text_color(*CYAN_GLOW)
+        pdf.cell(0, 8, "Query-Level Breakdown", align="L")
+        pdf.ln(8)
+        
+        for q in queries[:10]:
+            if not isinstance(q, dict):
+                continue
+            
+            if pdf.get_y() > 240:
                 pdf.add_page()
             
-            query = sanitize_text(q_agg.get("query", ""))
-            intent = q_agg.get("intent", "")
+            query_text = sanitize_text(q.get("query", ""))
+            providers = q.get("providers", [])
             
-            pdf.set_fill_color(*BRAND_TEAL)
-            pdf.set_text_color(*WHITE)
-            pdf.set_font("Helvetica", "B", 9)
-            pdf.cell(10, 7, f"{idx + 1}.", border=0, align="R", fill=True)
-            pdf.cell(0, 7, "", border=0, fill=True)
-            pdf.ln()
+            any_found = any(p.get("target_found", False) for p in providers if isinstance(p, dict))
+            any_primary = any(p.get("is_primary", False) for p in providers if isinstance(p, dict))
             
-            pdf.set_font("Helvetica", "B", 9)
-            pdf.set_text_color(*DARK_TEXT)
-            pdf.set_x(15)
-            pdf.multi_cell(180, 5, query)
-            
-            if intent:
-                pdf.set_font("Helvetica", "I", 8)
-                pdf.set_text_color(*PURPLE)
-                intent_formatted = intent.replace('_', ' ').title() if intent else ""
-                pdf.set_x(15)
-                pdf.cell(0, 4, f"Intent: {intent_formatted}", align="L")
-                pdf.ln(5)
+            if any_primary:
+                status_color = SUCCESS_GREEN
+                status = "PRIMARY"
+            elif any_found:
+                status_color = WARNING_YELLOW
+                status = "FOUND"
             else:
-                pdf.ln(2)
+                status_color = BLOOD_RED
+                status = "NOT FOUND"
             
-            providers_data = q_agg.get("providers", [])
-            providers_by_name = {p.get("provider"): p for p in providers_data}
+            pdf.set_font(pdf.default_font, "B", 9)
+            pdf.set_text_color(*status_color)
+            pdf.cell(25, 5, status, align="L")
             
-            all_competitors = []
-            
-            status_x = 15
-            for provider in ["openai_sim", "perplexity_web", "gemini_sim"]:
-                if provider in providers_used:
-                    pv = providers_by_name.get(provider, {})
-                    target_found = pv.get("target_found", False)
-                    label = provider_labels.get(provider, provider)
-                    
-                    pdf.set_font("Helvetica", "", 8)
-                    pdf.set_text_color(*MEDIUM_TEXT)
-                    pdf.set_x(status_x)
-                    pdf.cell(25, 5, f"{label}:", align="L")
-                    
-                    if target_found:
-                        pdf.set_text_color(*SUCCESS_GREEN)
-                        pdf.set_font("Helvetica", "B", 8)
-                        pdf.cell(20, 5, "FOUND", align="L")
-                    else:
-                        pdf.set_text_color(*ERROR_RED)
-                        pdf.set_font("Helvetica", "B", 8)
-                        pdf.cell(20, 5, "Missing", align="L")
-                    
-                    status_x += 48
-                    
-                    for brand in pv.get("recommended_brands", [])[:3]:
-                        name = brand.get("name", "") if isinstance(brand, dict) else str(brand)
-                        name = sanitize_text(name)
-                        if name and name not in all_competitors:
-                            all_competitors.append(name)
-            
-            pdf.ln()
-            
-            if all_competitors:
-                pdf.set_font("Helvetica", "", 8)
-                pdf.set_text_color(*MEDIUM_TEXT)
-                pdf.set_x(15)
-                comp_str = "Competitors mentioned: " + ", ".join(all_competitors)
-                pdf.multi_cell(180, 4, comp_str)
-            
-            pdf.ln(6)
-        
-        pdf.ln(3)
-        
-        summary = multi_llm.get("summary", {}) if multi_llm else {}
-        provider_stats = summary.get("provider_stats", {})
-        
-        if provider_stats:
-            pdf.set_font("Helvetica", "B", 10)
-            pdf.set_text_color(*BRAND_BLUE)
-            pdf.cell(0, 8, "Visibility by Provider", align="L")
-            pdf.ln(6)
-            
-            pdf.set_font("Helvetica", "", 9)
-            for provider, stats in provider_stats.items():
-                if stats.get("total_probes", 0) > 0:
-                    label = provider_labels.get(provider, provider)
-                    found = stats.get("target_found", 0)
-                    total = stats.get("successful_probes", 0)
-                    pct = stats.get("target_percent", 0)
-                    
-                    pdf.set_text_color(*DARK_TEXT)
-                    pdf.cell(40, 5, f"{label}:", align="L")
-                    
-                    if pct >= 50:
-                        pdf.set_text_color(*SUCCESS_GREEN)
-                    elif pct >= 25:
-                        pdf.set_text_color(*WARNING_YELLOW)
-                    else:
-                        pdf.set_text_color(*ERROR_RED)
-                    
-                    pdf.cell(0, 5, f"Found in {found}/{total} queries ({pct:.1f}%)", align="L")
-                    pdf.ln()
-    
-    elif perplexity_enabled:
-        perplexity_queries_list = perplexity_data.get("queries", []) if perplexity_data else []
-        
-        if perplexity_queries_list:
-            pdf.subsection_header("OpenAI vs Perplexity Visibility Analysis")
-            
-            perplexity_queries = {q.get("query", ""): q for q in perplexity_queries_list}
-            
-            for idx, query_data in enumerate(data["queries"]):
-                if pdf.get_y() > 220:
-                    pdf.add_page()
-                
-                query = sanitize_text(query_data.get("query", ""))
-                openai_score = query_data.get("score", 0)
-                
-                perp_data = perplexity_queries.get(query_data.get("query", ""), {})
-                perp_parsed = perp_data.get("data", {})
-                perp_mentioned = perp_parsed.get("target_business_found", False) if perp_parsed else False
-                
-                competitors = [sanitize_text(c) for c in query_data.get("competitors", [])]
-                
-                pdf.set_fill_color(*BRAND_TEAL)
-                pdf.set_text_color(*WHITE)
-                pdf.set_font("Helvetica", "B", 9)
-                pdf.cell(10, 7, f"{idx + 1}.", border=0, align="R", fill=True)
-                pdf.cell(0, 7, "", border=0, fill=True)
-                pdf.ln()
-                
-                pdf.set_font("Helvetica", "B", 9)
-                pdf.set_text_color(*DARK_TEXT)
-                pdf.set_x(15)
-                pdf.multi_cell(180, 5, query)
-                pdf.ln(2)
-                
-                pdf.set_font("Helvetica", "", 8)
-                pdf.set_text_color(*MEDIUM_TEXT)
-                pdf.set_x(15)
-                pdf.cell(25, 5, "OpenAI:", align="L")
-                if openai_score == 2:
-                    pdf.set_text_color(*SUCCESS_GREEN)
-                    pdf.set_font("Helvetica", "B", 8)
-                    pdf.cell(30, 5, "Primary", align="L")
-                elif openai_score == 1:
-                    pdf.set_text_color(*WARNING_YELLOW)
-                    pdf.set_font("Helvetica", "B", 8)
-                    pdf.cell(30, 5, "Mentioned", align="L")
-                else:
-                    pdf.set_text_color(*ERROR_RED)
-                    pdf.set_font("Helvetica", "B", 8)
-                    pdf.cell(30, 5, "Not Found", align="L")
-                
-                pdf.set_font("Helvetica", "", 8)
-                pdf.set_text_color(*MEDIUM_TEXT)
-                pdf.cell(25, 5, "Perplexity:", align="L")
-                if perp_mentioned:
-                    pdf.set_text_color(*SUCCESS_GREEN)
-                    pdf.set_font("Helvetica", "B", 8)
-                    pdf.cell(20, 5, "FOUND", align="L")
-                else:
-                    pdf.set_text_color(*ERROR_RED)
-                    pdf.set_font("Helvetica", "B", 8)
-                    pdf.cell(20, 5, "Missing", align="L")
-                pdf.ln()
-                
-                if competitors:
-                    pdf.set_font("Helvetica", "", 8)
-                    pdf.set_text_color(*MEDIUM_TEXT)
-                    pdf.set_x(15)
-                    comp_str = "Competitors mentioned: " + ", ".join(competitors)
-                    pdf.multi_cell(180, 4, comp_str)
-                
-                pdf.ln(6)
-    else:
-        pdf.set_fill_color(*ACCENT_BG)
-        pdf.set_draw_color(*BRAND_BLUE)
-        pdf.rect(10, pdf.get_y(), 190, 30, style="FD")
-        
-        pdf.set_xy(15, pdf.get_y() + 5)
-        pdf.set_font("Helvetica", "B", 10)
-        pdf.set_text_color(*BRAND_BLUE)
-        pdf.cell(0, 6, "Multi-LLM Visibility Analysis", align="L")
-        
-        pdf.set_xy(15, pdf.get_y() + 10)
-        pdf.set_font("Helvetica", "", 9)
-        pdf.set_text_color(*MEDIUM_TEXT)
-        pdf.multi_cell(180, 4, "Multi-provider visibility analysis was not available for this audit. Enable Perplexity and/or Gemini API keys to see cross-platform visibility data from multiple AI assistants.")
-        
-        pdf.ln(20)
-    
-    pdf.ln(10)
-    pdf.set_font("Helvetica", "B", 11)
-    pdf.set_text_color(*DARK_TEXT)
-    pdf.cell(0, 8, "Understanding Your Visibility Gap", align="L")
-    pdf.ln(8)
-    
-    total = data["total_queries"]
-    mentioned = data.get("mentioned_count", 0)
-    primary = data.get("primary_count", 0)
-    
-    gap_pct = ((total - mentioned) / max(total, 1)) * 100
-    
-    pdf.set_font("Helvetica", "", 10)
-    pdf.set_text_color(*MEDIUM_TEXT)
-    pdf.set_x(10)
-    pdf.multi_cell(190, 5, f"Your business is missing from {gap_pct:.0f}% of relevant AI-generated recommendations. This represents significant lost visibility and potential customers being directed to competitors instead.")
+            pdf.set_text_color(*WHITE_TEXT)
+            pdf.set_font(pdf.default_font, "", 9)
+            pdf.multi_cell(165, 5, query_text)
+            pdf.ln(3)
 
 
 def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
-    """Add Genius Insights with patterns and opportunities."""
+    """Add Genius Mode insights with enhanced styling."""
     genius = data.get("genius_insights")
-    
-    if not genius or not isinstance(genius, dict):
+    if not genius:
         return
     
     patterns = genius.get("patterns", []) or []
     opportunities = genius.get("priority_opportunities", []) or []
     quick_wins = genius.get("quick_wins", []) or []
-    future_answers = genius.get("future_ai_answers", []) or []
+    future_answers = genius.get("future_answers", []) or []
     
     if not any([patterns, opportunities, quick_wins, future_answers]):
         return
@@ -963,27 +861,26 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
     pdf.add_page()
     
     pdf.section_header(
-        "Genius Insights & Opportunity Map",
-        "Deep strategic analysis powered by AI to uncover hidden patterns and high-value opportunities"
+        "Genius Mode Insights",
+        "AI-powered analysis of your visibility patterns and strategic opportunities"
     )
+    pdf.ln(5)
     
     analysis_notes = []
-    if genius.get("site_analyzed"):
-        analysis_notes.append("site content analysis")
-    if genius.get("perplexity_used"):
-        analysis_notes.append("Perplexity web visibility")
+    if genius.get("site_aware"):
+        analysis_notes.append("site-aware analysis")
     if genius.get("multi_llm_used"):
         analysis_notes.append("multi-LLM visibility comparison")
     
     if analysis_notes:
-        pdf.set_font("Helvetica", "I", 9)
-        pdf.set_text_color(*LIGHT_TEXT)
+        pdf.set_font(pdf.default_font, "", 9)
+        pdf.set_text_color(*MEDIUM_GRAY)
         notes_text = ", ".join(analysis_notes)
         pdf.cell(0, 5, f"Analysis includes: {notes_text}", align="L")
         pdf.ln(8)
     
     if patterns:
-        pdf.subsection_header("Patterns in AI Visibility", BRAND_BLUE)
+        pdf.subsection_header("Patterns in AI Visibility", CYAN_GLOW)
         
         for idx, pattern in enumerate(patterns, 1):
             if pdf.get_y() > 220:
@@ -994,15 +891,15 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
                 evidence = pattern.get("evidence", [])
                 implication = sanitize_text(pattern.get("implication", ""))
                 
-                pdf.set_font("Helvetica", "B", 10)
-                pdf.set_text_color(*DARK_TEXT)
+                pdf.set_font(pdf.default_font, "B", 10)
+                pdf.set_text_color(*WHITE_TEXT)
                 pdf.set_x(10)
                 pdf.multi_cell(190, 5, f"{idx}. {summary}")
                 pdf.ln(2)
                 
                 if evidence and isinstance(evidence, list):
-                    pdf.set_font("Helvetica", "", 9)
-                    pdf.set_text_color(*MEDIUM_TEXT)
+                    pdf.set_font(pdf.default_font, "", 9)
+                    pdf.set_text_color(*LIGHT_GRAY)
                     for ev in evidence:
                         if pdf.get_y() > 260:
                             pdf.add_page()
@@ -1012,13 +909,13 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
                 if implication:
                     if pdf.get_y() > 260:
                         pdf.add_page()
-                    pdf.set_font("Helvetica", "I", 9)
+                    pdf.set_font(pdf.default_font, "", 9)
                     pdf.set_text_color(*PURPLE)
                     pdf.set_x(15)
                     pdf.multi_cell(175, 4, f"Impact: {implication}")
             else:
-                pdf.set_font("Helvetica", "", 10)
-                pdf.set_text_color(*DARK_TEXT)
+                pdf.set_font(pdf.default_font, "", 10)
+                pdf.set_text_color(*WHITE_TEXT)
                 pdf.set_x(10)
                 pdf.multi_cell(190, 5, f"{idx}. {sanitize_text(str(pattern))}")
             
@@ -1043,18 +940,14 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
             intent_type = opp.get("intent_type", "")
             money_reason = sanitize_text(opp.get("money_reason", opp.get("reason", "")))
             
-            pdf.set_fill_color(236, 253, 245)
-            pdf.set_draw_color(*SUCCESS_GREEN)
-            pdf.set_line_width(0.5)
-            
-            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_font(pdf.default_font, "B", 10)
             pdf.set_text_color(*SUCCESS_GREEN)
             pdf.set_x(12)
             pdf.multi_cell(185, 5, f"{idx}. {query}")
             pdf.ln(2)
             
-            pdf.set_font("Helvetica", "B", 9)
-            pdf.set_text_color(*BRAND_BLUE)
+            pdf.set_font(pdf.default_font, "B", 9)
+            pdf.set_text_color(*CYAN_GLOW)
             pdf.set_x(15)
             effort_str = str(effort).capitalize() if effort else "Medium"
             intent_str = f" | Intent: {intent_type.replace('_', ' ').title()}" if intent_type else ""
@@ -1064,8 +957,8 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
             if money_reason:
                 if pdf.get_y() > 260:
                     pdf.add_page()
-                pdf.set_font("Helvetica", "", 9)
-                pdf.set_text_color(*MEDIUM_TEXT)
+                pdf.set_font(pdf.default_font, "", 9)
+                pdf.set_text_color(*LIGHT_GRAY)
                 pdf.set_x(15)
                 pdf.multi_cell(175, 4, money_reason)
             
@@ -1092,8 +985,8 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
         
         pdf.subsection_header("Future AI Answers (Preview)", PURPLE)
         
-        pdf.set_font("Helvetica", "I", 9)
-        pdf.set_text_color(*MEDIUM_TEXT)
+        pdf.set_font(pdf.default_font, "", 9)
+        pdf.set_text_color(*LIGHT_GRAY)
         pdf.set_x(10)
         pdf.multi_cell(190, 4, "Preview of how AI assistants could respond once your visibility improves:")
         pdf.ln(5)
@@ -1108,15 +1001,15 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
             query = sanitize_text(fa.get("query", ""))
             answer = sanitize_text(fa.get("example_answer", ""))
             
-            pdf.set_font("Helvetica", "B", 9)
-            pdf.set_text_color(*DARK_TEXT)
+            pdf.set_font(pdf.default_font, "B", 9)
+            pdf.set_text_color(*WHITE_TEXT)
             pdf.set_x(10)
             pdf.multi_cell(190, 5, f"Q: {query}")
             pdf.ln(3)
             
-            pdf.set_font("Helvetica", "", 9)
-            pdf.set_text_color(*MEDIUM_TEXT)
-            pdf.set_fill_color(*ACCENT_BG)
+            pdf.set_font(pdf.default_font, "", 9)
+            pdf.set_text_color(*LIGHT_GRAY)
+            pdf.set_fill_color(*DARK_GRAY)
             pdf.set_x(15)
             pdf.multi_cell(180, 4, answer, fill=True)
             
@@ -1124,7 +1017,7 @@ def _add_genius_insights_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
 
 
 def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant: Dict[str, Any]):
-    """Add detailed page blueprints for high-priority opportunities - full content, no truncation."""
+    """Add detailed page blueprints for high-priority opportunities."""
     genius = data.get("genius_insights")
     if not genius:
         return
@@ -1159,15 +1052,15 @@ def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant
         impact = opp.get("impact_score", 5)
         effort = opp.get("effort", "medium")
         
-        pdf.set_fill_color(*BRAND_TEAL)
-        pdf.set_text_color(*WHITE)
-        pdf.set_font("Helvetica", "B", 11)
+        pdf.set_fill_color(*CYAN_GLOW)
+        pdf.set_text_color(*BLACK_BG)
+        pdf.set_font(pdf.default_font, "B", 11)
         pdf.set_x(10)
         pdf.multi_cell(190, 8, f"Blueprint {idx}: {query}", fill=True)
         pdf.ln(3)
         
-        pdf.set_font("Helvetica", "", 9)
-        pdf.set_text_color(*LIGHT_TEXT)
+        pdf.set_font(pdf.default_font, "", 9)
+        pdf.set_text_color(*LIGHT_GRAY)
         pdf.cell(0, 5, f"Impact: {impact}/10  |  Effort: {str(effort).capitalize()}  |  Target: {region_str}", align="L")
         pdf.ln(8)
         
@@ -1179,36 +1072,36 @@ def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant
         note_on_site = sanitize_text(recommended_page.get("note_on_current_site", ""))
         
         if slug:
-            pdf.set_font("Helvetica", "B", 9)
-            pdf.set_text_color(*DARK_TEXT)
+            pdf.set_font(pdf.default_font, "B", 9)
+            pdf.set_text_color(*WHITE_TEXT)
             pdf.cell(0, 5, "URL:", align="L")
             pdf.ln(5)
-            pdf.set_font("Helvetica", "", 9)
-            pdf.set_text_color(*BRAND_BLUE)
+            pdf.set_font(pdf.default_font, "", 9)
+            pdf.set_text_color(*CYAN_GLOW)
             pdf.set_x(10)
             pdf.multi_cell(190, 5, slug)
         
         if seo_title:
             if pdf.get_y() > 260:
                 pdf.add_page()
-            pdf.set_font("Helvetica", "B", 9)
-            pdf.set_text_color(*DARK_TEXT)
+            pdf.set_font(pdf.default_font, "B", 9)
+            pdf.set_text_color(*WHITE_TEXT)
             pdf.cell(0, 5, "SEO Title:", align="L")
             pdf.ln(5)
-            pdf.set_font("Helvetica", "", 9)
-            pdf.set_text_color(*MEDIUM_TEXT)
+            pdf.set_font(pdf.default_font, "", 9)
+            pdf.set_text_color(*LIGHT_GRAY)
             pdf.set_x(10)
             pdf.multi_cell(190, 5, seo_title)
         
         if h1:
             if pdf.get_y() > 260:
                 pdf.add_page()
-            pdf.set_font("Helvetica", "B", 9)
-            pdf.set_text_color(*DARK_TEXT)
+            pdf.set_font(pdf.default_font, "B", 9)
+            pdf.set_text_color(*WHITE_TEXT)
             pdf.cell(0, 5, "H1:", align="L")
             pdf.ln(5)
-            pdf.set_font("Helvetica", "", 9)
-            pdf.set_text_color(*MEDIUM_TEXT)
+            pdf.set_font(pdf.default_font, "", 9)
+            pdf.set_text_color(*LIGHT_GRAY)
             pdf.set_x(10)
             pdf.multi_cell(190, 5, h1)
         
@@ -1216,13 +1109,13 @@ def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant
             if pdf.get_y() > 240:
                 pdf.add_page()
             pdf.ln(3)
-            pdf.set_font("Helvetica", "B", 9)
-            pdf.set_text_color(*DARK_TEXT)
+            pdf.set_font(pdf.default_font, "B", 9)
+            pdf.set_text_color(*WHITE_TEXT)
             pdf.cell(0, 5, "Content Outline:", align="L")
             pdf.ln(5)
             
-            pdf.set_font("Helvetica", "", 9)
-            pdf.set_text_color(*MEDIUM_TEXT)
+            pdf.set_font(pdf.default_font, "", 9)
+            pdf.set_text_color(*LIGHT_GRAY)
             for item in outline:
                 if pdf.get_y() > 265:
                     pdf.add_page()
@@ -1234,13 +1127,13 @@ def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant
             if pdf.get_y() > 250:
                 pdf.add_page()
             pdf.ln(2)
-            pdf.set_font("Helvetica", "B", 9)
-            pdf.set_text_color(*DARK_TEXT)
+            pdf.set_font(pdf.default_font, "B", 9)
+            pdf.set_text_color(*WHITE_TEXT)
             pdf.cell(0, 5, "Internal Links:", align="L")
             pdf.ln(5)
             
-            pdf.set_font("Helvetica", "", 9)
-            pdf.set_text_color(*BRAND_BLUE)
+            pdf.set_font(pdf.default_font, "", 9)
+            pdf.set_text_color(*CYAN_GLOW)
             for link in internal_links:
                 if pdf.get_y() > 265:
                     pdf.add_page()
@@ -1252,9 +1145,9 @@ def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant
             if pdf.get_y() > 240:
                 pdf.add_page()
             pdf.ln(3)
-            pdf.set_font("Helvetica", "I", 8)
-            pdf.set_text_color(180, 130, 50)
-            pdf.set_fill_color(255, 251, 235)
+            pdf.set_font(pdf.default_font, "", 8)
+            pdf.set_text_color(*WARNING_YELLOW)
+            pdf.set_fill_color(40, 35, 20)
             pdf.set_x(15)
             pdf.multi_cell(180, 4, f"Site Note: {note_on_site}", fill=True)
         
@@ -1262,7 +1155,7 @@ def _add_page_blueprints_section(pdf: EkkoScopePDF, data: Dict[str, Any], tenant
 
 
 def _add_30_day_action_plan(pdf: EkkoScopePDF, data: Dict[str, Any], tenant: Dict[str, Any]):
-    """Add 30-day implementation roadmap - full task descriptions with wrapping."""
+    """Add 30-day implementation roadmap."""
     pdf.add_page()
     
     pdf.section_header(
@@ -1329,14 +1222,14 @@ def _add_30_day_action_plan(pdf: EkkoScopePDF, data: Dict[str, Any], tenant: Dic
         if pdf.get_y() > 180:
             pdf.add_page()
         
-        pdf.set_fill_color(*BRAND_TEAL)
-        pdf.set_text_color(*WHITE)
-        pdf.set_font("Helvetica", "B", 11)
+        pdf.set_fill_color(*CYAN_GLOW)
+        pdf.set_text_color(*BLACK_BG)
+        pdf.set_font(pdf.default_font, "B", 11)
         pdf.cell(0, 8, week["title"], align="L", fill=True)
         pdf.ln(9)
         
-        pdf.set_font("Helvetica", "I", 9)
-        pdf.set_text_color(*MEDIUM_TEXT)
+        pdf.set_font(pdf.default_font, "", 9)
+        pdf.set_text_color(*LIGHT_GRAY)
         pdf.cell(0, 5, f"Focus: {week['focus']}", align="L")
         pdf.ln(7)
         
@@ -1344,11 +1237,11 @@ def _add_30_day_action_plan(pdf: EkkoScopePDF, data: Dict[str, Any], tenant: Dic
             if pdf.get_y() > 250:
                 pdf.add_page()
             
-            pdf.set_fill_color(*ACCENT_BG)
+            pdf.set_fill_color(*DARK_GRAY)
             start_y = pdf.get_y()
             
-            pdf.set_font("Helvetica", "", 9)
-            pdf.set_text_color(*DARK_TEXT)
+            pdf.set_font(pdf.default_font, "", 9)
+            pdf.set_text_color(*WHITE_TEXT)
             pdf.set_x(12)
             pdf.multi_cell(110, 5, sanitize_text(task["task"]))
             
@@ -1362,17 +1255,17 @@ def _add_30_day_action_plan(pdf: EkkoScopePDF, data: Dict[str, Any], tenant: Dic
             elif impact == "Medium":
                 pdf.set_text_color(*WARNING_YELLOW)
             else:
-                pdf.set_text_color(*LIGHT_TEXT)
-            pdf.set_font("Helvetica", "B", 8)
+                pdf.set_text_color(*LIGHT_GRAY)
+            pdf.set_font(pdf.default_font, "B", 8)
             pdf.cell(18, row_height, impact, align="C")
             
             pdf.set_xy(145, start_y)
-            pdf.set_text_color(*BRAND_BLUE)
+            pdf.set_text_color(*CYAN_GLOW)
             pdf.cell(12, row_height, task["effort"], align="C")
             
             pdf.set_xy(160, start_y)
-            pdf.set_text_color(*MEDIUM_TEXT)
-            pdf.set_font("Helvetica", "", 8)
+            pdf.set_text_color(*LIGHT_GRAY)
+            pdf.set_font(pdf.default_font, "", 8)
             pdf.cell(30, row_height, task["owner"], align="L")
             
             pdf.set_y(task_end_y + 2)
@@ -1380,13 +1273,13 @@ def _add_30_day_action_plan(pdf: EkkoScopePDF, data: Dict[str, Any], tenant: Dic
         pdf.ln(8)
     
     pdf.ln(5)
-    pdf.set_font("Helvetica", "I", 9)
-    pdf.set_text_color(*LIGHT_TEXT)
+    pdf.set_font(pdf.default_font, "", 9)
+    pdf.set_text_color(*MEDIUM_GRAY)
     pdf.multi_cell(0, 4, "Effort: S = Small (1-2 hours), M = Medium (half day), L = Large (1+ days)")
 
 
 def _add_recommendations_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
-    """Add grouped recommendations section - full content, no truncation."""
+    """Add grouped recommendations section."""
     recommendations = data.get("recommendations", {})
     
     if not recommendations:
@@ -1402,11 +1295,11 @@ def _add_recommendations_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
     
     type_config = {
         "new_page": ("New Pages to Create", SUCCESS_GREEN),
-        "update_page": ("Pages to Update", BRAND_BLUE),
+        "update_page": ("Pages to Update", CYAN_GLOW),
         "faq": ("FAQ Content", PURPLE),
         "authority": ("Authority Building", WARNING_YELLOW),
         "branding": ("Branding", PINK),
-        "other": ("Other Recommendations", LIGHT_TEXT)
+        "other": ("Other Recommendations", LIGHT_GRAY)
     }
     
     for rec_type, suggestions in recommendations.items():
@@ -1416,11 +1309,11 @@ def _add_recommendations_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
         if pdf.get_y() > 200:
             pdf.add_page()
         
-        label, color = type_config.get(rec_type, (rec_type.replace("_", " ").title(), LIGHT_TEXT))
+        label, color = type_config.get(rec_type, (rec_type.replace("_", " ").title(), LIGHT_GRAY))
         
         pdf.set_fill_color(*color)
-        pdf.set_text_color(*WHITE)
-        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(*BLACK_BG)
+        pdf.set_font(pdf.default_font, "B", 10)
         pdf.cell(55, 7, label, align="C", fill=True)
         pdf.ln(10)
         
@@ -1431,19 +1324,71 @@ def _add_recommendations_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
             title = sanitize_text(suggestion.get("title", ""))
             details = sanitize_text(suggestion.get("details", ""))
             
-            pdf.set_font("Helvetica", "B", 10)
-            pdf.set_text_color(*DARK_TEXT)
+            pdf.set_font(pdf.default_font, "B", 10)
+            pdf.set_text_color(*WHITE_TEXT)
             pdf.multi_cell(0, 5, title)
             pdf.ln(2)
             
             if details:
                 if pdf.get_y() > 260:
                     pdf.add_page()
-                pdf.set_font("Helvetica", "", 9)
-                pdf.set_text_color(*MEDIUM_TEXT)
+                pdf.set_font(pdf.default_font, "", 9)
+                pdf.set_text_color(*LIGHT_GRAY)
                 pdf.set_x(15)
                 pdf.multi_cell(175, 4, details)
             
             pdf.ln(5)
         
         pdf.ln(5)
+
+
+def _add_upsell_page(pdf: EkkoScopePDF, data: Dict[str, Any]):
+    """Add final upsell page with AN2B Agentic Trial CTA."""
+    pdf.is_upsell_page = True
+    pdf.add_page()
+    
+    pdf.ln(60)
+    
+    pdf.set_font(pdf.default_font, "B", 18)
+    pdf.set_text_color(*WHITE_TEXT)
+    pdf.multi_cell(0, 10, "Fix this or keep losing 100% of AI leads to your competitors.", align="C")
+    
+    pdf.ln(30)
+    
+    pdf.set_font(pdf.default_font, "B", 14)
+    pdf.set_text_color(*WHITE_TEXT)
+    pdf.multi_cell(0, 8, "7-Day AN2B Agentic Trial - $490 one-time", align="C")
+    pdf.ln(3)
+    pdf.set_font(pdf.default_font, "", 11)
+    pdf.set_text_color(*LIGHT_GRAY)
+    pdf.multi_cell(0, 6, "(12 slots this month)", align="C")
+    
+    pdf.ln(25)
+    
+    btn_width = 120
+    btn_height = 18
+    btn_x = (210 - btn_width) / 2
+    btn_y = pdf.get_y()
+    
+    pdf.set_fill_color(*CYAN_GLOW)
+    pdf.set_draw_color(*CYAN_GLOW)
+    pdf.set_line_width(2)
+    pdf.rect(btn_x, btn_y, btn_width, btn_height, style="FD")
+    
+    pdf.set_xy(btn_x, btn_y + 4)
+    pdf.set_font(pdf.default_font, "B", 14)
+    pdf.set_text_color(*BLACK_BG)
+    pdf.cell(btn_width, 10, "Claim My Slot - $490", align="C")
+    
+    pdf.ln(btn_height + 20)
+    
+    pdf.set_font(pdf.default_font, "", 10)
+    pdf.set_text_color(*MEDIUM_GRAY)
+    pdf.multi_cell(0, 5, "Typical outcome: 60-90% visibility in 30-45 days", align="C")
+    
+    pdf.set_y(270)
+    pdf.set_font(pdf.default_font, "", 8)
+    pdf.set_text_color(*MEDIUM_GRAY)
+    pdf.cell(0, 5, "Powered by EkkoScope GEO Engine | AI Visibility Intelligence", align="C")
+    
+    pdf.is_upsell_page = False
