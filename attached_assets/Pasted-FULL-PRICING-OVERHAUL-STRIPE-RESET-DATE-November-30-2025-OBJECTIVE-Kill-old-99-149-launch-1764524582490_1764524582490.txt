@@ -1,0 +1,70 @@
+FULL PRICING OVERHAUL + STRIPE RESET
+DATE: November 30, 2025
+OBJECTIVE: Kill old $99/$149 → launch $490 one-time report + $990 Agentic Fix
+
+1. DELETE ALL OLD STRIPE PRODUCTS
+   - Standard Monitoring $99/mo
+   - EkkoBrain add-on $149/mo
+   → Archive and disable immediately
+
+2. CREATE TWO NEW STRIPE PRODUCTS (one-time payments)
+   Product 1:
+     Name: EkkoScope Full GEO Report
+     Price: $490 one-time
+     Description: 19-page AI visibility report + competitor teardown
+     Quantity limit: 12 this month
+     Checkout link → save as EKkoscope_490_Link
+
+   Product 2:
+     Name: EkkoScope + 30-Day Agentic Fix
+     Price: $990 one-time
+     Description: Full report + RapidRoof autonomously builds and deploys every missing page
+     Checkout link → save as Agentic_990_Link
+
+3. UPDATE EKkoscope APP PRICING PAGE (an2b.com/ekko)
+   Replace entire pricing section with this HTML:
+
+<div style="background:#0d0d0d;color:#00f0ff;text-align:center;padding:5rem 1rem;font-family:monospace">
+  <h1 style="font-size:3.5rem;margin-bottom:1rem">Your Business Is Invisible to AI</h1>
+  <h2 style="font-size:5rem;margin:2rem 0">$490</h2>
+  <p style="font-size:1.8rem;max-width:900px;margin:0 auto 3rem">
+    One-time payment → Full 19-page EkkoScope GEO Report<br>
+    See exactly who is taking 100 % of your AI leads right now.
+  </p>
+  <a href="[INSERT EKkoscope_490_Link HERE]" 
+     style="background:#00f0ff;color:#000;padding:1.5rem 4rem;font-size:2.2rem;font-weight:bold;text-decoration:none;border-radius:12px">
+    Get My Report → 12 slots this month
+  </a>
+  <div style="margin-top:4rem;font-size:1.3rem;opacity:0.8">
+    Want us to fix it for you?<br>
+    After your report, upgrade to 30-Day Agentic Fix → $990 one-time<br>
+    We autonomously deploy every page your report diagnosed.
+  </div>
+  <p style="margin-top:3rem;font-size:1rem;opacity:0.6">
+    Powered by EkkoScope GEO Engine | From Any to Business
+  </p>
+</div>
+
+4. UPDATE ALL FUTURE EKKOSCOPE PDF TEMPLATES
+   Add this exact block as page 19 (replace any old pricing page):
+
+┌────────────────────────────────────────────────────────────┐
+│ YOU ARE CURRENTLY AT 0 % VISIBILITY                        │
+│ Your competitors are taking every AI lead in your market   │
+└────────────────────────────────────────────────────────────┘
+
+$490 → Full EkkoScope GEO Report (you just read it)
+$990 → We build + deploy every missing page autonomously (30 days)
+
+→ Claim Report: https://an2b.com/ekko/pay
+→ Upgrade to Agentic Fix after purchase
+
+Powered by EkkoScope | AN2B
+
+5. FINAL ACTIONS
+   - Set both new Stripe links to live mode
+   - Redirect old /pricing → /ekko
+   - Deploy all changes immediately
+   - Ping confirmation when live
+
+END OF PROMPT — EXECUTE NOW

@@ -1343,91 +1343,91 @@ def _add_recommendations_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
 
 
 def _add_upsell_page(pdf: EkkoScopePDF, data: Dict[str, Any]):
-    """Add final upsell page with complete 7-Day Agentic Trial CTA."""
+    """Add final upsell page with $490 report and $990 Agentic Fix options."""
     pdf.is_upsell_page = True
     pdf.add_page()
     
-    pdf.ln(25)
+    pdf.ln(20)
     
     box_x = 15
     box_y = pdf.get_y()
     box_width = 180
-    box_height = 20
+    box_height = 22
     
-    pdf.set_draw_color(*CYAN_GLOW)
+    pdf.set_draw_color(*BLOOD_RED)
     pdf.set_line_width(2)
     pdf.rect(box_x, box_y, box_width, box_height)
     
-    pdf.set_xy(box_x, box_y + 5)
-    pdf.set_font(pdf.default_font, "B", 12)
-    pdf.set_text_color(*WHITE_TEXT)
-    pdf.cell(box_width, 10, "FIX THIS OR KEEP LOSING 100% OF AI LEADS TO YOUR COMPETITORS", align="C")
-    
-    pdf.set_y(box_y + box_height + 15)
-    
-    pdf.set_font(pdf.default_font, "B", 16)
-    pdf.set_text_color(*CYAN_GLOW)
-    pdf.multi_cell(0, 8, "7-Day Agentic Trial - $490 one-time", align="C")
-    pdf.ln(2)
+    pdf.set_xy(box_x, box_y + 4)
     pdf.set_font(pdf.default_font, "B", 11)
+    pdf.set_text_color(*BLOOD_RED)
+    pdf.cell(box_width, 6, "YOU ARE CURRENTLY AT 0% VISIBILITY", align="C")
+    pdf.set_xy(box_x, box_y + 12)
+    pdf.set_font(pdf.default_font, "", 9)
     pdf.set_text_color(*WHITE_TEXT)
-    pdf.multi_cell(0, 6, "Only 12 slots this month", align="C")
+    pdf.cell(box_width, 6, "Your competitors are taking every AI lead in your market", align="C")
     
-    pdf.ln(12)
+    pdf.set_y(box_y + box_height + 20)
     
-    pdf.set_font(pdf.default_font, "B", 11)
+    pdf.set_font(pdf.default_font, "B", 14)
     pdf.set_text_color(*CYAN_GLOW)
-    pdf.set_x(30)
-    pdf.cell(0, 6, "What you get:", align="L")
+    pdf.cell(0, 8, "$490", align="L")
+    pdf.set_text_color(*WHITE_TEXT)
+    pdf.set_font(pdf.default_font, "", 11)
+    pdf.cell(0, 8, "  Full EkkoScope GEO Report (you just read it)", align="L", new_x="LMARGIN", new_y="NEXT")
+    
     pdf.ln(8)
     
-    benefits = [
-        "Full 19-page EkkoScope GEO report (you just read it)",
-        "7 days of autonomous page creation + content deployment via RapidRoof beta",
-        "Daily visibility delta tracking",
-        "Direct line to the builder"
-    ]
-    
-    pdf.set_font(pdf.default_font, "", 10)
+    pdf.set_font(pdf.default_font, "B", 14)
+    pdf.set_text_color(*CYAN_GLOW)
+    pdf.cell(0, 8, "$990", align="L")
     pdf.set_text_color(*WHITE_TEXT)
-    for benefit in benefits:
-        pdf.set_x(35)
-        pdf.set_text_color(*CYAN_GLOW)
-        pdf.cell(5, 5, "*", align="L")
-        pdf.set_text_color(*WHITE_TEXT)
-        pdf.multi_cell(145, 5, benefit)
-        pdf.ln(2)
-    
-    pdf.ln(10)
-    
-    pdf.set_font(pdf.default_font, "B", 11)
-    pdf.set_text_color(*SUCCESS_GREEN)
-    pdf.multi_cell(0, 6, "Typical outcome: 60-90% visibility in 30-45 days", align="C")
-    pdf.ln(2)
-    pdf.set_font(pdf.default_font, "", 10)
-    pdf.set_text_color(*LIGHT_GRAY)
-    pdf.multi_cell(0, 5, "(or your money back - no questions)", align="C")
+    pdf.set_font(pdf.default_font, "", 11)
+    pdf.cell(0, 8, "  We build + deploy every missing page autonomously (30 days)", align="L", new_x="LMARGIN", new_y="NEXT")
     
     pdf.ln(15)
     
-    btn_width = 140
-    btn_height = 20
-    btn_x = (210 - btn_width) / 2
-    btn_y = pdf.get_y()
+    pdf.set_font(pdf.default_font, "B", 11)
+    pdf.set_text_color(*CYAN_GLOW)
+    pdf.cell(0, 6, "What's included in the Agentic Fix:", align="L", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(6)
     
-    pdf.set_fill_color(*CYAN_GLOW)
+    benefits = [
+        "We autonomously build every page your report diagnosed",
+        "Content deployed directly to your website",
+        "Daily visibility tracking during the 30-day period",
+        "Direct Slack/email access to our team",
+        "Typical outcome: 60-90% visibility in 30-45 days",
+        "Money-back guarantee if no improvement"
+    ]
+    
+    pdf.set_font(pdf.default_font, "", 10)
+    for benefit in benefits:
+        pdf.set_x(20)
+        pdf.set_text_color(*CYAN_GLOW)
+        pdf.cell(5, 5, "*", align="L")
+        pdf.set_text_color(*WHITE_TEXT)
+        pdf.multi_cell(160, 5, benefit)
+        pdf.ln(2)
+    
+    pdf.ln(12)
+    
     pdf.set_draw_color(*CYAN_GLOW)
-    pdf.set_line_width(2)
-    pdf.rect(btn_x, btn_y, btn_width, btn_height, style="FD")
+    pdf.set_line_width(1)
+    pdf.line(15, pdf.get_y(), 195, pdf.get_y())
+    pdf.ln(8)
     
-    pdf.set_xy(btn_x, btn_y + 5)
-    pdf.set_font(pdf.default_font, "B", 14)
-    pdf.set_text_color(*BLACK_BG)
-    pdf.cell(btn_width, 10, "Claim My Slot - 12 left", align="C")
+    pdf.set_font(pdf.default_font, "B", 11)
+    pdf.set_text_color(*WHITE_TEXT)
+    pdf.multi_cell(0, 6, "Claim Report: https://an2b.com/ekko/pay", align="C")
+    pdf.ln(3)
+    pdf.set_font(pdf.default_font, "", 10)
+    pdf.set_text_color(*LIGHT_GRAY)
+    pdf.multi_cell(0, 5, "Upgrade to Agentic Fix after purchase", align="C")
     
     pdf.set_y(270)
     pdf.set_font(pdf.default_font, "", 8)
     pdf.set_text_color(*MEDIUM_GRAY)
-    pdf.cell(0, 5, "Powered by EkkoScope | From Any to Business", align="C")
+    pdf.cell(0, 5, "Powered by EkkoScope | AN2B", align="C")
     
     pdf.is_upsell_page = False

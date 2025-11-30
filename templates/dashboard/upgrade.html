@@ -3,115 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subscribe - EkkoScope</title>
+    <title>Get Your Report - EkkoScope</title>
     <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
-    <link rel="stylesheet" href="/static/styles.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0a0f;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            min-height: 100vh;
+        }
+        
         .dashboard-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 1rem 2rem;
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .nav-logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            text-decoration: none;
+            background: #000;
+            border-bottom: 1px solid #00f0ff;
         }
         
         .nav-logo img {
-            width: 36px;
-            height: 36px;
+            height: 32px;
+            width: auto;
         }
         
         .back-link {
-            color: var(--text-secondary);
+            color: #00f0ff;
             text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: color 0.2s;
+            font-size: 0.9rem;
         }
         
         .back-link:hover {
-            color: var(--brand-teal);
+            text-decoration: underline;
         }
         
         .upgrade-container {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-        
-        .upgrade-header {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 3rem 1rem;
             text-align: center;
-            margin-bottom: 2rem;
-        }
-        
-        .upgrade-header h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .upgrade-header p {
-            color: var(--text-secondary);
         }
         
         .business-badge {
             display: inline-block;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            background: #000;
+            border: 1px solid #00f0ff;
             border-radius: 8px;
             padding: 0.75rem 1.5rem;
             margin-bottom: 2rem;
         }
         
         .business-badge .name {
-            font-weight: 600;
-            color: var(--brand-teal);
+            color: #00f0ff;
+            font-weight: bold;
         }
         
         .business-badge .domain {
-            color: var(--text-secondary);
+            color: #888;
             font-size: 0.9rem;
+            margin-left: 0.5rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        h1 .cyan {
+            color: #00f0ff;
+        }
+        
+        .tagline {
+            color: #888;
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
         }
         
         .plans-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 2rem;
+            margin-top: 2rem;
         }
         
         .plan-card {
-            background: var(--bg-card);
-            border: 2px solid var(--border-color);
+            background: #000;
+            border: 2px solid #333;
             border-radius: 16px;
-            padding: 2rem;
+            padding: 2.5rem;
             text-align: center;
             transition: transform 0.2s, border-color 0.2s;
-            position: relative;
         }
         
         .plan-card:hover {
             transform: translateY(-4px);
+            border-color: #00f0ff;
         }
         
         .plan-card.featured {
-            border-color: var(--brand-teal);
+            border-color: #00f0ff;
+            position: relative;
         }
         
         .plan-card.featured::before {
-            content: "RECOMMENDED";
+            content: "MOST POPULAR";
             position: absolute;
             top: -12px;
             left: 50%;
             transform: translateX(-50%);
-            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
-            color: var(--bg-dark);
+            background: #00f0ff;
+            color: #000;
             font-size: 0.75rem;
             font-weight: 700;
             padding: 0.35rem 1rem;
@@ -119,14 +128,15 @@
         }
         
         .plan-name {
-            font-size: 1.5rem;
-            font-weight: 600;
+            font-size: 1.4rem;
+            font-weight: bold;
             margin-bottom: 0.5rem;
+            color: #00f0ff;
         }
         
         .plan-tagline {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
+            color: #888;
+            font-size: 0.9rem;
             margin-bottom: 1.5rem;
         }
         
@@ -135,18 +145,15 @@
         }
         
         .plan-price .amount {
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: bold;
+            color: #fff;
         }
         
         .plan-price .period {
-            color: var(--text-secondary);
+            color: #888;
             font-size: 1rem;
-        }
-        
-        .plan-price .commitment-note {
-            color: var(--text-muted);
-            font-size: 0.85rem;
+            display: block;
             margin-top: 0.5rem;
         }
         
@@ -162,7 +169,8 @@
             display: flex;
             align-items: flex-start;
             gap: 0.75rem;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid #222;
+            font-size: 0.95rem;
         }
         
         .plan-features li:last-child {
@@ -170,169 +178,157 @@
         }
         
         .plan-features .check {
-            color: var(--brand-teal);
+            color: #00f0ff;
             flex-shrink: 0;
-        }
-        
-        .plan-features .highlight {
-            color: var(--brand-teal);
-            font-weight: 600;
         }
         
         .plan-cta {
             display: block;
             width: 100%;
-            padding: 1rem;
+            padding: 1.2rem;
             border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 1.2rem;
+            font-weight: bold;
             text-decoration: none;
             transition: transform 0.2s, box-shadow 0.2s;
             margin-top: 1.5rem;
             border: none;
             cursor: pointer;
+            font-family: inherit;
         }
         
         .plan-cta.primary {
-            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
-            color: var(--bg-dark);
+            background: #00f0ff;
+            color: #000;
         }
         
         .plan-cta.secondary {
             background: transparent;
-            border: 2px solid var(--brand-teal);
-            color: var(--brand-teal);
+            border: 2px solid #00f0ff;
+            color: #00f0ff;
         }
         
         .plan-cta:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(46, 230, 168, 0.2);
+            box-shadow: 0 8px 25px rgba(0, 240, 255, 0.3);
         }
         
-        .addon-note {
-            text-align: center;
-            margin-top: 1rem;
+        .slots-note {
+            margin-top: 3rem;
             padding: 1rem;
-            background: rgba(46, 230, 168, 0.05);
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff0000;
             border-radius: 8px;
+            color: #ff0000;
             font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-        
-        .addon-note strong {
-            color: var(--brand-teal);
         }
     </style>
 </head>
 <body>
     <nav class="dashboard-nav">
         <a href="/dashboard" class="nav-logo">
-            <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope" style="height: 32px; width: auto;">
+            <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope">
         </a>
         <a href="/dashboard" class="back-link">
-            &#8592; Back to Dashboard
+            ← Back to Dashboard
         </a>
     </nav>
 
     <main class="upgrade-container">
-        <div class="upgrade-header">
-            <h1>Unlock <span class="teal">Automatic AI Monitoring</span></h1>
-            <p>Get continuous AI visibility tracking with reports delivered every 2 weeks</p>
-            
-            <div class="business-badge">
-                <span class="name">{{ business.name }}</span>
-                <span class="domain">{{ business.primary_domain }}</span>
-            </div>
+        <div class="business-badge">
+            <span class="name">{{ business.name }}</span>
+            <span class="domain">{{ business.primary_domain }}</span>
         </div>
+        
+        <h1>Your Business Is <span class="cyan">Invisible to AI</span></h1>
+        <p class="tagline">See exactly who is taking 100% of your AI leads right now</p>
         
         <div class="plans-grid">
             <div class="plan-card featured">
-                <div class="plan-name">Standard</div>
-                <div class="plan-tagline">Automatic AI visibility monitoring</div>
+                <div class="plan-name">Full GEO Report</div>
+                <div class="plan-tagline">19-page AI visibility analysis</div>
                 
                 <div class="plan-price">
-                    <span class="amount">$99</span>
-                    <span class="period">/month</span>
-                    <div class="commitment-note">3-month minimum commitment</div>
+                    <span class="amount">$490</span>
+                    <span class="period">one-time payment</span>
                 </div>
                 
                 <ul class="plan-features">
                     <li>
                         <span class="check">&#10003;</span>
-                        <span><span class="highlight">2 automatic audits per month</span> (every 2 weeks)</span>
+                        <span>Complete AI visibility score across ChatGPT, Gemini, Perplexity</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Multi-AI visibility analysis (ChatGPT, Gemini, Perplexity)</span>
+                        <span>Competitor teardown - see who's taking your leads</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Competitor tracking and alerts</span>
+                        <span>20-30 industry-specific query analysis</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Genius Insights with action items</span>
+                        <span>Page blueprints for missing content</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Professional PDF reports</span>
+                        <span>30-day action roadmap</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Track visibility improvements over time</span>
+                        <span>Professional PDF delivered instantly</span>
                     </li>
                 </ul>
                 
-                <form method="POST" action="/dashboard/business/{{ business.id }}/checkout/standard">
-                    <button type="submit" class="plan-cta primary">Start Monitoring</button>
+                <form method="POST" action="/dashboard/business/{{ business.id }}/checkout/report">
+                    <button type="submit" class="plan-cta primary">Get My Report → $490</button>
                 </form>
             </div>
             
             <div class="plan-card">
-                <div class="plan-name">Standard + EkkoBrain</div>
-                <div class="plan-tagline">Everything in Standard plus AI pattern insights</div>
+                <div class="plan-name">Report + 30-Day Agentic Fix</div>
+                <div class="plan-tagline">We build everything for you</div>
                 
                 <div class="plan-price">
-                    <span class="amount">$248</span>
-                    <span class="period">/month</span>
-                    <div class="commitment-note">$99 Standard + $149 EkkoBrain</div>
+                    <span class="amount">$990</span>
+                    <span class="period">one-time payment</span>
                 </div>
                 
                 <ul class="plan-features">
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Everything in Standard</span>
+                        <span>Everything in Full GEO Report</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span><span class="highlight">EkkoBrain pattern memory access</span></span>
+                        <span>We autonomously build every missing page</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Historical AI recommendation trends</span>
+                        <span>Content deployed to your website</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Cross-industry pattern insights</span>
+                        <span>Typical outcome: 60-90% visibility in 30-45 days</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Predictive visibility recommendations</span>
+                        <span>Direct Slack/email access to our team</span>
                     </li>
                     <li>
                         <span class="check">&#10003;</span>
-                        <span>Priority support</span>
+                        <span>Money-back guarantee if no improvement</span>
                     </li>
                 </ul>
                 
-                <form method="POST" action="/dashboard/business/{{ business.id }}/checkout/standard-ekkobrain">
-                    <button type="submit" class="plan-cta secondary">Start with EkkoBrain</button>
+                <form method="POST" action="/dashboard/business/{{ business.id }}/checkout/agentic">
+                    <button type="submit" class="plan-cta secondary">Get Report + Fix → $990</button>
                 </form>
             </div>
         </div>
         
-        <div class="addon-note">
-            <strong>Already a subscriber?</strong> You can add EkkoBrain ($149/mo) anytime from your dashboard.
+        <div class="slots-note">
+            Only 12 slots available this month. Reports are processed in order received.
         </div>
     </main>
 </body>

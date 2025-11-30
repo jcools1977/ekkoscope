@@ -3,410 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EkkoScope Pricing - AI Visibility Monitoring</title>
+    <title>EkkoScope - AI Visibility Reports</title>
     <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
-    <link rel="stylesheet" href="/static/styles.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0d0d0d;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            min-height: 100vh;
+        }
+        
         .pricing-hero {
             text-align: center;
-            padding: 3rem 2rem;
+            padding: 5rem 1rem;
             max-width: 1000px;
             margin: 0 auto;
         }
         
         .pricing-hero h1 {
-            font-size: 2.5rem;
+            font-size: 3.5rem;
             margin-bottom: 1rem;
+            color: #ffffff;
         }
         
-        .pricing-hero .tagline {
-            color: var(--text-secondary);
-            font-size: 1.25rem;
-            margin-bottom: 3rem;
+        .pricing-hero h1 .cyan {
+            color: #00f0ff;
         }
         
-        .free-banner {
-            background: linear-gradient(135deg, rgba(46, 230, 168, 0.15), rgba(24, 163, 255, 0.15));
-            border: 1px solid var(--brand-teal);
-            border-radius: 12px;
-            padding: 1.5rem 2rem;
-            margin-bottom: 3rem;
-            text-align: center;
-        }
-        
-        .free-banner h3 {
-            color: var(--brand-teal);
-            margin-bottom: 0.5rem;
-            font-size: 1.25rem;
-        }
-        
-        .free-banner p {
-            color: var(--text-secondary);
-            margin: 0;
-        }
-        
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 2rem;
-            margin: 2rem 0;
-        }
-        
-        .pricing-card {
-            background: var(--bg-card);
-            border: 2px solid var(--border-color);
-            border-radius: 16px;
-            padding: 2rem;
-            text-align: center;
-            transition: transform 0.2s, border-color 0.2s;
-            position: relative;
-        }
-        
-        .pricing-card:hover {
-            transform: translateY(-4px);
-        }
-        
-        .pricing-card.featured {
-            border-color: var(--brand-teal);
-            background: linear-gradient(180deg, rgba(46, 230, 168, 0.05) 0%, var(--bg-card) 100%);
-        }
-        
-        .pricing-card.featured::before {
-            content: "MOST POPULAR";
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
-            color: var(--bg-dark);
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 0.35rem 1rem;
-            border-radius: 20px;
-        }
-        
-        .plan-name {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-        
-        .plan-name .teal {
-            color: var(--brand-teal);
-        }
-        
-        .plan-tagline {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .plan-price {
-            margin: 1.5rem 0;
-        }
-        
-        .plan-price .amount {
-            font-size: 3rem;
+        .price-main {
+            font-size: 5rem;
             font-weight: bold;
-            color: var(--text-primary);
+            margin: 2rem 0;
+            color: #00f0ff;
         }
         
-        .plan-price .period {
-            color: var(--text-secondary);
-            font-size: 1rem;
+        .price-desc {
+            font-size: 1.8rem;
+            max-width: 900px;
+            margin: 0 auto 3rem;
+            line-height: 1.5;
         }
         
-        .plan-price .commitment-note {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-        }
-        
-        .plan-features {
-            list-style: none;
-            padding: 0;
-            margin: 1.5rem 0;
-            text-align: left;
-        }
-        
-        .plan-features li {
-            padding: 0.6rem 0;
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        
-        .plan-features li:last-child {
-            border-bottom: none;
-        }
-        
-        .plan-features .check {
-            color: var(--brand-teal);
-            flex-shrink: 0;
-        }
-        
-        .plan-features .highlight {
-            color: var(--brand-teal);
-            font-weight: 600;
-        }
-        
-        .plan-cta {
-            display: block;
-            width: 100%;
-            padding: 1rem;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 600;
+        .cta-button {
+            display: inline-block;
+            background: #00f0ff;
+            color: #000;
+            padding: 1.5rem 4rem;
+            font-size: 2.2rem;
+            font-weight: bold;
             text-decoration: none;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-top: 1.5rem;
-        }
-        
-        .plan-cta.primary {
-            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
-            color: var(--bg-dark);
-        }
-        
-        .plan-cta.secondary {
-            background: transparent;
-            border: 2px solid var(--brand-teal);
-            color: var(--brand-teal);
-        }
-        
-        .plan-cta:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(46, 230, 168, 0.2);
-        }
-        
-        .comparison-section {
-            margin-top: 4rem;
-            text-align: center;
-        }
-        
-        .comparison-section h2 {
-            color: var(--brand-teal);
-            margin-bottom: 2rem;
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-        
-        .comparison-table th,
-        .comparison-table td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .comparison-table th {
-            color: var(--brand-teal);
-            font-weight: 600;
-        }
-        
-        .comparison-table td:nth-child(2),
-        .comparison-table td:nth-child(3) {
-            text-align: center;
-        }
-        
-        .comparison-table th:nth-child(2),
-        .comparison-table th:nth-child(3) {
-            text-align: center;
-        }
-        
-        .check-mark {
-            color: var(--brand-teal);
-            font-size: 1.25rem;
-        }
-        
-        .x-mark {
-            color: var(--text-muted);
-        }
-        
-        .addon-note {
-            margin-top: 2rem;
-            padding: 1.5rem;
-            background: rgba(46, 230, 168, 0.05);
             border-radius: 12px;
-            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: inherit;
         }
         
-        .addon-note strong {
-            color: var(--brand-teal);
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(0, 240, 255, 0.4);
+        }
+        
+        .upgrade-section {
+            margin-top: 4rem;
+            font-size: 1.3rem;
+            opacity: 0.8;
+            line-height: 1.8;
+        }
+        
+        .upgrade-section .price-highlight {
+            color: #00f0ff;
+            font-weight: bold;
+        }
+        
+        .footer {
+            margin-top: 3rem;
+            font-size: 1rem;
+            opacity: 0.6;
+        }
+        
+        .slots-badge {
+            display: inline-block;
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid #00f0ff;
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            font-size: 1rem;
         }
     </style>
 </head>
 <body>
-    <header class="hero-card">
-        <a href="/" class="logo-link">
-            <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope" style="height: 40px; width: auto;">
+    <div class="pricing-hero">
+        <h1>Your Business Is <span class="cyan">Invisible to AI</span></h1>
+        
+        <div class="slots-badge">Only 12 slots available this month</div>
+        
+        <div class="price-main">$490</div>
+        
+        <p class="price-desc">
+            One-time payment → Full 19-page EkkoScope GEO Report<br>
+            See exactly who is taking 100% of your AI leads right now.
+        </p>
+        
+        <a href="/checkout/report" class="cta-button">
+            Get My Report → 12 slots this month
         </a>
-        <p class="hero-subtitle">GEO Engine for AI Visibility</p>
-    </header>
-
-    <main class="container">
-        <div class="pricing-hero">
-            <h1>Choose Your <span class="teal">AI Visibility</span> Plan</h1>
-            <p class="tagline">Automatic biweekly audits to track and improve how AI recommends your business</p>
-            
-            <div class="free-banner">
-                <h3>Start with a FREE Audit</h3>
-                <p>Every new account gets one free AI visibility report - no credit card required</p>
-            </div>
-            
-            <div class="pricing-grid">
-                <div class="pricing-card featured">
-                    <div class="plan-name">Ekko<span class="teal">Scope</span> Standard</div>
-                    <div class="plan-tagline">Automatic AI visibility monitoring</div>
-                    
-                    <div class="plan-price">
-                        <span class="amount">$99</span>
-                        <span class="period">/month</span>
-                        <div class="commitment-note">3-month minimum commitment</div>
-                    </div>
-                    
-                    <ul class="plan-features">
-                        <li>
-                            <span class="check">&#10003;</span>
-                            <span><span class="highlight">2 automatic audits per month</span> (every 2 weeks)</span>
-                        </li>
-                        <li>
-                            <span class="check">&#10003;</span>
-                            <span>Multi-AI visibility analysis (ChatGPT, Gemini, Perplexity)</span>
-                        </li>
-                        <li>
-                            <span class="check">&#10003;</span>
-                            <span>Competitor tracking and alerts</span>
-                        </li>
-                        <li>
-                            <span class="check">&#10003;</span>
-                            <span>Genius Insights with action items</span>
-                        </li>
-                        <li>
-                            <span class="check">&#10003;</span>
-                            <span>Professional PDF reports</span>
-                        </li>
-                        <li>
-                            <span class="check">&#10003;</span>
-                            <span>Track visibility improvements over time</span>
-                        </li>
-                    </ul>
-                    
-                    <a href="/auth/signup" class="plan-cta primary">Get Started</a>
-                </div>
-                
-                <div class="pricing-card">
-                    <div class="plan-name">Standard + <span class="teal">EkkoBrain</span></div>
-                    <div class="plan-tagline">Everything in Standard plus AI pattern insights</div>
-                    
-                    <div class="plan-price">
-                        <span class="amount">$248</span>
-                        <span class="period">/month</span>
-                        <div class="commitment-note">$99 Standard + $149 EkkoBrain</div>
-                    </div>
-                    
-                    <ul class="plan-features">
-                        <li>
-                            <span class="check">&#10003;</span>
-                            <span>Everything in Standard</span>
-                        </li>
-                        <li>
-                            <span class="check">&#10003;</span>
-                            <span><span class="highlight">EkkoBrain pattern memory access</span></span>
-                        </li>
-                        <li>
-                            <span class="check">&#10003;</span>
-                            <span>Historical AI recommendation trends</span>
-                        </li>
-                        <li>
-                            <span class="check">&#10003;</span>
-                            <span>Cross-industry pattern insights</span>
-                        </li>
-                        <li>
-                            <span class="check">&#10003;</span>
-                            <span>Predictive visibility recommendations</span>
-                        </li>
-                        <li>
-                            <span class="check">&#10003;</span>
-                            <span>Priority support</span>
-                        </li>
-                    </ul>
-                    
-                    <a href="/auth/signup" class="plan-cta secondary">Get Started</a>
-                </div>
-            </div>
-            
-            <div class="addon-note">
-                <strong>Add EkkoBrain anytime!</strong> Existing Standard subscribers can add EkkoBrain ($149/mo) from their dashboard.
-            </div>
-            
-            <div class="comparison-section">
-                <h2>Plan Comparison</h2>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>Feature</th>
-                            <th>Standard</th>
-                            <th>+ EkkoBrain</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Automatic Biweekly Audits</td>
-                            <td><span class="check-mark">&#10003;</span></td>
-                            <td><span class="check-mark">&#10003;</span></td>
-                        </tr>
-                        <tr>
-                            <td>Multi-AI Analysis (3 platforms)</td>
-                            <td><span class="check-mark">&#10003;</span></td>
-                            <td><span class="check-mark">&#10003;</span></td>
-                        </tr>
-                        <tr>
-                            <td>Competitor Analysis</td>
-                            <td><span class="check-mark">&#10003;</span></td>
-                            <td><span class="check-mark">&#10003;</span></td>
-                        </tr>
-                        <tr>
-                            <td>Genius Insights & Recommendations</td>
-                            <td><span class="check-mark">&#10003;</span></td>
-                            <td><span class="check-mark">&#10003;</span></td>
-                        </tr>
-                        <tr>
-                            <td>PDF Reports</td>
-                            <td><span class="check-mark">&#10003;</span></td>
-                            <td><span class="check-mark">&#10003;</span></td>
-                        </tr>
-                        <tr>
-                            <td>EkkoBrain Pattern Memory</td>
-                            <td><span class="x-mark">&mdash;</span></td>
-                            <td><span class="check-mark">&#10003;</span></td>
-                        </tr>
-                        <tr>
-                            <td>Historical Trend Analysis</td>
-                            <td><span class="x-mark">&mdash;</span></td>
-                            <td><span class="check-mark">&#10003;</span></td>
-                        </tr>
-                        <tr>
-                            <td>Cross-Industry Insights</td>
-                            <td><span class="x-mark">&mdash;</span></td>
-                            <td><span class="check-mark">&#10003;</span></td>
-                        </tr>
-                        <tr>
-                            <td>Priority Support</td>
-                            <td><span class="x-mark">&mdash;</span></td>
-                            <td><span class="check-mark">&#10003;</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        
+        <div class="upgrade-section">
+            Want us to fix it for you?<br>
+            After your report, upgrade to <span class="price-highlight">30-Day Agentic Fix → $990 one-time</span><br>
+            We autonomously deploy every page your report diagnosed.
         </div>
-    </main>
-    
-    <footer style="text-align: center; padding: 2rem; color: var(--text-muted);">
-        <p>Powered by EkkoScope - GEO Engine for AI Visibility</p>
-    </footer>
+        
+        <p class="footer">
+            Powered by EkkoScope GEO Engine | From Any to Business
+        </p>
+    </div>
 </body>
 </html>

@@ -642,9 +642,9 @@ async def dashboard_business_upgrade(request: Request, business_id: int):
         db.close()
 
 
-@app.post("/dashboard/business/{business_id}/checkout/standard")
-async def dashboard_checkout_standard(request: Request, business_id: int):
-    """Checkout for Standard plan - $99/month with automatic biweekly audits."""
+@app.post("/dashboard/business/{business_id}/checkout/report")
+async def dashboard_checkout_report(request: Request, business_id: int):
+    """Checkout for $490 Full GEO Report - one-time payment."""
     user = get_current_user(request)
     if not user:
         return RedirectResponse(url="/auth/login", status_code=302)
@@ -659,7 +659,12 @@ async def dashboard_checkout_standard(request: Request, business_id: int):
         if not business:
             return RedirectResponse(url="/dashboard", status_code=302)
         
-        request.session["standard_business_id"] = business.id
+        await load_stripe_config()
+        stripe_client = get_stripe_client()
+        
+        report_price_id = os.getenv("STRIPE_PRICE_REPORT_490")
+        if not report_price_id:
+            return RedirectResponse(url=f"/dashboard/business/{business.id}/upgrade?error=not_configured", status_code=302)
         
         domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
         if not domain:
@@ -668,29 +673,32 @@ async def dashboard_checkout_standard(request: Request, business_id: int):
         protocol = "https" if "replit" in domain else "http"
         base_url = f"{protocol}://{domain}"
         
-        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}"
+        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}&product=report&business_id={business.id}"
         cancel_url = f"{base_url}/dashboard/business/{business.id}/upgrade"
         
-        session = await create_subscription_checkout_session(
-            business_id=business.id,
+        session = stripe_client.checkout.Session.create(
+            mode="payment",
+            line_items=[{"price": report_price_id, "quantity": 1}],
             success_url=success_url,
             cancel_url=cancel_url,
-            include_ekkobrain=False,
-            metadata={"user_id": str(user.id), "plan": "standard"}
+            customer_email=user.email,
+            metadata={
+                "user_id": str(user.id),
+                "business_id": str(business.id),
+                "product": "geo_report_490"
+            }
         )
         return RedirectResponse(url=session.url, status_code=303)
     except Exception as e:
-        return templates.TemplateResponse(
-            "dashboard/upgrade.html",
-            {"request": request, "user": user, "business": business, "error": str(e)}
-        )
+        print(f"Report checkout error: {e}")
+        return RedirectResponse(url=f"/dashboard/business/{business_id}/upgrade", status_code=302)
     finally:
         db.close()
 
 
-@app.post("/dashboard/business/{business_id}/checkout/standard-ekkobrain")
-async def dashboard_checkout_standard_ekkobrain(request: Request, business_id: int):
-    """Checkout for Standard + EkkoBrain plan - $248/month ($99 + $149)."""
+@app.post("/dashboard/business/{business_id}/checkout/agentic")
+async def dashboard_checkout_agentic(request: Request, business_id: int):
+    """Checkout for $990 Agentic Fix - one-time payment."""
     user = get_current_user(request)
     if not user:
         return RedirectResponse(url="/auth/login", status_code=302)
@@ -705,7 +713,12 @@ async def dashboard_checkout_standard_ekkobrain(request: Request, business_id: i
         if not business:
             return RedirectResponse(url="/dashboard", status_code=302)
         
-        request.session["standard_ekkobrain_business_id"] = business.id
+        await load_stripe_config()
+        stripe_client = get_stripe_client()
+        
+        agentic_price_id = os.getenv("STRIPE_PRICE_AGENTIC_990")
+        if not agentic_price_id:
+            return RedirectResponse(url=f"/dashboard/business/{business.id}/upgrade?error=not_configured", status_code=302)
         
         domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
         if not domain:
@@ -714,22 +727,25 @@ async def dashboard_checkout_standard_ekkobrain(request: Request, business_id: i
         protocol = "https" if "replit" in domain else "http"
         base_url = f"{protocol}://{domain}"
         
-        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}"
+        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}&product=agentic&business_id={business.id}"
         cancel_url = f"{base_url}/dashboard/business/{business.id}/upgrade"
         
-        session = await create_subscription_checkout_session(
-            business_id=business.id,
+        session = stripe_client.checkout.Session.create(
+            mode="payment",
+            line_items=[{"price": agentic_price_id, "quantity": 1}],
             success_url=success_url,
             cancel_url=cancel_url,
-            include_ekkobrain=True,
-            metadata={"user_id": str(user.id), "plan": "standard_ekkobrain"}
+            customer_email=user.email,
+            metadata={
+                "user_id": str(user.id),
+                "business_id": str(business.id),
+                "product": "agentic_fix_990"
+            }
         )
         return RedirectResponse(url=session.url, status_code=302)
     except Exception as e:
-        return templates.TemplateResponse(
-            "dashboard/upgrade.html",
-            {"request": request, "user": user, "business": business, "error": str(e)}
-        )
+        print(f"Agentic checkout error: {e}")
+        return RedirectResponse(url=f"/dashboard/business/{business_id}/upgrade", status_code=302)
     finally:
         db.close()
 
@@ -791,21 +807,21 @@ async def dashboard_payment_success(request: Request, session_id: Optional[str] 
     )
 
 
-@app.get("/checkout/trial")
-async def checkout_trial(request: Request):
-    """Checkout for 7-Day Agentic Trial - $490 one-time."""
+@app.get("/checkout/report")
+async def checkout_report(request: Request):
+    """Checkout for $490 Full GEO Report - one-time."""
     user = get_current_user(request)
     if not user:
-        return RedirectResponse(url="/auth/login?next=/checkout/trial", status_code=302)
+        return RedirectResponse(url="/auth/login?next=/checkout/report", status_code=302)
     
     try:
         await load_stripe_config()
         stripe_client = get_stripe_client()
         
-        trial_price_id = os.getenv("STRIPE_PRICE_TRIAL_490")
-        if not trial_price_id:
-            print("Trial checkout error: STRIPE_PRICE_TRIAL_490 not configured")
-            return RedirectResponse(url="/dashboard?error=trial_not_configured", status_code=302)
+        report_price_id = os.getenv("STRIPE_PRICE_REPORT_490")
+        if not report_price_id:
+            print("Report checkout error: STRIPE_PRICE_REPORT_490 not configured")
+            return RedirectResponse(url="/dashboard?error=report_not_configured", status_code=302)
         
         domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
         if not domain:
@@ -814,23 +830,66 @@ async def checkout_trial(request: Request):
         protocol = "https" if "replit" in domain else "http"
         base_url = f"{protocol}://{domain}"
         
-        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}&product=trial"
+        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}&product=report"
         cancel_url = f"{base_url}/dashboard"
         
         session = stripe_client.checkout.Session.create(
             mode="payment",
-            line_items=[{"price": trial_price_id, "quantity": 1}],
+            line_items=[{"price": report_price_id, "quantity": 1}],
             success_url=success_url,
             cancel_url=cancel_url,
             customer_email=user.email,
             metadata={
                 "user_id": str(user.id),
-                "product": "7day_agentic_trial"
+                "product": "geo_report_490"
             }
         )
         return RedirectResponse(url=session.url, status_code=302)
     except Exception as e:
-        print(f"Trial checkout error: {e}")
+        print(f"Report checkout error: {e}")
+        return RedirectResponse(url="/dashboard?error=checkout_failed", status_code=302)
+
+
+@app.get("/checkout/agentic")
+async def checkout_agentic(request: Request):
+    """Checkout for $990 Agentic Fix - one-time."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login?next=/checkout/agentic", status_code=302)
+    
+    try:
+        await load_stripe_config()
+        stripe_client = get_stripe_client()
+        
+        agentic_price_id = os.getenv("STRIPE_PRICE_AGENTIC_990")
+        if not agentic_price_id:
+            print("Agentic checkout error: STRIPE_PRICE_AGENTIC_990 not configured")
+            return RedirectResponse(url="/dashboard?error=agentic_not_configured", status_code=302)
+        
+        domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
+        if not domain:
+            domain = "localhost:5000"
+        
+        protocol = "https" if "replit" in domain else "http"
+        base_url = f"{protocol}://{domain}"
+        
+        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}&product=agentic"
+        cancel_url = f"{base_url}/dashboard"
+        
+        session = stripe_client.checkout.Session.create(
+            mode="payment",
+            line_items=[{"price": agentic_price_id, "quantity": 1}],
+            success_url=success_url,
+            cancel_url=cancel_url,
+            customer_email=user.email,
+            metadata={
+                "user_id": str(user.id),
+                "product": "agentic_fix_990"
+            }
+        )
+        return RedirectResponse(url=session.url, status_code=302)
+    except Exception as e:
+        print(f"Agentic checkout error: {e}")
         return RedirectResponse(url="/dashboard?error=checkout_failed", status_code=302)
 
 
