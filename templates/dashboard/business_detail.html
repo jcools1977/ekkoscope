@@ -39,7 +39,7 @@
         }
         
         .admin-badge {
-            background: linear-gradient(135deg, #2EE6A8, #18A3FF);
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
             color: #0a1628;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
@@ -78,7 +78,7 @@
         }
         
         .breadcrumb a:hover {
-            color: #2EE6A8;
+            color: var(--accent-cyan);
         }
         
         .breadcrumb span {
@@ -100,7 +100,7 @@
         }
         
         .business-domain {
-            color: #2EE6A8;
+            color: var(--accent-cyan);
             font-size: 1.1rem;
         }
         
@@ -122,7 +122,7 @@
             justify-content: center;
             gap: 0.75rem;
             background: transparent;
-            border: 2px solid #2EE6A8;
+            border: 2px solid var(--accent-cyan);
             border-radius: 60px;
             padding: 0.75rem 1.5rem;
             cursor: pointer;
@@ -135,7 +135,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 30% 50%, rgba(46, 230, 168, 0.1) 0%, transparent 70%);
+            background: radial-gradient(circle at 30% 50%, rgba(0, 240, 255, 0.1) 0%, transparent 70%);
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -145,8 +145,8 @@
         }
         
         .radar-button:hover {
-            border-color: #2EE6A8;
-            box-shadow: 0 0 30px rgba(46, 230, 168, 0.3), inset 0 0 20px rgba(46, 230, 168, 0.05);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.3), inset 0 0 20px rgba(0, 240, 255, 0.05);
             transform: scale(1.02);
         }
         
@@ -162,7 +162,7 @@
         }
         
         .radar-button:hover .radar-icon {
-            filter: drop-shadow(0 0 8px rgba(46, 230, 168, 0.6));
+            filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.6));
         }
         
         .radar-sweep {
@@ -227,15 +227,15 @@
         }
         
         .radar-button:hover .radar-text {
-            color: #2EE6A8;
-            text-shadow: 0 0 10px rgba(46, 230, 168, 0.5);
+            color: var(--accent-cyan);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
         }
         
         .radar-loading-text {
             display: none;
             font-size: 1rem;
             font-weight: 600;
-            color: #2EE6A8;
+            color: var(--accent-cyan);
             letter-spacing: 0.5px;
             animation: text-pulse 1.5s ease-in-out infinite;
         }
@@ -254,8 +254,8 @@
         }
         
         .radar-button.loading {
-            border-color: #2EE6A8;
-            box-shadow: 0 0 40px rgba(46, 230, 168, 0.4), inset 0 0 30px rgba(46, 230, 168, 0.08);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.4), inset 0 0 30px rgba(0, 240, 255, 0.08);
         }
         
         .admin-link {
@@ -273,8 +273,8 @@
         }
         
         .admin-link:hover {
-            border-color: #2EE6A8;
-            color: #2EE6A8;
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
         }
         
         .section-title {
@@ -300,7 +300,7 @@
         }
         
         .audit-card:hover {
-            border-color: #2EE6A8;
+            border-color: var(--accent-cyan);
         }
         
         .audit-card a {
@@ -329,8 +329,8 @@
         }
         
         .status-completed {
-            background: rgba(46, 230, 168, 0.15);
-            color: #2EE6A8;
+            background: rgba(0, 240, 255, 0.15);
+            color: var(--accent-cyan);
         }
         
         .status-pending {
@@ -346,7 +346,7 @@
         .audit-score {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #2EE6A8;
+            color: var(--accent-cyan);
         }
         
         .audit-channel {
@@ -404,8 +404,8 @@
         }
         
         .subscription-status.active {
-            border-color: #2EE6A8;
-            background: linear-gradient(135deg, rgba(46, 230, 168, 0.05), rgba(24, 163, 255, 0.05));
+            border-color: var(--accent-cyan);
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.05), rgba(0, 136, 255, 0.05));
         }
         
         .subscription-header {
@@ -426,8 +426,8 @@
         }
         
         .subscription-badge.active {
-            background: rgba(46, 230, 168, 0.15);
-            color: #2EE6A8;
+            background: rgba(0, 240, 255, 0.15);
+            color: var(--accent-cyan);
         }
         
         .subscription-badge.inactive {
@@ -468,7 +468,7 @@
         }
         
         .subscription-value.highlight {
-            color: #2EE6A8;
+            color: var(--accent-cyan);
         }
         
         .subscription-cta {
@@ -485,7 +485,7 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.75rem 1.5rem;
-            background: linear-gradient(135deg, #2EE6A8, #18A3FF);
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
             border: none;
             border-radius: 8px;
             color: #0a1628;
@@ -497,7 +497,7 @@
         
         .btn-subscribe:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(46, 230, 168, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 240, 255, 0.3);
         }
         
         .btn-addon {
@@ -570,7 +570,7 @@
         .overlay-title {
             font-size: 1.75rem;
             font-weight: 700;
-            color: #2EE6A8;
+            color: var(--accent-cyan);
             margin-bottom: 0.5rem;
             animation: text-pulse 2s ease-in-out infinite;
         }
@@ -597,11 +597,11 @@
         }
         
         .overlay-step.active {
-            color: #2EE6A8;
+            color: var(--accent-cyan);
         }
         
         .overlay-step.completed {
-            color: #2EE6A8;
+            color: var(--accent-cyan);
             opacity: 0.6;
         }
         
@@ -617,8 +617,8 @@
         }
         
         .overlay-step.active .step-indicator {
-            background: #2EE6A8;
-            border-color: #2EE6A8;
+            background: var(--accent-cyan);
+            border-color: var(--accent-cyan);
             color: #0a1628;
             animation: pulse-glow 1s ease-in-out infinite;
         }
@@ -634,7 +634,7 @@
         }
         
         .overlay-timer span {
-            color: #2EE6A8;
+            color: var(--accent-cyan);
             font-weight: 600;
         }
     </style>
@@ -644,8 +644,8 @@
         <svg class="overlay-radar" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <linearGradient id="overlayGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#2EE6A8"/>
-                    <stop offset="100%" style="stop-color:#18A3FF"/>
+                    <stop offset="0%" style="stop-color:var(--accent-cyan)"/>
+                    <stop offset="100%" style="stop-color:var(--accent-blue)"/>
                 </linearGradient>
             </defs>
             <g class="radar-grid">
@@ -659,12 +659,12 @@
                 <path d="M 100 100 L 100 15 A 85 85 0 0 1 175 135 Z" fill="url(#overlayGrad)" opacity="0.2"/>
             </g>
             <g class="radar-arcs">
-                <path d="M 130 80 A 40 40 0 0 1 130 120" fill="none" stroke="#2EE6A8" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
-                <path d="M 145 65 A 55 55 0 0 1 145 135" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
-                <path d="M 160 50 A 75 75 0 0 1 160 150" fill="none" stroke="#18A3FF" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+                <path d="M 130 80 A 40 40 0 0 1 130 120" fill="none" stroke="var(--accent-cyan)" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+                <path d="M 145 65 A 55 55 0 0 1 145 135" fill="none" stroke="var(--accent-cyan)" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+                <path d="M 160 50 A 75 75 0 0 1 160 150" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
             </g>
             <circle class="radar-center" cx="100" cy="100" r="12" fill="url(#overlayGrad)"/>
-            <circle class="radar-pulse" cx="100" cy="100" r="12" fill="none" stroke="#2EE6A8" stroke-width="2" opacity="0.8"/>
+            <circle class="radar-pulse" cx="100" cy="100" r="12" fill="none" stroke="var(--accent-cyan)" stroke-width="2" opacity="0.8"/>
         </svg>
         <div class="overlay-status" id="overlayRunning">
             <div class="overlay-title">Analyzing AI Visibility</div>
@@ -698,11 +698,11 @@
         <div class="overlay-status" id="overlaySuccess" style="display: none;">
             <div class="success-checkmark">
                 <svg viewBox="0 0 52 52" style="width: 80px; height: 80px;">
-                    <circle cx="26" cy="26" r="25" fill="none" stroke="#2EE6A8" stroke-width="2"/>
-                    <path fill="none" stroke="#2EE6A8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                    <circle cx="26" cy="26" r="25" fill="none" stroke="var(--accent-cyan)" stroke-width="2"/>
+                    <path fill="none" stroke="var(--accent-cyan)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
                 </svg>
             </div>
-            <div class="overlay-title" style="color: #2EE6A8; margin-top: 1rem;">Audit Complete!</div>
+            <div class="overlay-title" style="color: var(--accent-cyan); margin-top: 1rem;">Audit Complete!</div>
             <div class="overlay-subtitle">Your AI visibility report is ready</div>
             <div class="overlay-timer" style="margin-top: 1rem;">Loading results...</div>
         </div>
@@ -750,8 +750,8 @@
                         <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
                             <defs>
                                 <linearGradient id="radarGradBtn" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#2EE6A8"/>
-                                    <stop offset="100%" style="stop-color:#18A3FF"/>
+                                    <stop offset="0%" style="stop-color:var(--accent-cyan)"/>
+                                    <stop offset="100%" style="stop-color:var(--accent-blue)"/>
                                 </linearGradient>
                             </defs>
                             <g class="radar-grid">
@@ -765,12 +765,12 @@
                                 <path d="M 40 40 L 40 5 A 35 35 0 0 1 72 55 Z" fill="url(#radarGradBtn)" opacity="0.15"/>
                             </g>
                             <g class="radar-arcs">
-                                <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
-                                <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
-                                <path d="M 64 20 A 30 30 0 0 1 64 60" fill="none" stroke="#18A3FF" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+                                <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="var(--accent-cyan)" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                                <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="var(--accent-cyan)" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                                <path d="M 64 20 A 30 30 0 0 1 64 60" fill="none" stroke="var(--accent-blue)" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
                             </g>
                             <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn)"/>
-                            <circle class="radar-pulse" cx="40" cy="40" r="5" fill="none" stroke="#2EE6A8" stroke-width="1.5" opacity="0.8"/>
+                            <circle class="radar-pulse" cx="40" cy="40" r="5" fill="none" stroke="var(--accent-cyan)" stroke-width="1.5" opacity="0.8"/>
                         </svg>
                         <span class="radar-text">Run Audit</span>
                         <span class="radar-loading-text">Running Audit...</span>
@@ -900,8 +900,8 @@
                     <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
                         <defs>
                             <linearGradient id="radarGradBtn3" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:#2EE6A8"/>
-                                <stop offset="100%" style="stop-color:#18A3FF"/>
+                                <stop offset="0%" style="stop-color:var(--accent-cyan)"/>
+                                <stop offset="100%" style="stop-color:var(--accent-blue)"/>
                             </linearGradient>
                         </defs>
                         <g class="radar-grid">
@@ -913,18 +913,18 @@
                             <path d="M 40 40 L 40 5 A 35 35 0 0 1 72 55 Z" fill="url(#radarGradBtn3)" opacity="0.15"/>
                         </g>
                         <g class="radar-arcs">
-                            <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="#2EE6A8" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
-                            <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="#2EE6A8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                            <path d="M 52 32 A 15 15 0 0 1 52 48" fill="none" stroke="var(--accent-cyan)" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                            <path d="M 58 26 A 22 22 0 0 1 58 54" fill="none" stroke="var(--accent-cyan)" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
                         </g>
                         <circle class="radar-center" cx="40" cy="40" r="5" fill="url(#radarGradBtn3)"/>
-                        <circle class="radar-pulse" cx="40" cy="40" r="5" fill="none" stroke="#2EE6A8" stroke-width="1.5" opacity="0.8"/>
+                        <circle class="radar-pulse" cx="40" cy="40" r="5" fill="none" stroke="var(--accent-cyan)" stroke-width="1.5" opacity="0.8"/>
                     </svg>
                     <span class="radar-text">Run Your First Audit</span>
                     <span class="radar-loading-text">Running Audit...</span>
                 </button>
             </form>
             {% elif business.subscription_active %}
-            <p style="color: #2EE6A8;">Your first automatic audit will run soon!</p>
+            <p style="color: var(--accent-cyan);">Your first automatic audit will run soon!</p>
             {% else %}
             <p style="color: var(--text-secondary);">Subscribe to start receiving automatic audits every 2 weeks.</p>
             {% endif %}

@@ -5,120 +5,110 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Get Your Report - EkkoScope</title>
     <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background: #0d0d0d;
-            color: #ffffff;
-            font-family: 'JetBrains Mono', 'Courier New', monospace;
-            min-height: 100vh;
-        }
-        
         .dashboard-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 1rem 2rem;
-            background: #000;
-            border-bottom: 1px solid #00f0ff;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
         }
         
         .nav-logo img {
-            height: 32px;
+            height: 28px;
             width: auto;
+            filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.3));
         }
         
         .back-link {
-            color: #00f0ff;
+            color: var(--text-secondary);
             text-decoration: none;
             font-size: 0.9rem;
+            transition: color 0.2s;
         }
         
         .back-link:hover {
-            text-decoration: underline;
+            color: var(--accent-cyan);
         }
         
         .upgrade-container {
             max-width: 1000px;
             margin: 0 auto;
-            padding: 3rem 1rem;
+            padding: 3rem 1.5rem;
             text-align: center;
         }
         
         .business-badge {
             display: inline-block;
-            background: #000;
-            border: 1px solid #00f0ff;
-            border-radius: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 6px;
             padding: 0.75rem 1.5rem;
             margin-bottom: 2rem;
         }
         
         .business-badge .name {
-            color: #00f0ff;
+            color: var(--accent-cyan);
             font-weight: bold;
         }
         
         .business-badge .domain {
-            color: #888;
+            color: var(--text-muted);
             font-size: 0.9rem;
             margin-left: 0.5rem;
         }
         
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            color: #00f0ff;
+        .page-title {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-cyan);
+            font-weight: 600;
         }
         
         .tagline {
-            color: #888;
-            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-size: 1rem;
             margin-bottom: 3rem;
         }
         
         .plans-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
             gap: 2rem;
             margin-top: 2rem;
         }
         
         .plan-card {
-            background: #111;
-            border: 2px solid #333;
-            border-radius: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             padding: 2.5rem;
             text-align: center;
-            transition: transform 0.2s, border-color 0.2s;
+            transition: all 0.2s ease;
         }
         
         .plan-card:hover {
             transform: translateY(-4px);
-            border-color: #00f0ff;
+            border-color: var(--accent-cyan);
         }
         
         .plan-card.featured {
-            border-color: #00f0ff;
+            border-color: var(--accent-cyan);
         }
         
         .plan-name {
-            font-size: 1.4rem;
+            font-size: 1.1rem;
             font-weight: bold;
             margin-bottom: 0.5rem;
-            color: #00f0ff;
+            color: var(--accent-cyan);
+            letter-spacing: 1px;
         }
         
         .plan-tagline {
-            color: #888;
-            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
             margin-bottom: 1.5rem;
         }
         
@@ -127,14 +117,14 @@
         }
         
         .plan-price .amount {
-            font-size: 3.5rem;
+            font-size: 3rem;
             font-weight: bold;
-            color: #fff;
+            color: var(--text-primary);
         }
         
         .plan-price .period {
-            color: #888;
-            font-size: 1rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
             display: block;
             margin-top: 0.5rem;
         }
@@ -151,8 +141,9 @@
             display: flex;
             align-items: flex-start;
             gap: 0.75rem;
-            border-bottom: 1px solid #222;
-            font-size: 0.95rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
         }
         
         .plan-features li:last-child {
@@ -160,24 +151,24 @@
         }
         
         .plan-features .check {
-            color: #00f0ff;
+            color: var(--accent-cyan);
             flex-shrink: 0;
         }
         
         .plan-cta {
             display: block;
             width: 100%;
-            padding: 1.2rem;
-            border-radius: 8px;
-            font-size: 1.2rem;
+            padding: 1rem;
+            border-radius: 6px;
+            font-size: 1.1rem;
             font-weight: bold;
             text-decoration: none;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s ease;
             margin-top: 1.5rem;
             border: none;
             cursor: pointer;
-            font-family: inherit;
-            background: #00f0ff;
+            font-family: var(--font-mono);
+            background: var(--accent-cyan);
             color: #000;
         }
         
@@ -189,15 +180,28 @@
         .footer-note {
             margin-top: 3rem;
             padding: 1.5rem;
-            background: #111;
-            border: 1px solid #333;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            font-size: 1rem;
-            color: #888;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         .footer-note strong {
-            color: #00f0ff;
+            color: var(--accent-cyan);
+        }
+        
+        @media (max-width: 768px) {
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .plan-price .amount {
+                font-size: 2.5rem;
+            }
         }
     </style>
 </head>
@@ -207,7 +211,7 @@
             <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope">
         </a>
         <a href="/dashboard" class="back-link">
-            ← Back to Dashboard
+            &larr; Back to Dashboard
         </a>
     </nav>
 
@@ -217,12 +221,12 @@
             <span class="domain">{{ business.primary_domain }}</span>
         </div>
         
-        <h1>EkkoScope</h1>
+        <h1 class="page-title">EkkoScope</h1>
         <p class="tagline">GEO Engine for AI Visibility</p>
         
         <div class="plans-grid">
             <div class="plan-card featured">
-                <div class="plan-name">Full GEO Report</div>
+                <div class="plan-name">FULL GEO REPORT</div>
                 <div class="plan-tagline">One-time 19-page analysis</div>
                 
                 <div class="plan-price">
@@ -254,12 +258,12 @@
                 </ul>
                 
                 <form method="POST" action="/dashboard/business/{{ business.id }}/checkout/report">
-                    <button type="submit" class="plan-cta">Get My Report &mdash; 12 slots</button>
+                    <button type="submit" class="plan-cta">Get My Report</button>
                 </form>
             </div>
             
             <div class="plan-card">
-                <div class="plan-name">Continuous Monitoring</div>
+                <div class="plan-name">CONTINUOUS MONITORING</div>
                 <div class="plan-tagline">New report every 14 days</div>
                 
                 <div class="plan-price">

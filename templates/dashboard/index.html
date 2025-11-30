@@ -24,8 +24,9 @@
         }
         
         .nav-logo img.full-logo {
-            height: 32px;
+            height: 28px;
             width: auto;
+            filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.3));
         }
         
         .nav-user {
@@ -36,6 +37,7 @@
         
         .user-name {
             color: var(--text-secondary);
+            font-size: 0.9rem;
         }
         
         .logout-btn {
@@ -45,12 +47,35 @@
             border-radius: 6px;
             color: var(--text-secondary);
             text-decoration: none;
-            transition: border-color 0.2s, color 0.2s;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
         }
         
         .logout-btn:hover {
-            border-color: var(--brand-teal);
-            color: var(--brand-teal);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+        
+        .promo-banner {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem 2rem;
+            text-align: center;
+        }
+        
+        .promo-banner p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .promo-banner strong {
+            color: var(--accent-cyan);
+        }
+        
+        .promo-banner a {
+            color: var(--accent-cyan);
+            margin-left: 1rem;
         }
         
         .dashboard-container {
@@ -67,7 +92,9 @@
         }
         
         .dashboard-header h1 {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            font-weight: 600;
         }
         
         .add-business-btn {
@@ -75,17 +102,18 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.75rem 1.5rem;
-            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
-            color: var(--bg-dark);
+            background: var(--accent-cyan);
+            color: #000;
             text-decoration: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: 600;
-            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
         }
         
         .add-business-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(46, 230, 168, 0.25);
+            box-shadow: 0 8px 25px rgba(0, 240, 255, 0.25);
         }
         
         .businesses-list {
@@ -97,16 +125,17 @@
         .business-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: border-color 0.2s;
+            transition: all 0.2s ease;
         }
         
         .business-card:hover {
-            border-color: var(--brand-teal);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.05);
         }
         
         .business-info {
@@ -119,18 +148,19 @@
         }
         
         .business-info a:hover h3 {
-            color: var(--brand-teal);
+            color: var(--accent-cyan);
         }
         
         .business-info h3 {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             margin-bottom: 0.25rem;
             transition: color 0.2s;
+            font-weight: 600;
         }
         
         .business-info .domain {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
         }
         
         .business-status {
@@ -141,25 +171,29 @@
         
         .plan-badge {
             padding: 0.35rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
             font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
-        .plan-badge.snapshot {
-            background: rgba(59, 130, 246, 0.15);
-            color: var(--brand-blue);
+        .plan-badge.continuous {
+            background: rgba(0, 240, 255, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(0, 240, 255, 0.3);
         }
         
-        .plan-badge.ongoing {
-            background: rgba(46, 230, 168, 0.15);
-            color: var(--brand-teal);
+        .plan-badge.report {
+            background: rgba(0, 136, 255, 0.15);
+            color: var(--accent-blue);
+            border: 1px solid rgba(0, 136, 255, 0.3);
         }
         
         .plan-badge.none {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
             color: var(--text-muted);
+            border: 1px solid var(--border-color);
         }
         
         .business-actions {
@@ -171,13 +205,14 @@
             padding: 0.5rem 1rem;
             border-radius: 6px;
             text-decoration: none;
-            font-size: 0.9rem;
-            transition: transform 0.2s;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
         }
         
         .action-btn.primary {
-            background: var(--brand-teal);
-            color: var(--bg-dark);
+            background: var(--accent-cyan);
+            color: #000;
+            font-weight: 600;
         }
         
         .action-btn.secondary {
@@ -190,16 +225,23 @@
             transform: translateY(-1px);
         }
         
+        .action-btn.secondary:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+        
         .empty-state {
             text-align: center;
             padding: 4rem 2rem;
             background: var(--bg-card);
-            border: 2px dashed var(--border-color);
-            border-radius: 16px;
+            border: 1px dashed var(--border-color);
+            border-radius: 12px;
         }
         
         .empty-state h2 {
             margin-bottom: 1rem;
+            color: var(--accent-cyan);
+            font-size: 1.3rem;
         }
         
         .empty-state p {
@@ -207,99 +249,91 @@
             margin-bottom: 2rem;
         }
         
-        .plan-options {
+        .pricing-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
-            margin-top: 2rem;
+            margin-top: 3rem;
         }
         
-        .plan-option {
+        .pricing-card {
             background: var(--bg-card);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
             text-align: center;
-            transition: border-color 0.2s, transform 0.2s;
+            transition: all 0.2s ease;
         }
         
-        .plan-option:hover {
-            border-color: var(--brand-teal);
-            transform: translateY(-2px);
+        .pricing-card:hover {
+            border-color: var(--accent-cyan);
         }
         
-        .plan-option h3 {
-            color: var(--brand-teal);
+        .pricing-card.featured {
+            border-color: var(--accent-cyan);
+        }
+        
+        .pricing-card h3 {
+            color: var(--accent-cyan);
             margin-bottom: 0.5rem;
+            font-size: 1rem;
+            letter-spacing: 1px;
         }
         
-        .plan-option .price {
-            font-size: 1.5rem;
+        .pricing-card .price {
+            font-size: 2.5rem;
             font-weight: bold;
             margin: 0.5rem 0;
+            color: var(--text-primary);
         }
         
-        .plan-option .period {
+        .pricing-card .period {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+        
+        .pricing-card .description {
             color: var(--text-secondary);
             font-size: 0.9rem;
+            margin-bottom: 1.5rem;
         }
         
-        .plan-option .plan-cta {
+        .pricing-card .pricing-cta {
             display: block;
-            margin-top: 1rem;
-            padding: 0.75rem;
+            padding: 0.875rem;
             border-radius: 6px;
             text-decoration: none;
             font-weight: 600;
-        }
-        
-        .plan-option .plan-cta.primary {
-            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
-            color: var(--bg-dark);
-        }
-        
-        .plan-option .plan-cta.secondary {
-            background: transparent;
-            border: 1px solid var(--brand-teal);
-            color: var(--brand-teal);
-        }
-        .trial-banner {
-            background: #000;
-            border: 2px solid #00f0ff;
-            padding: 1.5rem;
-            text-align: center;
-            font-family: 'JetBrains Mono', 'Courier New', monospace;
-            margin: 0;
-        }
-        
-        .trial-banner h3 {
-            margin: 0;
-            color: #00f0ff;
-            font-size: 1.1rem;
-        }
-        
-        .trial-banner p {
-            margin: 0.5rem 0;
-            font-size: 1rem;
-            color: #fff;
-        }
-        
-        .trial-banner .trial-cta {
-            display: inline-block;
-            background: #00f0ff;
+            transition: all 0.2s ease;
+            background: var(--accent-cyan);
             color: #000;
-            padding: 0.75rem 2rem;
-            font-size: 1.1rem;
-            font-weight: bold;
-            text-decoration: none;
-            border-radius: 8px;
-            margin-top: 0.75rem;
-            transition: transform 0.2s, box-shadow 0.2s;
         }
         
-        .trial-banner .trial-cta:hover {
+        .pricing-card .pricing-cta:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 240, 255, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-nav {
+                padding: 1rem;
+            }
+            
+            .dashboard-container {
+                padding: 1rem;
+            }
+            
+            .business-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .business-status {
+                width: 100%;
+                justify-content: space-between;
+            }
         }
     </style>
 </head>
@@ -314,11 +348,8 @@
         </div>
     </nav>
     
-    <div class="trial-banner">
-        <h3>EkkoScope - GEO Engine for AI Visibility</h3>
-        <p>$490 one-time report or $290/month continuous monitoring<br>
-        See exactly who is taking 100% of your AI leads.</p>
-        <a href="/pricing" class="trial-cta">View Pricing</a>
+    <div class="promo-banner">
+        <p><strong>$490</strong> one-time report | <strong>$290/month</strong> continuous monitoring <a href="/pricing">View Pricing &rarr;</a></p>
     </div>
 
     <main class="dashboard-container">
@@ -341,9 +372,9 @@
                 </div>
                 <div class="business-status">
                     {% if business.subscription_active and business.plan == 'ongoing' %}
-                    <span class="plan-badge ongoing">Ongoing</span>
+                    <span class="plan-badge continuous">Continuous</span>
                     {% elif business.plan == 'snapshot' %}
-                    <span class="plan-badge snapshot">Snapshot</span>
+                    <span class="plan-badge report">Report</span>
                     {% else %}
                     <span class="plan-badge none">No Plan</span>
                     {% endif %}
@@ -354,7 +385,7 @@
                         <a href="/dashboard/business/{{ business.id }}/audits" class="action-btn secondary">Audits</a>
                         {% endif %}
                         {% if not business.subscription_active %}
-                        <a href="/dashboard/business/{{ business.id }}/upgrade" class="action-btn primary">Get Audit</a>
+                        <a href="/dashboard/business/{{ business.id }}/upgrade" class="action-btn primary">Get Report</a>
                         {% endif %}
                     </div>
                 </div>
@@ -363,7 +394,7 @@
         </div>
         {% else %}
         <div class="empty-state">
-            <h2>Welcome to EkkoScope!</h2>
+            <h2>Welcome to EkkoScope</h2>
             <p>Add your first business to discover how AI assistants recommend you.</p>
             <a href="/dashboard/business/new" class="add-business-btn">
                 <span>+</span> Add Your Business
@@ -371,18 +402,20 @@
         </div>
         {% endif %}
         
-        <div class="plan-options">
-            <div class="plan-option">
-                <h3>Standard Monitoring</h3>
-                <div class="price">$99/mo</div>
-                <div class="period">3-month commitment</div>
-                <a href="/pricing" class="plan-cta primary">Learn More</a>
+        <div class="pricing-cards">
+            <div class="pricing-card featured">
+                <h3>FULL GEO REPORT</h3>
+                <div class="price">$490</div>
+                <div class="period">one-time</div>
+                <div class="description">19-page AI visibility report with competitor teardown</div>
+                <a href="/checkout/report" class="pricing-cta">Get My Report</a>
             </div>
-            <div class="plan-option">
-                <h3>+ EkkoBrain</h3>
-                <div class="price">$149/mo</div>
-                <div class="period">add-on for Standard</div>
-                <a href="/pricing" class="plan-cta secondary">Learn More</a>
+            <div class="pricing-card">
+                <h3>CONTINUOUS MONITORING</h3>
+                <div class="price">$290</div>
+                <div class="period">/ month</div>
+                <div class="description">New report every 14 days + visibility delta tracking</div>
+                <a href="/checkout/continuous" class="pricing-cta">Start Continuous</a>
             </div>
         </div>
     </main>

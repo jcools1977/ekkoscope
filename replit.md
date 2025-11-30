@@ -10,12 +10,23 @@ EkkoScope is a premium SaaS web application designed to analyze and improve "AI 
 - **$490 Full GEO Report**: One-time 19-page AI visibility report (12 slots/month)
 - **$290/month Continuous**: New report every 14 days + visibility delta + email summary
 - **FIX tier**: Private/email-only - "Reply FIX after your first report, first 5 only"
-- **Black-Ops PDF Design**: Pure black background, JetBrains Mono, cyan branding, blood-red for 0% visibility
 
-### Key Files
-- `templates/public/pricing.html` - Black/cyan pricing page with $490 + $290/mo options
-- `templates/dashboard/upgrade.html` - Business upgrade page with both tiers
-- `services/reporting.py` - PDF upsell page 19 with final pricing copy
+### Unified Black-Ops Design System (November 30, 2025)
+- **Color Scheme**: Pure black (#0a0a0f), cyan accents (#00f0ff), blood-red alerts (#ff0000)
+- **Typography**: JetBrains Mono throughout all pages
+- **CSS Variables**: `--accent-cyan`, `--accent-blue`, `--bg-primary`, `--bg-card`, etc.
+- **Logo Placement**: EkkoScope logo on every page header
+- **Footer**: "Powered by EkkoScope GEO Engine" on all pages
+
+### Key Design Files
+- `static/styles.css` - Unified global CSS with JetBrains Mono and black/cyan theme
+- `templates/public/landing.html` - Homepage with new design
+- `templates/public/pricing.html` - Pricing page with $490 + $290/mo cards
+- `templates/auth/login.html` - Login page with unified design
+- `templates/auth/signup.html` - Signup page with unified design
+- `templates/dashboard/index.html` - Dashboard with new aesthetic
+- `templates/dashboard/upgrade.html` - Business upgrade page
+- `services/reporting.py` - PDF with black-ops design
 
 ### Stripe Products
 - `STRIPE_PRICE_REPORT_490` - $490 Full GEO Report (one-time)

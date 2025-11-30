@@ -7,31 +7,76 @@
     <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
     <link rel="stylesheet" href="/static/styles.css">
     <style>
-        .auth-container {
-            max-width: 420px;
-            margin: 3rem auto;
-            padding: 0 1rem;
-        }
-        
-        .auth-card {
-            background: var(--bg-card);
-            border: 2px solid var(--border-color);
-            border-radius: 16px;
-            padding: 2.5rem;
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         
         .auth-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+        }
+        
+        .auth-header a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .auth-header img {
+            height: 32px;
+            width: auto;
+            filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.3));
+        }
+        
+        .auth-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+        
+        .auth-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2.5rem;
+            position: relative;
+        }
+        
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--accent-gradient);
+            opacity: 0.5;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .auth-title {
             text-align: center;
             margin-bottom: 2rem;
         }
         
-        .auth-header h1 {
-            font-size: 1.75rem;
+        .auth-title h1 {
+            font-size: 1.5rem;
             margin-bottom: 0.5rem;
+            color: var(--accent-cyan);
+            font-weight: 600;
         }
         
-        .auth-header p {
+        .auth-title p {
             color: var(--text-secondary);
+            font-size: 0.9rem;
         }
         
         .auth-form .form-group {
@@ -42,52 +87,61 @@
             display: block;
             margin-bottom: 0.5rem;
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
         }
         
         .auth-form input {
             width: 100%;
             padding: 0.875rem 1rem;
-            background: var(--bg-dark);
+            background: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 6px;
             color: var(--text-primary);
             font-size: 1rem;
-            transition: border-color 0.2s;
+            font-family: var(--font-mono);
+            transition: all 0.2s ease;
         }
         
         .auth-form input:focus {
             outline: none;
-            border-color: var(--brand-teal);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.15);
+        }
+        
+        .auth-form input::placeholder {
+            color: var(--text-muted);
         }
         
         .auth-form .submit-btn {
             width: 100%;
             padding: 1rem;
-            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            background: var(--accent-cyan);
             border: none;
-            border-radius: 8px;
-            color: var(--bg-dark);
-            font-size: 1.1rem;
+            border-radius: 6px;
+            color: #000;
+            font-size: 1rem;
             font-weight: 600;
+            font-family: var(--font-mono);
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s ease;
             margin-top: 0.5rem;
         }
         
         .auth-form .submit-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(46, 230, 168, 0.25);
+            box-shadow: 0 8px 25px rgba(0, 240, 255, 0.25);
         }
         
         .auth-footer {
             text-align: center;
             margin-top: 1.5rem;
             color: var(--text-secondary);
+            font-size: 0.9rem;
         }
         
         .auth-footer a {
-            color: var(--brand-teal);
+            color: var(--accent-cyan);
             text-decoration: none;
         }
         
@@ -96,75 +150,86 @@
         }
         
         .error-message {
-            background: rgba(255, 82, 82, 0.1);
-            border: 1px solid rgba(255, 82, 82, 0.3);
-            border-radius: 8px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 6px;
             padding: 1rem;
             margin-bottom: 1.5rem;
-            color: #ff5252;
+            color: #ff6666;
             text-align: center;
+            font-size: 0.9rem;
         }
         
         .success-message {
-            background: rgba(46, 230, 168, 0.1);
-            border: 1px solid rgba(46, 230, 168, 0.3);
-            border-radius: 8px;
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 6px;
             padding: 1rem;
             margin-bottom: 1.5rem;
-            color: var(--brand-teal);
+            color: var(--accent-cyan);
             text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .page-footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border-color);
         }
     </style>
 </head>
 <body>
-    <header class="hero-card">
-        <a href="/" class="logo-link">
-            <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope" style="height: 40px; width: auto;">
-        </a>
-        <p class="hero-subtitle">GEO Engine for AI Visibility</p>
-    </header>
+    <div class="auth-page">
+        <header class="auth-header">
+            <a href="/">
+                <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope">
+            </a>
+        </header>
 
-    <main class="auth-container">
-        <div class="auth-card">
-            <div class="auth-header">
-                <h1>Welcome Back</h1>
-                <p>Log in to your EkkoScope account</p>
-            </div>
-            
-            {% if error %}
-            <div class="error-message">{{ error }}</div>
-            {% endif %}
-            
-            {% if success %}
-            <div class="success-message">{{ success }}</div>
-            {% endif %}
-            
-            <form method="POST" action="/auth/login" class="auth-form">
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" required placeholder="you@company.com" value="{{ email or '' }}">
+        <main class="auth-container">
+            <div class="auth-card">
+                <div class="auth-title">
+                    <h1>Welcome Back</h1>
+                    <p>Log in to your EkkoScope account</p>
                 </div>
                 
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Enter your password">
-                </div>
-                
-                {% if next %}
-                <input type="hidden" name="next" value="{{ next }}">
+                {% if error %}
+                <div class="error-message">{{ error }}</div>
                 {% endif %}
                 
-                <button type="submit" class="submit-btn">Log In</button>
-            </form>
-            
-            <div class="auth-footer">
-                <p>Don't have an account? <a href="/auth/signup{% if next %}?next={{ next }}{% endif %}">Sign up for free</a></p>
+                {% if success %}
+                <div class="success-message">{{ success }}</div>
+                {% endif %}
+                
+                <form method="POST" action="/auth/login" class="auth-form">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" required placeholder="you@company.com" value="{{ email or '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    </div>
+                    
+                    {% if next %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                    {% endif %}
+                    
+                    <button type="submit" class="submit-btn">Log In</button>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>Don't have an account? <a href="/auth/signup{% if next %}?next={{ next }}{% endif %}">Sign up</a></p>
+                </div>
             </div>
-        </div>
-    </main>
-    
-    <footer style="text-align: center; padding: 2rem; color: var(--text-muted);">
-        <p>Powered by EkkoScope</p>
-    </footer>
+        </main>
+        
+        <footer class="page-footer">
+            <p>Powered by EkkoScope GEO Engine</p>
+        </footer>
+    </div>
 </body>
 </html>

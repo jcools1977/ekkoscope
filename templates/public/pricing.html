@@ -3,122 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EkkoScope - GEO Engine for AI Visibility</title>
+    <title>Pricing - EkkoScope</title>
     <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            border-bottom: 1px solid var(--border-color);
         }
         
-        body {
-            background: #0d0d0d;
-            color: #00f0ff;
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+        
+        .nav-logo img.full-logo {
+            height: 32px;
+            width: auto;
+            filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.3));
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover {
+            color: var(--accent-cyan);
+        }
+        
+        .nav-btn {
+            padding: 0.6rem 1.25rem;
+            background: var(--accent-cyan);
+            color: #000;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 240, 255, 0.25);
+        }
+        
+        .pricing-hero {
             text-align: center;
-            padding: 8rem 2rem;
-            font-family: 'JetBrains Mono', monospace;
-            min-height: 100vh;
-        }
-        
-        h1 {
-            font-size: 4rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .tagline {
-            font-size: 2rem;
-            margin-bottom: 6rem;
-            opacity: 0.9;
-        }
-        
-        .pricing-card {
-            display: inline-block;
-            background: #111;
-            padding: 3rem;
-            border: 2px solid #00f0ff;
-            border-radius: 16px;
+            padding: 4rem 2rem 2rem;
+            max-width: 800px;
             margin: 0 auto;
         }
         
-        .pricing-card h2 {
-            font-size: 5rem;
-            margin: 1rem 0;
-            color: #fff;
+        .pricing-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-cyan);
+            font-weight: 600;
         }
         
-        .pricing-card.secondary h2 {
-            font-size: 4rem;
+        .pricing-hero .tagline {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
         }
         
-        .pricing-card p {
-            font-size: 1.8rem;
-            line-height: 1.6;
-            color: #fff;
+        .pricing-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem 4rem;
         }
         
-        .pricing-card.secondary p {
-            font-size: 1.6rem;
+        .pricing-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 2rem;
         }
         
-        .cta-btn {
-            background: #00f0ff;
-            color: #000;
-            padding: 1.5rem 4rem;
-            font-size: 2rem;
-            margin: 2rem 0;
-            display: inline-block;
-            text-decoration: none;
+        .pricing-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
             border-radius: 12px;
-            font-family: inherit;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        
+        .pricing-card:hover {
+            border-color: var(--accent-cyan);
+        }
+        
+        .pricing-card.featured {
+            border-color: var(--accent-cyan);
+        }
+        
+        .pricing-card .price {
+            font-size: 3.5rem;
             font-weight: bold;
-            border: none;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            color: var(--text-primary);
+            margin: 1rem 0;
         }
         
-        .cta-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 40px rgba(0, 240, 255, 0.4);
+        .pricing-card .period {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
         }
         
-        .divider {
-            margin: 6rem 0 2rem;
-            font-size: 2rem;
-            opacity: 0.8;
+        .pricing-card .description {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .pricing-card .cta-btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent-cyan);
+            color: #000;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .pricing-card .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.3);
+        }
+        
+        .pricing-card .slots {
+            margin-top: 1rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
         }
         
         .footer-note {
-            margin: 8rem 0 2rem;
-            font-size: 1.2rem;
-            opacity: 0.6;
-            color: #fff;
+            text-align: center;
+            margin-top: 4rem;
+            padding: 1.5rem 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .footer-note strong {
+            color: var(--accent-cyan);
+        }
+        
+        .footer-note p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+        
+        .page-footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        @media (max-width: 768px) {
+            .pricing-hero h1 {
+                font-size: 2rem;
+            }
+            
+            .pricing-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .pricing-card .price {
+                font-size: 2.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>EkkoScope</h1>
-    <p class="tagline">GEO Engine for AI Visibility</p>
+    <nav class="nav-bar">
+        <a href="/" class="nav-logo">
+            <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope" class="full-logo">
+        </a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/auth/login" class="nav-link">Log In</a>
+            <a href="/auth/signup" class="nav-btn">Get Started</a>
+        </div>
+    </nav>
+
+    <main>
+        <section class="pricing-hero">
+            <h1>EkkoScope</h1>
+            <p class="tagline">GEO Engine for AI Visibility</p>
+        </section>
+        
+        <section class="pricing-container">
+            <div class="pricing-cards">
+                <div class="pricing-card featured">
+                    <div class="price">$490</div>
+                    <div class="period">one-time</div>
+                    <div class="description">
+                        Full 19-page AI visibility report<br>
+                        See exactly who is taking 100% of your AI leads
+                    </div>
+                    <a href="/checkout/report" class="cta-btn">Get My Report</a>
+                    <div class="slots">12 slots this month</div>
+                </div>
+                
+                <div class="pricing-card">
+                    <div class="price">$290</div>
+                    <div class="period">/ month</div>
+                    <div class="description">
+                        Continuous monitoring<br>
+                        New report every 14 days + visibility delta tracking
+                    </div>
+                    <a href="/checkout/continuous" class="cta-btn">Start Continuous</a>
+                    <div class="slots">Cancel anytime</div>
+                </div>
+            </div>
+            
+            <div class="footer-note">
+                <p><strong>Want us to actually fix it?</strong><br>
+                After your first report, reply "FIX" &mdash; first 5 only.</p>
+            </div>
+        </section>
+    </main>
     
-    <div class="pricing-card">
-        <h2>$490</h2>
-        <p>One-time &rarr; Full 19-page report<br>See exactly who is taking 100% of your AI leads</p>
-        <a href="/checkout/report" class="cta-btn">Get My Report &mdash; 12 slots</a>
-    </div>
-    
-    <p class="divider">or</p>
-    
-    <div class="pricing-card secondary">
-        <h2>$290 / month</h2>
-        <p>Continuous &rarr; New report every 14 days<br>Watch your visibility (or lack of it) in real time</p>
-        <a href="/checkout/continuous" class="cta-btn">Start Continuous Monitoring</a>
-    </div>
-    
-    <p class="footer-note">
-        Want us to actually fix it?<br>
-        After your first report, reply "FIX" &mdash; first 5 only.
-    </p>
+    <footer class="page-footer">
+        <p>Powered by EkkoScope GEO Engine</p>
+    </footer>
 </body>
 </html>
