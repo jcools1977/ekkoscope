@@ -110,23 +110,79 @@
         
         .cta-btn.primary {
             background: var(--accent-cyan);
-            color: #000;
+            color: #0a0a0f;
+            font-weight: 700;
+            text-shadow: none;
         }
         
         .cta-btn.secondary {
             background: transparent;
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--accent-cyan);
             color: var(--text-primary);
         }
         
         .cta-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 240, 255, 0.2);
+            box-shadow: 0 8px 25px rgba(0, 240, 255, 0.4);
         }
         
         .cta-btn.secondary:hover {
-            border-color: var(--accent-cyan);
+            background: rgba(0, 240, 255, 0.1);
             color: var(--accent-cyan);
+        }
+        
+        .pricing-banner {
+            margin-top: 2.5rem;
+            padding: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 12px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .pricing-banner-title {
+            color: var(--accent-cyan);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+        
+        .pricing-options {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .pricing-option {
+            text-align: center;
+        }
+        
+        .pricing-option .price {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+        
+        .pricing-option .period {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: block;
+        }
+        
+        .pricing-option .desc {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+        
+        .pricing-divider {
+            width: 1px;
+            background: var(--border-color);
+            align-self: stretch;
         }
         
         .trust-badge {
@@ -366,6 +422,23 @@
             <div class="cta-buttons">
                 <a href="/auth/signup" class="cta-btn primary">Get Started</a>
                 <a href="/pricing" class="cta-btn secondary">View Pricing</a>
+            </div>
+            
+            <div class="pricing-banner">
+                <div class="pricing-banner-title">SIMPLE PRICING</div>
+                <div class="pricing-options">
+                    <div class="pricing-option">
+                        <div class="price">$490</div>
+                        <span class="period">one-time</span>
+                        <div class="desc">Full 19-page GEO Report</div>
+                    </div>
+                    <div class="pricing-divider"></div>
+                    <div class="pricing-option">
+                        <div class="price">$290</div>
+                        <span class="period">/ month</span>
+                        <div class="desc">Continuous Monitoring</div>
+                    </div>
+                </div>
             </div>
             
             <p class="trust-badge">Trusted by businesses optimizing for AI-driven discovery</p>
