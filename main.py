@@ -799,11 +799,12 @@ async def checkout_trial(request: Request):
         return RedirectResponse(url="/auth/login?next=/checkout/trial", status_code=302)
     
     try:
-        config = await load_stripe_config()
-        stripe = await get_stripe_client()
+        await load_stripe_config()
+        stripe_client = get_stripe_client()
         
         trial_price_id = os.getenv("STRIPE_PRICE_TRIAL_490")
         if not trial_price_id:
+            print("Trial checkout error: STRIPE_PRICE_TRIAL_490 not configured")
             return RedirectResponse(url="/dashboard?error=trial_not_configured", status_code=302)
         
         domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
@@ -816,7 +817,7 @@ async def checkout_trial(request: Request):
         success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}&product=trial"
         cancel_url = f"{base_url}/dashboard"
         
-        session = stripe.checkout.Session.create(
+        session = stripe_client.checkout.Session.create(
             mode="payment",
             line_items=[{"price": trial_price_id, "quantity": 1}],
             success_url=success_url,
