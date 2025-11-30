@@ -1215,6 +1215,66 @@ async def admin_businesses(request: Request):
         db.close()
 
 
+@app.get("/admin/business/new", response_class=HTMLResponse)
+async def admin_business_form(request: Request):
+    """Show admin business creation form."""
+    if not is_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    return templates.TemplateResponse(
+        "admin/business_new.html",
+        {"request": request, "error": None}
+    )
+
+
+@app.post("/admin/business/new")
+async def admin_business_create(
+    request: Request,
+    name: str = Form(...),
+    primary_domain: str = Form(...),
+    extra_domains: str = Form(""),
+    business_type: str = Form("local_service"),
+    regions: str = Form(""),
+    categories: str = Form(""),
+    contact_name: str = Form(""),
+    contact_email: str = Form("")
+):
+    """Create a new business from admin panel."""
+    if not is_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        extra_domains_list = [d.strip() for d in extra_domains.split(",") if d.strip()]
+        regions_list = [r.strip() for r in regions.split(",") if r.strip()]
+        categories_list = [c.strip() for c in categories.split(",") if c.strip()]
+        
+        business = Business(
+            name=name,
+            primary_domain=primary_domain,
+            business_type=business_type,
+            contact_name=contact_name or None,
+            contact_email=contact_email or None,
+            source="admin"
+        )
+        business.set_extra_domains(extra_domains_list)
+        business.set_regions(regions_list)
+        business.set_categories(categories_list)
+        
+        db.add(business)
+        db.commit()
+        db.refresh(business)
+        
+        return RedirectResponse(url=f"/admin/business/{business.id}", status_code=302)
+    except Exception as e:
+        return templates.TemplateResponse(
+            "admin/business_new.html",
+            {"request": request, "error": f"Error creating business: {str(e)}"}
+        )
+    finally:
+        db.close()
+
+
 @app.get("/admin/business/{business_id}", response_class=HTMLResponse)
 async def admin_business_detail(request: Request, business_id: int):
     """Show business detail with audits."""
@@ -1571,66 +1631,6 @@ async def public_business_create(
         return templates.TemplateResponse(
             "public/business_new.html",
             {"request": request, "error": f"Error creating business: {str(e)}", "success": False}
-        )
-    finally:
-        db.close()
-
-
-@app.get("/admin/business/new", response_class=HTMLResponse)
-async def admin_business_form(request: Request):
-    """Show admin business creation form."""
-    if not is_authenticated(request):
-        return RedirectResponse(url="/admin/login", status_code=302)
-    
-    return templates.TemplateResponse(
-        "admin/business_new.html",
-        {"request": request, "error": None}
-    )
-
-
-@app.post("/admin/business/new")
-async def admin_business_create(
-    request: Request,
-    name: str = Form(...),
-    primary_domain: str = Form(...),
-    extra_domains: str = Form(""),
-    business_type: str = Form("local_service"),
-    regions: str = Form(""),
-    categories: str = Form(""),
-    contact_name: str = Form(""),
-    contact_email: str = Form("")
-):
-    """Create a new business from admin panel."""
-    if not is_authenticated(request):
-        return RedirectResponse(url="/admin/login", status_code=302)
-    
-    db = get_db_session()
-    try:
-        extra_domains_list = [d.strip() for d in extra_domains.split(",") if d.strip()]
-        regions_list = [r.strip() for r in regions.split(",") if r.strip()]
-        categories_list = [c.strip() for c in categories.split(",") if c.strip()]
-        
-        business = Business(
-            name=name,
-            primary_domain=primary_domain,
-            business_type=business_type,
-            contact_name=contact_name or None,
-            contact_email=contact_email or None,
-            source="admin"
-        )
-        business.set_extra_domains(extra_domains_list)
-        business.set_regions(regions_list)
-        business.set_categories(categories_list)
-        
-        db.add(business)
-        db.commit()
-        db.refresh(business)
-        
-        return RedirectResponse(url=f"/admin/business/{business.id}", status_code=302)
-    except Exception as e:
-        return templates.TemplateResponse(
-            "admin/business_new.html",
-            {"request": request, "error": f"Error creating business: {str(e)}"}
         )
     finally:
         db.close()
