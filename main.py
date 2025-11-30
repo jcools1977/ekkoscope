@@ -1176,6 +1176,28 @@ async def admin_dashboard(request: Request):
         db.close()
 
 
+@app.get("/admin/demo-pdf")
+async def admin_demo_pdf(request: Request):
+    """Generate a demo PDF report for prospect presentations."""
+    if not is_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    from services.reporting_demo import generate_demo_pdf
+    from fastapi.responses import Response
+    
+    pdf_bytes = generate_demo_pdf()
+    
+    filename = f"EkkoScope_Demo_Report_{datetime.now().strftime('%Y%m%d')}.pdf"
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
+
+
 @app.get("/admin/businesses", response_class=HTMLResponse)
 async def admin_businesses(request: Request):
     """List all businesses."""
