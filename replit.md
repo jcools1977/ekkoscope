@@ -6,19 +6,22 @@ EkkoScope is a premium SaaS web application designed to analyze and improve "AI 
 
 ## Recent Changes (November 2025)
 
-### Subscription Model Pivot (v1.5)
-- **New Pricing**: $99/month standard subscription with 3-month minimum commitment, +$149/month optional EkkoBrain access
-- **Automatic Biweekly Audits**: Subscribers receive automatic AI visibility audits every 2 weeks (no manual triggering)
-- **Scheduler Service**: Background scheduler runs hourly checking for due audits and scheduling future ones
-- **EkkoBrain Add-on**: Users can add EkkoBrain pattern insights for +$149/month at any time
-- **Dashboard Updates**: Shows subscription status, next audit date, and EkkoBrain access status
-- **Admin Override**: Admin users retain ability to manually run audits for any business
-- **Webhook Security**: Stripe webhooks now require signature verification (no bypass when secret missing)
+### Pricing Overhaul v2.0 - One-Time Payment Model
+- **$490 Full GEO Report**: 19-page AI visibility report with competitor teardown, page blueprints, and 30-day action plan
+- **$990 Agentic Fix**: Full report + autonomous page creation and deployment over 30 days (60-90% visibility improvement typical)
+- **Black-Ops PDF Design**: Pure black background (#0a0a0f), JetBrains Mono typography, cyan (#00f0ff) branding, blood-red (#ff0000) for 0% visibility alerts
+- **Slot-Limited Sales**: 12 slots per month messaging throughout
+- **Simplified Checkout**: Direct one-time payment via Stripe, no subscriptions
 
-### New/Updated Files for Subscription Model
-- `services/audit_scheduler.py` - Background scheduler for automatic biweekly audits
-- `templates/dashboard/upgrade.html` - Updated with new pricing and plan options
-- `templates/dashboard/business_detail.html` - Subscription status section and EkkoBrain toggle
+### Key Files for v2.0
+- `templates/public/pricing.html` - New black/cyan pricing page with $490/$990 options
+- `templates/dashboard/upgrade.html` - Business-specific upgrade page with new pricing
+- `templates/dashboard/index.html` - Dashboard banner promoting $490 report
+- `services/reporting.py` - Updated PDF upsell page with new pricing model
+
+### Stripe Products (v2.0)
+- `STRIPE_PRICE_REPORT_490` - $490 Full GEO Report (one-time)
+- `STRIPE_PRICE_AGENTIC_990` - $990 Agentic Fix (one-time)
 
 ### Free First Report Feature (v1.4)
 - **One-Time Free Audit**: Every new user gets one free AI visibility report upon signup
