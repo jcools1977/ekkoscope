@@ -21,3 +21,4 @@ bcrypt
 passlib
 google-generativeai
 pinecone
+requests

@@ -10,6 +10,7 @@ from fpdf import FPDF
 from collections import Counter
 import os
 from services.genius import generate_executive_summary
+from services.ekkoscope_sentinel import log_report_generated
 
 BLACK_BG = (10, 10, 15)
 CYAN_GLOW = (0, 240, 255)
@@ -324,6 +325,8 @@ def build_ekkoscope_pdf(tenant: Dict[str, Any], analysis: Dict[str, Any]) -> byt
     _add_30_day_action_plan(pdf, data, tenant)
     _add_recommendations_section(pdf, data)
     _add_upsell_page(pdf, data)
+    
+    log_report_generated(tenant_name, "geo_report", pages=pdf.page_no())
     
     return pdf.output()
 

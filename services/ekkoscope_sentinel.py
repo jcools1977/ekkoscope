@@ -1,118 +1,132 @@
 """
-EkkoScope -> Sentinel_OS Integration
-Logs AI queries and report generation events to Sentinel_OS monitoring dashboard.
+================================================================================
+  SENTINEL_OS INTEGRATION FOR EKKOSCOPE
+================================================================================
 """
-
 import os
-import httpx
+import json
+import hashlib
+import functools
 from datetime import datetime
-from typing import Optional
-
-SENTINEL_API_KEY = os.environ.get("SENTINEL_API_KEY")
-SENTINEL_BASE_URL = "https://sentinel-os.replit.app/api"
-
-def _send_event(event_type: str, data: dict) -> bool:
-    """Send an event to Sentinel_OS."""
-    if not SENTINEL_API_KEY:
-        return False
-    
-    try:
+from typing import Optional, Dict, Any, Callable
+try:
+    import requests
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
+    import urllib.request
+    import urllib.error
+class SentinelClient:
+    def __init__(
+        self, 
+        api_key: str = None,
+        base_url: str = "https://sentinelos.an2b.com",
+        agent_id: str = "ekkoscope-agent",
+        fail_open: bool = True,
+        verbose: bool = True
+    ):
+        self.api_key = api_key or os.environ.get("SENTINEL_API_KEY", "")
+        self.base_url = base_url.rstrip("/")
+        self.agent_id = agent_id
+        self.fail_open = fail_open
+        self.verbose = verbose
+        self.run_id = f"ekko_{int(datetime.utcnow().timestamp())}_{os.urandom(4).hex()}"
+        self._sequence = 0
+        self._last_hash = "0" * 64
+        if self.verbose and self.api_key:
+            print(f"[SENTINEL] Connected: {self.api_key[:16]}...")
+    def _compute_hash(self, data: Dict) -> str:
+        payload = json.dumps(data, sort_keys=True, default=str) + self._last_hash
+        self._last_hash = hashlib.sha256(payload.encode()).hexdigest()
+        return self._last_hash
+    def _request(self, endpoint: str, payload: Dict) -> Dict:
+        if not self.api_key:
+            return {"decision": "allow", "reason": "no_api_key"}
+        url = f"{self.base_url}{endpoint}"
         headers = {
-            "Authorization": f"Bearer {SENTINEL_API_KEY}",
-            "Content-Type": "application/json"
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "User-Agent": "EkkoScope-Sentinel/1.0"
         }
-        
-        payload = {
-            "event_type": event_type,
-            "source": "ekkoscope",
-            "timestamp": datetime.utcnow().isoformat(),
-            "data": data
+        try:
+            if HAS_REQUESTS:
+                resp = requests.post(url, json=payload, headers=headers, timeout=5)
+                return resp.json()
+            else:
+                data = json.dumps(payload).encode()
+                req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    return json.loads(resp.read().decode())
+        except Exception as e:
+            if self.verbose:
+                print(f"[SENTINEL] Request error: {e}")
+            if self.fail_open:
+                return {"decision": "allow", "reason": "network_error", "error": str(e)}
+            raise
+    def check_action(self, action: Dict, context: Dict = None) -> Dict:
+        self._sequence += 1
+        event = {
+            "action": action,
+            "context": context or {},
+            "agent_id": self.agent_id,
+            "run_id": self.run_id,
+            "sequence": self._sequence,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
         }
-        
-        with httpx.Client(timeout=10.0) as client:
-            response = client.post(
-                f"{SENTINEL_BASE_URL}/events",
-                json=payload,
-                headers=headers
-            )
-            return response.status_code == 200
-    except Exception as e:
-        print(f"[Sentinel] Failed to send event: {e}")
-        return False
-
-
-def log_ai_query(model: str, prompt: str, business_name: Optional[str] = None, 
-                 response_preview: Optional[str] = None, tokens_used: Optional[int] = None) -> bool:
-    """
-    Log an AI query to Sentinel_OS.
-    
-    Args:
-        model: The AI model used (e.g., "chatgpt", "gemini", "perplexity")
-        prompt: The prompt sent to the AI
-        business_name: Optional name of the business being analyzed
-        response_preview: Optional preview of the AI response (first 200 chars)
-        tokens_used: Optional number of tokens used
-    """
-    data = {
+        event["hash"] = self._compute_hash(event)
+        result = self._request("/api/ingest", event)
+        if self.verbose:
+            decision = result.get("decision", "unknown")
+            action_type = action.get("type", "unknown")
+            print(f"[SENTINEL] {action_type} -> {decision}")
+        return result
+    def log_event(self, event_type: str, data: Dict = None) -> Dict:
+        action = {"type": event_type}
+        if data:
+            action.update(data)
+        return self.check_action(action, {"eventOnly": True})
+sentinel = SentinelClient()
+def log_ai_query(model: str, prompt: str, business_name: str = None, tokens: int = None):
+    """Log an AI query (ChatGPT, Gemini, Perplexity, etc.)"""
+    sentinel.log_event("ai.query", {
         "model": model,
-        "prompt_preview": prompt[:500] if prompt else "",
-        "prompt_length": len(prompt) if prompt else 0,
-    }
-    
-    if business_name:
-        data["business_name"] = business_name
-    if response_preview:
-        data["response_preview"] = response_preview[:200]
-    if tokens_used:
-        data["tokens_used"] = tokens_used
-        
-    return _send_event("ai_query", data)
-
-
-def log_report_generated(business_name: str, report_type: str = "geo_report", 
-                         pages: Optional[int] = None, queries_analyzed: Optional[int] = None) -> bool:
-    """
-    Log a report generation event to Sentinel_OS.
-    
-    Args:
-        business_name: Name of the business the report was generated for
-        report_type: Type of report (e.g., "geo_report", "visibility_audit")
-        pages: Optional number of pages in the report
-        queries_analyzed: Optional number of queries analyzed
-    """
-    data = {
+        "prompt_preview": prompt[:150] if prompt else None,
+        "business_name": business_name,
+        "tokens": tokens
+    })
+def log_report_generated(business_name: str, report_type: str = "geo_report", pages: int = 19):
+    """Log when a GEO report is generated"""
+    sentinel.log_event("report.generated", {
         "business_name": business_name,
         "report_type": report_type,
-    }
-    
-    if pages:
-        data["pages"] = pages
-    if queries_analyzed:
-        data["queries_analyzed"] = queries_analyzed
-        
-    return _send_event("report_generated", data)
-
-
-def log_audit_started(business_name: str, business_type: Optional[str] = None) -> bool:
-    """Log when an audit is started."""
-    data = {
+        "pages": pages
+    })
+def log_visibility_score(business_name: str, score: float, ai_models: list = None):
+    """Log visibility score calculation"""
+    sentinel.log_event("visibility.calculated", {
         "business_name": business_name,
-    }
-    if business_type:
-        data["business_type"] = business_type
-        
-    return _send_event("audit_started", data)
-
-
-def log_audit_completed(business_name: str, visibility_score: Optional[float] = None,
-                        competitors_found: Optional[int] = None) -> bool:
-    """Log when an audit is completed."""
-    data = {
+        "visibility_score": score,
+        "ai_models": ai_models or ["chatgpt", "gemini", "perplexity"]
+    })
+def log_competitor_analysis(business_name: str, competitors: list, industry: str = None):
+    """Log competitor analysis"""
+    sentinel.log_event("analysis.competitors", {
         "business_name": business_name,
-    }
-    if visibility_score is not None:
-        data["visibility_score"] = visibility_score
-    if competitors_found is not None:
-        data["competitors_found"] = competitors_found
-        
-    return _send_event("audit_completed", data)
+        "competitor_count": len(competitors),
+        "top_competitors": competitors[:5],
+        "industry": industry
+    })
+def log_user_signup(email: str, plan: str = "free", source: str = "website"):
+    """Log user signup"""
+    sentinel.log_event("user.signup", {
+        "email_domain": email.split("@")[-1] if "@" in email else None,
+        "plan": plan,
+        "source": source
+    })
+def log_payment(amount: float, currency: str = "usd", product: str = None):
+    """Log payment event"""
+    sentinel.log_event("payment.completed", {
+        "amount": amount,
+        "currency": currency,
+        "product": product
+    })

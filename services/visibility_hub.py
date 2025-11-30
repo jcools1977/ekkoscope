@@ -253,6 +253,7 @@ def run_multi_llm_visibility(
                     for vis in gemini_results:
                         if vis.query in agg_by_query:
                             agg_by_query[vis.query].providers.append(vis)
+                        log_ai_query(model="gemini", prompt=vis.query, business_name=business_name)
                     providers_used.append("gemini_sim")
                     print(f"[VISIBILITY HUB] Added 'gemini_sim' to providers_used")
                     sys.stdout.flush()
