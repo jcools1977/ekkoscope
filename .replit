@@ -40,10 +40,6 @@ localPort = 35297
 externalPort = 3002
 
 [[ports]]
-localPort = 37547
-externalPort = 5000
-
-[[ports]]
 localPort = 38529
 externalPort = 3000
 
@@ -74,4 +70,4 @@ STRIPE_PRICE_CONTINUOUS_290 = "price_1SZEm249IDZUQDsehNuH5VUc"
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
+run = ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
