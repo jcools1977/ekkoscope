@@ -1343,30 +1343,75 @@ def _add_recommendations_section(pdf: EkkoScopePDF, data: Dict[str, Any]):
 
 
 def _add_upsell_page(pdf: EkkoScopePDF, data: Dict[str, Any]):
-    """Add final upsell page with AN2B Agentic Trial CTA."""
+    """Add final upsell page with complete 7-Day Agentic Trial CTA."""
     pdf.is_upsell_page = True
     pdf.add_page()
     
-    pdf.ln(60)
-    
-    pdf.set_font(pdf.default_font, "B", 18)
-    pdf.set_text_color(*WHITE_TEXT)
-    pdf.multi_cell(0, 10, "Fix this or keep losing 100% of AI leads to your competitors.", align="C")
-    
-    pdf.ln(30)
-    
-    pdf.set_font(pdf.default_font, "B", 14)
-    pdf.set_text_color(*WHITE_TEXT)
-    pdf.multi_cell(0, 8, "7-Day AN2B Agentic Trial - $490 one-time", align="C")
-    pdf.ln(3)
-    pdf.set_font(pdf.default_font, "", 11)
-    pdf.set_text_color(*LIGHT_GRAY)
-    pdf.multi_cell(0, 6, "(12 slots this month)", align="C")
-    
     pdf.ln(25)
     
-    btn_width = 120
-    btn_height = 18
+    box_x = 15
+    box_y = pdf.get_y()
+    box_width = 180
+    box_height = 20
+    
+    pdf.set_draw_color(*CYAN_GLOW)
+    pdf.set_line_width(2)
+    pdf.rect(box_x, box_y, box_width, box_height)
+    
+    pdf.set_xy(box_x, box_y + 5)
+    pdf.set_font(pdf.default_font, "B", 12)
+    pdf.set_text_color(*WHITE_TEXT)
+    pdf.cell(box_width, 10, "FIX THIS OR KEEP LOSING 100% OF AI LEADS TO YOUR COMPETITORS", align="C")
+    
+    pdf.set_y(box_y + box_height + 15)
+    
+    pdf.set_font(pdf.default_font, "B", 16)
+    pdf.set_text_color(*CYAN_GLOW)
+    pdf.multi_cell(0, 8, "7-Day Agentic Trial - $490 one-time", align="C")
+    pdf.ln(2)
+    pdf.set_font(pdf.default_font, "B", 11)
+    pdf.set_text_color(*WHITE_TEXT)
+    pdf.multi_cell(0, 6, "Only 12 slots this month", align="C")
+    
+    pdf.ln(12)
+    
+    pdf.set_font(pdf.default_font, "B", 11)
+    pdf.set_text_color(*CYAN_GLOW)
+    pdf.set_x(30)
+    pdf.cell(0, 6, "What you get:", align="L")
+    pdf.ln(8)
+    
+    benefits = [
+        "Full 19-page EkkoScope GEO report (you just read it)",
+        "7 days of autonomous page creation + content deployment via RapidRoof beta",
+        "Daily visibility delta tracking",
+        "Direct line to the builder"
+    ]
+    
+    pdf.set_font(pdf.default_font, "", 10)
+    pdf.set_text_color(*WHITE_TEXT)
+    for benefit in benefits:
+        pdf.set_x(35)
+        pdf.set_text_color(*CYAN_GLOW)
+        pdf.cell(5, 5, "*", align="L")
+        pdf.set_text_color(*WHITE_TEXT)
+        pdf.multi_cell(145, 5, benefit)
+        pdf.ln(2)
+    
+    pdf.ln(10)
+    
+    pdf.set_font(pdf.default_font, "B", 11)
+    pdf.set_text_color(*SUCCESS_GREEN)
+    pdf.multi_cell(0, 6, "Typical outcome: 60-90% visibility in 30-45 days", align="C")
+    pdf.ln(2)
+    pdf.set_font(pdf.default_font, "", 10)
+    pdf.set_text_color(*LIGHT_GRAY)
+    pdf.multi_cell(0, 5, "(or your money back - no questions)", align="C")
+    
+    pdf.ln(15)
+    
+    btn_width = 140
+    btn_height = 20
     btn_x = (210 - btn_width) / 2
     btn_y = pdf.get_y()
     
@@ -1375,20 +1420,14 @@ def _add_upsell_page(pdf: EkkoScopePDF, data: Dict[str, Any]):
     pdf.set_line_width(2)
     pdf.rect(btn_x, btn_y, btn_width, btn_height, style="FD")
     
-    pdf.set_xy(btn_x, btn_y + 4)
+    pdf.set_xy(btn_x, btn_y + 5)
     pdf.set_font(pdf.default_font, "B", 14)
     pdf.set_text_color(*BLACK_BG)
-    pdf.cell(btn_width, 10, "Claim My Slot - $490", align="C")
-    
-    pdf.ln(btn_height + 20)
-    
-    pdf.set_font(pdf.default_font, "", 10)
-    pdf.set_text_color(*MEDIUM_GRAY)
-    pdf.multi_cell(0, 5, "Typical outcome: 60-90% visibility in 30-45 days", align="C")
+    pdf.cell(btn_width, 10, "Claim My Slot - 12 left", align="C")
     
     pdf.set_y(270)
     pdf.set_font(pdf.default_font, "", 8)
     pdf.set_text_color(*MEDIUM_GRAY)
-    pdf.cell(0, 5, "Powered by EkkoScope GEO Engine | AI Visibility Intelligence", align="C")
+    pdf.cell(0, 5, "Powered by EkkoScope | From Any to Business", align="C")
     
     pdf.is_upsell_page = False

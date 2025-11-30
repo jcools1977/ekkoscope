@@ -791,6 +791,48 @@ async def dashboard_payment_success(request: Request, session_id: Optional[str] 
     )
 
 
+@app.get("/checkout/trial")
+async def checkout_trial(request: Request):
+    """Checkout for 7-Day Agentic Trial - $490 one-time."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login?next=/checkout/trial", status_code=302)
+    
+    try:
+        config = await load_stripe_config()
+        stripe = await get_stripe_client()
+        
+        trial_price_id = os.getenv("STRIPE_PRICE_TRIAL_490")
+        if not trial_price_id:
+            return RedirectResponse(url="/dashboard?error=trial_not_configured", status_code=302)
+        
+        domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
+        if not domain:
+            domain = "localhost:5000"
+        
+        protocol = "https" if "replit" in domain else "http"
+        base_url = f"{protocol}://{domain}"
+        
+        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}&product=trial"
+        cancel_url = f"{base_url}/dashboard"
+        
+        session = stripe.checkout.Session.create(
+            mode="payment",
+            line_items=[{"price": trial_price_id, "quantity": 1}],
+            success_url=success_url,
+            cancel_url=cancel_url,
+            customer_email=user.email,
+            metadata={
+                "user_id": str(user.id),
+                "product": "7day_agentic_trial"
+            }
+        )
+        return RedirectResponse(url=session.url, status_code=302)
+    except Exception as e:
+        print(f"Trial checkout error: {e}")
+        return RedirectResponse(url="/dashboard?error=checkout_failed", status_code=302)
+
+
 @app.get("/dashboard/business/{business_id}/audits", response_class=HTMLResponse)
 async def dashboard_business_audits(request: Request, business_id: int):
     user = get_current_user(request)

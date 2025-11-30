@@ -263,6 +263,44 @@
             border: 1px solid var(--brand-teal);
             color: var(--brand-teal);
         }
+        .trial-banner {
+            background: #000;
+            border: 2px solid #00f0ff;
+            padding: 1.5rem;
+            text-align: center;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            margin: 0;
+        }
+        
+        .trial-banner h3 {
+            margin: 0;
+            color: #00f0ff;
+            font-size: 1.1rem;
+        }
+        
+        .trial-banner p {
+            margin: 0.5rem 0;
+            font-size: 1rem;
+            color: #fff;
+        }
+        
+        .trial-banner .trial-cta {
+            display: inline-block;
+            background: #00f0ff;
+            color: #000;
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 0.75rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .trial-banner .trial-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 240, 255, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -275,6 +313,13 @@
             <a href="/auth/logout" class="logout-btn">Log Out</a>
         </div>
     </nav>
+    
+    <div class="trial-banner">
+        <h3>7-Day Agentic Trial - $490 one-time - 12 slots this month</h3>
+        <p>We deploy the exact pages and content your report just diagnosed.<br>
+        You watch your visibility climb 60-90% in 30-45 days or pay nothing.</p>
+        <a href="/checkout/trial" class="trial-cta">Claim My Slot - 12 left</a>
+    </div>
 
     <main class="dashboard-container">
         <div class="dashboard-header">
