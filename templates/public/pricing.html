@@ -23,13 +23,6 @@
             align-items: center;
         }
         
-        .nav-center {
-            flex: 2;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
         .nav-right {
             flex: 1;
             display: flex;
@@ -37,17 +30,26 @@
             align-items: center;
         }
         
-        .nav-logo {
+        .hero-logo {
             display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            text-decoration: none;
+            justify-content: center;
+            margin-bottom: 1.5rem;
         }
         
-        .nav-logo img.full-logo {
-            height: 48px;
+        .hero-logo img {
+            height: 80px;
             width: auto;
-            filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.5));
+            filter: drop-shadow(0 0 25px rgba(0, 240, 255, 0.6));
+            animation: logo-glow 3s ease-in-out infinite;
+        }
+        
+        @keyframes logo-glow {
+            0%, 100% {
+                filter: drop-shadow(0 0 25px rgba(0, 240, 255, 0.6));
+            }
+            50% {
+                filter: drop-shadow(0 0 40px rgba(0, 240, 255, 0.9));
+            }
         }
         
         .nav-links {
@@ -259,11 +261,6 @@
                 AN2B
             </a>
         </div>
-        <div class="nav-center">
-            <a href="/" class="nav-logo">
-                <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope" class="full-logo">
-            </a>
-        </div>
         <div class="nav-right nav-links">
             <a href="/" class="nav-link">Home</a>
             <a href="/auth/login" class="nav-link">Log In</a>
@@ -273,7 +270,9 @@
 
     <main>
         <section class="pricing-hero">
-            <h1>EkkoScope</h1>
+            <div class="hero-logo">
+                <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope">
+            </div>
             <p class="tagline">GEO Engine for AI Visibility</p>
         </section>
         
