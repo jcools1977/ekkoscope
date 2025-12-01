@@ -15,7 +15,7 @@
 {% endif %}
 
 {% if generated_codes %}
-<div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 240, 255, 0.1) 100%); border: 1px solid #00ff88;">
+<div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 210, 106, 0.1) 100%); border: 1px solid #00ff88;">
     <div class="card-header">
         <h2 style="color: #00ff88;">Newly Generated Codes</h2>
         <p style="color: #888; font-size: 0.875rem;">Copy these and send to your LinkedIn prospects</p>
@@ -28,7 +28,7 @@
         {% endfor %}
     </div>
     <div style="padding: 0 1rem 1rem; color: #888; font-size: 0.875rem;">
-        Share URL: <code style="background: #1a1a2e; padding: 0.25rem 0.5rem; border-radius: 4px; color: #00f0ff;">https://your-domain.com/activate?code=CODE</code>
+        Share URL: <code style="background: #1a1a2e; padding: 0.25rem 0.5rem; border-radius: 4px; color: #00D26A;">https://your-domain.com/activate?code=CODE</code>
     </div>
 </div>
 {% endif %}
@@ -49,7 +49,7 @@
                 <input type="text" name="label" placeholder="LinkedIn Campaign Dec 2025" 
                        style="width: 100%; padding: 0.75rem; background: #1a1a2e; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 1rem;">
             </div>
-            <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #00ff88 0%, #00f0ff 100%); color: #0a0a0f; border: none; padding: 0.75rem 1.5rem; font-weight: bold;">
+            <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #00ff88 0%, #00D26A 100%); color: #0a0a0f; border: none; padding: 0.75rem 1.5rem; font-weight: bold;">
                 Generate Codes
             </button>
         </div>
@@ -96,7 +96,7 @@
                 <td>{{ code.redeemed_by or '-' }}</td>
                 <td>
                     {% if code.redeemed_business %}
-                    <a href="/admin/business/{{ code.redeemed_business_id }}" style="color: #00f0ff;">{{ code.redeemed_business }}</a>
+                    <a href="/admin/business/{{ code.redeemed_business_id }}" style="color: #00D26A;">{{ code.redeemed_business }}</a>
                     {% else %}
                     -
                     {% endif %}

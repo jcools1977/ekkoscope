@@ -50,8 +50,8 @@
         }
         
         .agent-card:hover {
-            border-color: var(--accent-cyan, #00f0ff);
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+            border-color: var(--accent-cyan, #00D26A);
+            box-shadow: 0 0 20px rgba(0, 210, 106, 0.1);
         }
         
         .agent-icon {
@@ -66,7 +66,7 @@
         }
         
         .agent-card h3 {
-            color: var(--accent-cyan, #00f0ff);
+            color: var(--accent-cyan, #00D26A);
             font-size: 1.2rem;
             margin-bottom: 10px;
         }
@@ -99,11 +99,11 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #00ff80, #00f0ff);
+            background: linear-gradient(135deg, #00ff80, #00D26A);
         }
         
         .run-section {
-            background: linear-gradient(135deg, rgba(0, 255, 128, 0.1), rgba(0, 240, 255, 0.1));
+            background: linear-gradient(135deg, rgba(0, 255, 128, 0.1), rgba(0, 210, 106, 0.1));
             border: 2px solid var(--accent-green, #00ff80);
             border-radius: 16px;
             padding: 40px;
@@ -123,7 +123,7 @@
         }
         
         .run-btn {
-            background: linear-gradient(135deg, #00ff80, #00f0ff);
+            background: linear-gradient(135deg, #00ff80, #00D26A);
             color: #000;
             border: none;
             padding: 18px 50px;
@@ -147,7 +147,7 @@
         
         .bundle-section {
             background: var(--bg-card, #1a1a1f);
-            border: 2px solid var(--accent-cyan, #00f0ff);
+            border: 2px solid var(--accent-cyan, #00D26A);
             border-radius: 16px;
             padding: 40px;
             text-align: center;
@@ -169,8 +169,8 @@
         }
         
         .bundle-feature {
-            background: rgba(0, 240, 255, 0.1);
-            border: 1px solid var(--accent-cyan, #00f0ff);
+            background: rgba(0, 210, 106, 0.1);
+            border: 1px solid var(--accent-cyan, #00D26A);
             border-radius: 20px;
             padding: 8px 16px;
             font-size: 0.85rem;
@@ -178,7 +178,7 @@
         }
         
         .bundle-btn {
-            background: var(--accent-cyan, #00f0ff);
+            background: var(--accent-cyan, #00D26A);
             color: #000;
             border: none;
             padding: 15px 40px;
@@ -192,7 +192,7 @@
         
         .bundle-btn:hover {
             background: #fff;
-            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 210, 106, 0.3);
         }
         
         .audit-info {
@@ -225,7 +225,7 @@
         .back-link {
             display: inline-flex;
             align-items: center;
-            color: var(--accent-cyan, #00f0ff);
+            color: var(--accent-cyan, #00D26A);
             text-decoration: none;
             margin-bottom: 20px;
             font-size: 0.9rem;
@@ -247,7 +247,7 @@
                 <defs>
                     <linearGradient id="agentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" style="stop-color:#00ff80"/>
-                        <stop offset="100%" style="stop-color:#00f0ff"/>
+                        <stop offset="100%" style="stop-color:#00D26A"/>
                     </linearGradient>
                 </defs>
                 <circle cx="40" cy="40" r="35" fill="none" stroke="url(#agentGradient)" stroke-width="2"/>
@@ -288,7 +288,7 @@
                         <defs>
                             <linearGradient id="contentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <stop offset="0%" style="stop-color:#00ff80"/>
-                                <stop offset="100%" style="stop-color:#00f0ff"/>
+                                <stop offset="100%" style="stop-color:#00D26A"/>
                             </linearGradient>
                         </defs>
                         <rect x="5" y="5" width="40" height="40" rx="5" fill="none" stroke="url(#contentGrad)" stroke-width="2"/>
@@ -313,7 +313,7 @@
                         <defs>
                             <linearGradient id="seoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <stop offset="0%" style="stop-color:#00ff80"/>
-                                <stop offset="100%" style="stop-color:#00f0ff"/>
+                                <stop offset="100%" style="stop-color:#00D26A"/>
                             </linearGradient>
                         </defs>
                         <circle cx="25" cy="25" r="18" fill="none" stroke="url(#seoGrad)" stroke-width="2"/>
@@ -336,7 +336,7 @@
                         <defs>
                             <linearGradient id="deployGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <stop offset="0%" style="stop-color:#00ff80"/>
-                                <stop offset="100%" style="stop-color:#00f0ff"/>
+                                <stop offset="100%" style="stop-color:#00D26A"/>
                             </linearGradient>
                         </defs>
                         <polygon points="25,5 45,25 25,45 5,25" fill="none" stroke="url(#deployGrad)" stroke-width="2"/>
@@ -359,7 +359,7 @@
                         <defs>
                             <linearGradient id="verifyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <stop offset="0%" style="stop-color:#00ff80"/>
-                                <stop offset="100%" style="stop-color:#00f0ff"/>
+                                <stop offset="100%" style="stop-color:#00D26A"/>
                             </linearGradient>
                         </defs>
                         <circle cx="25" cy="25" r="20" fill="none" stroke="url(#verifyGrad)" stroke-width="2"/>
@@ -412,7 +412,7 @@
         </div>
         {% elif business.subscription_active %}
         <div class="bundle-section">
-            <h3 style="color: var(--accent-cyan, #00f0ff); margin-bottom: 10px;">UPGRADE TO AUTO-FIX</h3>
+            <h3 style="color: var(--accent-cyan, #00D26A); margin-bottom: 10px;">UPGRADE TO AUTO-FIX</h3>
             <p style="color: var(--text-secondary, #888);">You have bi-weekly reports. Add auto-fix agents!</p>
             <div class="bundle-price">$1,188<span style="font-size: 1rem; color: var(--text-muted);">/mo</span></div>
             <div class="bundle-features">
@@ -429,7 +429,7 @@
         </div>
         {% else %}
         <div class="bundle-section">
-            <h3 style="color: var(--accent-cyan, #00f0ff); margin-bottom: 10px;">GET AUTO-FIX</h3>
+            <h3 style="color: var(--accent-cyan, #00D26A); margin-bottom: 10px;">GET AUTO-FIX</h3>
             <p style="color: var(--text-secondary, #888);">Bi-weekly reports + AI agents that fix issues automatically</p>
             <div class="bundle-price">$1,188<span style="font-size: 1rem; color: var(--text-muted);">/mo</span></div>
             <div class="bundle-features">

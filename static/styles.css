@@ -12,16 +12,16 @@
     --bg-card: #111116;
     --bg-card-hover: #16161d;
     --border-color: #1a1a24;
-    --border-glow: rgba(0, 240, 255, 0.3);
+    --border-glow: rgba(0, 208, 108, 0.3);
     --text-primary: #ffffff;
     --text-secondary: #a0a0b0;
     --text-muted: #606070;
-    --accent-cyan: #00f0ff;
-    --accent-blue: #0088ff;
-    --accent-gradient: linear-gradient(135deg, #00f0ff 0%, #0088ff 100%);
+    --accent-cyan: #00D26A;
+    --accent-blue: #00D26A;
+    --accent-gradient: linear-gradient(135deg, #00D26A 0%, #00ff88 100%);
     --score-0: #ff0000;
     --score-1: #ff8800;
-    --score-2: #00f0ff;
+    --score-2: #00D26A;
     --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 }
 
@@ -46,7 +46,7 @@ body {
     background: var(--bg-card);
     border-radius: 12px;
     border: 1px solid var(--border-color);
-    box-shadow: 0 0 40px rgba(0, 240, 255, 0.03);
+    box-shadow: 0 0 40px rgba(0, 210, 106, 0.03);
     position: relative;
     overflow: hidden;
 }
@@ -71,7 +71,7 @@ body {
 .logo {
     height: 48px;
     width: auto;
-    filter: drop-shadow(0 0 12px rgba(0, 240, 255, 0.4));
+    filter: drop-shadow(0 0 12px rgba(0, 210, 106, 0.4));
 }
 
 .hero-header .tagline {
@@ -101,8 +101,8 @@ body {
 }
 
 .success-message {
-    background: rgba(0, 240, 255, 0.1);
-    border: 1px solid rgba(0, 240, 255, 0.3);
+    background: rgba(0, 210, 106, 0.1);
+    border: 1px solid rgba(0, 210, 106, 0.3);
     color: var(--accent-cyan);
     padding: 1rem 1.25rem;
     border-radius: 8px;
