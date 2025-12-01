@@ -36,10 +36,12 @@ EkkoScope is a premium SaaS web application designed to analyze and improve "AI 
 
 ## Recent Changes (November 2025)
 
-### Final Pricing Model (November 30, 2025)
+### Final Pricing Model (December 1, 2025)
 - **$490 Full GEO Report**: One-time 19-page AI visibility report (12 slots/month)
-- **$290/month Continuous**: New report every 14 days + visibility delta + email summary
-- **FIX tier**: Private/email-only - "Reply FIX after your first report, first 5 only"
+- **$290/month Continuous**: New report every 14 days + **Auto-Fix Agents run automatically** after each bi-weekly report
+  - Includes all 4 agents: Content, SEO, Deploy, Verification
+  - Fixed Report PDF generated automatically with before/after comparison
+  - No manual intervention required - agents execute on schedule
 
 ### Unified Black-Ops Design System (November 30, 2025)
 - **Color Scheme**: Pure black (#0a0a0f), cyan accents (#00f0ff), blood-red alerts (#ff0000)

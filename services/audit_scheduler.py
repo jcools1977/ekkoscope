@@ -1,13 +1,19 @@
 """
 Automatic Audit Scheduler for EkkoScope.
 Runs audits every 2 weeks for active subscribers.
+Auto-remediation agents run automatically after each bi-weekly report.
 """
 
 import asyncio
+import json
 from datetime import datetime, timedelta
 from typing import Optional
 from services.database import get_db_session, Business, Audit
 from services.audit_runner import run_audit_for_business
+from services.pdf_parser import parse_geo_report
+from services.fix_planner import generate_fix_plan
+from services.remediation_agents import RemediationOrchestrator
+from services.fixed_report import save_fixed_report
 
 
 def get_next_audit_date(from_date: Optional[datetime] = None) -> datetime:
@@ -65,9 +71,66 @@ def get_businesses_due_for_audit() -> list:
         db.close()
 
 
+def run_auto_remediation(business_id: int, audit_id: int) -> bool:
+    """
+    Run auto-remediation agents after a scheduled audit completes.
+    This is included in the $290/month Continuous subscription.
+    Returns True if remediation was successful.
+    """
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        audit = db.query(Audit).filter(Audit.id == audit_id).first()
+        
+        if not business or not audit:
+            print(f"[REMEDIATION] Business or audit not found: {business_id}/{audit_id}")
+            return False
+        
+        if not audit.pdf_path:
+            print(f"[REMEDIATION] No PDF path for audit {audit_id}")
+            return False
+        
+        print(f"[REMEDIATION] Starting auto-remediation for {business.business_name}")
+        
+        parsed_report = parse_geo_report(audit.pdf_path)
+        
+        business_context = {
+            "business_name": business.business_name,
+            "business_type": business.business_type or "",
+            "domain": business.domain or "",
+            "categories": business.categories.split(",") if business.categories else []
+        }
+        
+        fix_plan = generate_fix_plan(parsed_report, business_context)
+        
+        orchestrator = RemediationOrchestrator(parsed_report, business_context)
+        remediation_result = orchestrator.run_full_remediation(fix_plan)
+        
+        audit.remediation_result = json.dumps(remediation_result)
+        
+        fixed_pdf_path = save_fixed_report(
+            business.business_name,
+            parsed_report,
+            remediation_result
+        )
+        audit.fixed_report_path = fixed_pdf_path
+        
+        db.commit()
+        
+        print(f"[REMEDIATION] Completed for {business.business_name} - Fixed report: {fixed_pdf_path}")
+        return True
+        
+    except Exception as e:
+        print(f"[REMEDIATION] Error for business {business_id}: {e}")
+        return False
+    finally:
+        db.close()
+
+
 async def run_scheduled_audit(business_id: int) -> Optional[int]:
     """
     Run a scheduled audit for a business.
+    After audit completes, automatically runs remediation agents.
     Returns the audit ID if successful.
     """
     db = get_db_session()
@@ -90,6 +153,10 @@ async def run_scheduled_audit(business_id: int) -> Optional[int]:
         try:
             run_audit_for_business(business.id, audit_id)
             update_next_audit_date(business.id)
+            
+            run_auto_remediation(business.id, audit_id)
+            print(f"[SCHEDULER] Completed audit + remediation for business {business_id}")
+            
         except Exception as e:
             print(f"Scheduled audit failed for business {business.id}: {e}")
             audit.status = "error"
