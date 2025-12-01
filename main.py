@@ -1038,10 +1038,13 @@ async def get_fixed_report(request: Request, business_id: int, audit_id: int):
 
 @app.get("/checkout/autofix")
 async def checkout_autofix(request: Request):
-    """Checkout for $1188/month Auto-Fix subscription (reports + agents)."""
+    """Checkout for $1188/month Auto-Fix subscription (reports + agents). Admin only during beta."""
     user = get_current_user(request)
     if not user:
         return RedirectResponse(url="/auth/login?next=/checkout/autofix", status_code=302)
+    
+    if not user.is_admin:
+        return RedirectResponse(url="/pricing?error=beta_admin_only", status_code=302)
     
     try:
         await load_stripe_config()
@@ -1087,10 +1090,13 @@ async def checkout_autofix(request: Request):
 
 @app.post("/dashboard/business/{business_id}/checkout/autofix")
 async def dashboard_checkout_autofix(request: Request, business_id: int):
-    """Checkout for $1188/month Auto-Fix subscription for a specific business."""
+    """Checkout for $1188/month Auto-Fix subscription for a specific business. Admin only during beta."""
     user = get_current_user(request)
     if not user:
         return RedirectResponse(url="/auth/login", status_code=302)
+    
+    if not user.is_admin:
+        return RedirectResponse(url="/dashboard?error=beta_admin_only", status_code=302)
     
     db = get_db_session()
     try:
@@ -2267,9 +2273,16 @@ async def snapshot_audit_download(request: Request, audit_id: int):
 @app.get("/pricing", response_class=HTMLResponse)
 async def pricing_page(request: Request):
     """Show pricing page with both Snapshot and Ongoing plans."""
+    user = get_current_user(request)
+    error = request.query_params.get("error")
     return templates.TemplateResponse(
         "public/pricing.html",
-        {"request": request}
+        {
+            "request": request,
+            "user": user,
+            "is_admin": user.is_admin if user else False,
+            "error": error
+        }
     )
 
 

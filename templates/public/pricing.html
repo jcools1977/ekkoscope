@@ -269,6 +269,12 @@
     </nav>
 
     <main>
+        {% if error == 'beta_admin_only' %}
+        <div style="max-width: 600px; margin: 1rem auto; padding: 1rem 1.5rem; background: rgba(255, 136, 0, 0.1); border: 1px solid #ff8800; border-radius: 8px; text-align: center; color: #ff8800;">
+            The Auto-Fix tier is currently in beta testing and available to administrators only.
+        </div>
+        {% endif %}
+        
         <section class="pricing-hero">
             <div class="hero-logo">
                 <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope">
@@ -300,6 +306,19 @@
                     <div class="slots">Cancel anytime</div>
                 </div>
                 
+                {% if is_admin %}
+                <div class="pricing-card" style="position: relative; border: 2px solid #ff8800;">
+                    <div style="position: absolute; top: 1rem; right: 1rem; background: #ff8800; color: #000; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold;">ADMIN BETA</div>
+                    <div class="price">$1,188</div>
+                    <div class="period">/ month</div>
+                    <div class="description">
+                        Reports + Auto-Fix Agents<br>
+                        AI agents automatically generate fixes after every bi-weekly report
+                    </div>
+                    <a href="/checkout/autofix" class="cta-btn" style="background: linear-gradient(135deg, #ff8800, #ff6600); border-color: #ff8800;">Subscribe Now</a>
+                    <div class="slots" style="color: #ff8800;">Beta Access Enabled</div>
+                </div>
+                {% else %}
                 <div class="pricing-card" style="opacity: 0.7; position: relative;">
                     <div style="position: absolute; top: 1rem; right: 1rem; background: #ff8800; color: #000; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold;">BETA</div>
                     <div class="price" style="text-decoration: line-through; color: #666;">$1,188</div>
@@ -311,6 +330,7 @@
                     <div class="cta-btn" style="cursor: not-allowed; opacity: 0.5; pointer-events: none;">Coming Soon</div>
                     <div class="slots" style="color: #ff8800;">In Beta Testing</div>
                 </div>
+                {% endif %}
             </div>
             
             <div class="footer-note">
