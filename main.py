@@ -1385,6 +1385,123 @@ async def admin_send_followups(request: Request, background_tasks: BackgroundTas
         db.close()
 
 
+@app.get("/admin/activation-codes", response_class=HTMLResponse)
+async def admin_activation_codes(request: Request):
+    """List and manage activation codes."""
+    if not is_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    from services.database import ActivationCode
+    
+    db = get_db_session()
+    try:
+        codes = (
+            db.query(ActivationCode)
+            .order_by(ActivationCode.created_at.desc())
+            .all()
+        )
+        
+        code_data = []
+        for code in codes:
+            code_data.append({
+                "id": code.id,
+                "code": code.code,
+                "label": code.label,
+                "status": code.status,
+                "uses_remaining": code.uses_remaining,
+                "max_uses": code.max_uses,
+                "expires_at": code.expires_at,
+                "redeemed_by": code.redeemed_by.email if code.redeemed_by else None,
+                "redeemed_business": code.redeemed_business.name if code.redeemed_business else None,
+                "redeemed_at": code.redeemed_at,
+                "created_at": code.created_at
+            })
+        
+        success = request.query_params.get("success")
+        generated_codes = request.query_params.get("codes", "").split(",") if request.query_params.get("codes") else []
+        
+        return templates.TemplateResponse(
+            "admin/activation_codes.html",
+            {
+                "request": request,
+                "codes": code_data,
+                "success": success,
+                "generated_codes": [c for c in generated_codes if c],
+                "username": request.session.get("username", "Admin")
+            }
+        )
+    finally:
+        db.close()
+
+
+@app.post("/admin/activation-codes/generate")
+async def admin_generate_codes(
+    request: Request,
+    count: int = Form(1),
+    label: str = Form("")
+):
+    """Generate new activation codes."""
+    if not is_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    from services.database import ActivationCode, generate_activation_code
+    
+    if count < 1:
+        count = 1
+    if count > 100:
+        count = 100
+    
+    db = get_db_session()
+    try:
+        user = get_current_user(request)
+        admin_id = user.id if user else None
+        
+        generated = []
+        for _ in range(count):
+            code_str = generate_activation_code(8)
+            while db.query(ActivationCode).filter(ActivationCode.code == code_str).first():
+                code_str = generate_activation_code(8)
+            
+            code = ActivationCode(
+                code=code_str,
+                label=label.strip() or f"LinkedIn Campaign",
+                max_uses=1,
+                uses_remaining=1,
+                created_by_admin_id=admin_id
+            )
+            db.add(code)
+            generated.append(code_str)
+        
+        db.commit()
+        
+        codes_param = ",".join(generated)
+        return RedirectResponse(
+            url=f"/admin/activation-codes?success=Generated {count} codes&codes={codes_param}",
+            status_code=302
+        )
+    finally:
+        db.close()
+
+
+@app.post("/admin/activation-codes/{code_id}/delete")
+async def admin_delete_code(request: Request, code_id: int):
+    """Delete an activation code."""
+    if not is_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    from services.database import ActivationCode
+    
+    db = get_db_session()
+    try:
+        code = db.query(ActivationCode).filter(ActivationCode.id == code_id).first()
+        if code:
+            db.delete(code)
+            db.commit()
+        return RedirectResponse(url="/admin/activation-codes?success=Code deleted", status_code=302)
+    finally:
+        db.close()
+
+
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_dashboard(request: Request):
     """Admin dashboard with stats and recent audits."""
@@ -2154,6 +2271,115 @@ async def pricing_page(request: Request):
         "public/pricing.html",
         {"request": request}
     )
+
+
+# =============================================================================
+# ACTIVATION CODE REDEMPTION (LINKEDIN CAMPAIGN)
+# =============================================================================
+
+@app.get("/activate", response_class=HTMLResponse)
+async def activate_landing(request: Request):
+    """Landing page for activation code redemption."""
+    user = get_current_user(request)
+    code = request.query_params.get("code", "")
+    error = request.query_params.get("error")
+    
+    return templates.TemplateResponse(
+        "public/activate.html",
+        {
+            "request": request,
+            "user": user,
+            "prefilled_code": code,
+            "error": error
+        }
+    )
+
+
+@app.post("/activate")
+async def activate_submit(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    code: str = Form(...),
+    name: str = Form(""),
+    primary_domain: str = Form(""),
+    business_type: str = Form("local_service"),
+    regions: str = Form(""),
+    categories: str = Form("")
+):
+    """Validate activation code and create business + trigger audit."""
+    from services.database import ActivationCode
+    
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url=f"/auth/login?next=/activate?code={code}", status_code=302)
+    
+    db = get_db_session()
+    try:
+        activation = db.query(ActivationCode).filter(
+            ActivationCode.code == code.strip().upper()
+        ).first()
+        
+        if not activation:
+            return RedirectResponse(url="/activate?error=Invalid activation code", status_code=302)
+        
+        if not activation.is_valid:
+            return RedirectResponse(url=f"/activate?error=This code has already been used or expired", status_code=302)
+        
+        if not name or not primary_domain:
+            return templates.TemplateResponse(
+                "public/activate.html",
+                {
+                    "request": request,
+                    "user": user,
+                    "prefilled_code": code,
+                    "error": "Please fill in your business name and website",
+                    "show_business_form": True
+                }
+            )
+        
+        regions_list = [r.strip() for r in regions.split(",") if r.strip()]
+        categories_list = [c.strip() for c in categories.split(",") if c.strip()]
+        
+        business = Business(
+            owner_user_id=user.id,
+            name=name,
+            primary_domain=primary_domain,
+            business_type=business_type,
+            contact_name=user.full_name,
+            contact_email=user.email,
+            source="activation_code",
+            plan="activation"
+        )
+        business.set_regions(regions_list)
+        business.set_categories(categories_list)
+        
+        db.add(business)
+        db.commit()
+        db.refresh(business)
+        
+        activation.uses_remaining -= 1
+        activation.redeemed_by_user_id = user.id
+        activation.redeemed_business_id = business.id
+        activation.redeemed_at = datetime.utcnow()
+        db.commit()
+        
+        audit = Audit(
+            business_id=business.id,
+            channel="activation_code",
+            status="pending"
+        )
+        db.add(audit)
+        db.commit()
+        db.refresh(audit)
+        
+        background_tasks.add_task(run_audit_background, business.id, audit.id)
+        
+        return RedirectResponse(
+            url=f"/dashboard/business/{business.id}?activated=true",
+            status_code=302
+        )
+    finally:
+        db.close()
 
 
 # =============================================================================

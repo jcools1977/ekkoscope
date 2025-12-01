@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activate Your Free GEO Report - EkkoScope</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .activate-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .activate-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .activate-header img {
+            height: 60px;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.5));
+        }
+        
+        .activate-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #00ff88 0%, #00f0ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .activate-header p {
+            color: #888;
+            font-size: 1rem;
+        }
+        
+        .activate-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+        
+        .code-input-wrapper {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        
+        .code-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: #1a1a2e;
+            border: 2px solid #333;
+            border-radius: 8px;
+            color: #00ff88;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            transition: border-color 0.3s;
+        }
+        
+        .code-input:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+        
+        .code-input::placeholder {
+            color: #444;
+            letter-spacing: 2px;
+        }
+        
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #888;
+            font-size: 0.875rem;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #00f0ff;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #00ff88 0%, #00f0ff 100%);
+            border: none;
+            border-radius: 8px;
+            color: #0a0a0f;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
+        }
+        
+        .error-message {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .login-prompt {
+            text-align: center;
+            padding: 1.5rem;
+            background: rgba(0, 240, 255, 0.05);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        
+        .login-prompt p {
+            color: #888;
+            margin-bottom: 1rem;
+        }
+        
+        .login-prompt a {
+            color: #00f0ff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .login-prompt a:hover {
+            text-decoration: underline;
+        }
+        
+        .benefits-list {
+            margin: 2rem 0;
+            padding: 0;
+            list-style: none;
+        }
+        
+        .benefits-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            color: #ccc;
+            border-bottom: 1px solid #222;
+        }
+        
+        .benefits-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .benefits-list svg {
+            color: #00ff88;
+            flex-shrink: 0;
+        }
+        
+        .footer-text {
+            text-align: center;
+            color: #555;
+            font-size: 0.8rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="activate-container">
+        <div class="activate-header">
+            <a href="/">
+                <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope">
+            </a>
+            <h1>Activate Your Free Report</h1>
+            <p>LinkedIn Campaign Exclusive</p>
+        </div>
+        
+        {% if error %}
+        <div class="error-message">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <div class="activate-card">
+            {% if not user %}
+            <p style="color: #ccc; text-align: center; margin-bottom: 1.5rem;">
+                Enter your activation code to claim your free AI Visibility Report
+            </p>
+            
+            <form action="/activate" method="POST">
+                <div class="code-input-wrapper">
+                    <input type="text" name="code" class="code-input" 
+                           placeholder="ENTER CODE"
+                           value="{{ prefilled_code or '' }}"
+                           maxlength="10" required>
+                </div>
+                
+                <div class="login-prompt">
+                    <p>You need an account to claim your report</p>
+                    <a href="/auth/signup?next=/activate{% if prefilled_code %}?code={{ prefilled_code }}{% endif %}">Create Account</a>
+                    &nbsp;&nbsp;or&nbsp;&nbsp;
+                    <a href="/auth/login?next=/activate{% if prefilled_code %}?code={{ prefilled_code }}{% endif %}">Login</a>
+                </div>
+            </form>
+            
+            {% else %}
+            
+            <form action="/activate" method="POST">
+                <div class="code-input-wrapper">
+                    <input type="text" name="code" class="code-input" 
+                           placeholder="ENTER CODE"
+                           value="{{ prefilled_code or '' }}"
+                           maxlength="10" required>
+                </div>
+                
+                {% if show_business_form or prefilled_code %}
+                <div style="border-top: 1px solid #333; padding-top: 1.5rem; margin-top: 1rem;">
+                    <h3 style="color: #00f0ff; margin-bottom: 1rem; font-size: 1rem;">Your Business Details</h3>
+                    
+                    <div class="form-group">
+                        <label>Business Name *</label>
+                        <input type="text" name="name" placeholder="Acme Roofing LLC" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Website URL *</label>
+                        <input type="text" name="primary_domain" placeholder="acmeroofing.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Business Type</label>
+                        <select name="business_type">
+                            <option value="local_service">Local Service</option>
+                            <option value="ecommerce">E-Commerce</option>
+                            <option value="b2b">B2B</option>
+                            <option value="saas">SaaS</option>
+                            <option value="retail">Retail</option>
+                            <option value="restaurant">Restaurant</option>
+                            <option value="healthcare">Healthcare</option>
+                            <option value="professional">Professional Services</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Service Area / City</label>
+                        <input type="text" name="regions" placeholder="Denver, Colorado">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Main Services (comma-separated)</label>
+                        <input type="text" name="categories" placeholder="roofing, repairs, installations">
+                    </div>
+                </div>
+                {% endif %}
+                
+                <button type="submit" class="submit-btn">
+                    {% if show_business_form or prefilled_code %}
+                    Generate My Free Report
+                    {% else %}
+                    Validate Code
+                    {% endif %}
+                </button>
+            </form>
+            
+            <p style="text-align: center; color: #888; margin-top: 1rem; font-size: 0.875rem;">
+                Logged in as {{ user.email }}
+            </p>
+            
+            {% endif %}
+        </div>
+        
+        <ul class="benefits-list">
+            <li>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Full 19-page AI Visibility Report
+            </li>
+            <li>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Analysis across ChatGPT, Perplexity, and Gemini
+            </li>
+            <li>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Competitor visibility comparison
+            </li>
+            <li>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                30-day action plan with page blueprints
+            </li>
+        </ul>
+        
+        <p class="footer-text">
+            Powered by EkkoScope GEO Engine
+        </p>
+    </div>
+</body>
+</html>

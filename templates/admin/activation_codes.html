@@ -1,0 +1,125 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Activation Codes - EkkoScope Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Activation Codes</h1>
+    <p>Generate one-time codes for LinkedIn campaign prospects</p>
+</div>
+
+{% if success %}
+<div class="alert alert-success" style="background: rgba(0, 255, 136, 0.1); border: 1px solid #00ff88; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+    <strong style="color: #00ff88;">{{ success }}</strong>
+</div>
+{% endif %}
+
+{% if generated_codes %}
+<div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 240, 255, 0.1) 100%); border: 1px solid #00ff88;">
+    <div class="card-header">
+        <h2 style="color: #00ff88;">Newly Generated Codes</h2>
+        <p style="color: #888; font-size: 0.875rem;">Copy these and send to your LinkedIn prospects</p>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; padding: 1rem;">
+        {% for code in generated_codes %}
+        <div style="background: #0a0a0f; border: 2px solid #00ff88; padding: 0.75rem 1.25rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: bold; color: #00ff88; letter-spacing: 2px;">
+            {{ code }}
+        </div>
+        {% endfor %}
+    </div>
+    <div style="padding: 0 1rem 1rem; color: #888; font-size: 0.875rem;">
+        Share URL: <code style="background: #1a1a2e; padding: 0.25rem 0.5rem; border-radius: 4px; color: #00f0ff;">https://your-domain.com/activate?code=CODE</code>
+    </div>
+</div>
+{% endif %}
+
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <h2>Generate New Codes</h2>
+    </div>
+    <form action="/admin/activation-codes/generate" method="POST" style="padding: 1.5rem;">
+        <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 0 0 120px;">
+                <label style="display: block; margin-bottom: 0.5rem; color: #888;">Quantity</label>
+                <input type="number" name="count" value="20" min="1" max="100" 
+                       style="width: 100%; padding: 0.75rem; background: #1a1a2e; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 1rem;">
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <label style="display: block; margin-bottom: 0.5rem; color: #888;">Label (optional)</label>
+                <input type="text" name="label" placeholder="LinkedIn Campaign Dec 2025" 
+                       style="width: 100%; padding: 0.75rem; background: #1a1a2e; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 1rem;">
+            </div>
+            <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #00ff88 0%, #00f0ff 100%); color: #0a0a0f; border: none; padding: 0.75rem 1.5rem; font-weight: bold;">
+                Generate Codes
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>All Activation Codes</h2>
+        <span style="color: #888;">{{ codes|length }} total</span>
+    </div>
+    
+    {% if codes %}
+    <table>
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Label</th>
+                <th>Status</th>
+                <th>Redeemed By</th>
+                <th>Business</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for code in codes %}
+            <tr>
+                <td>
+                    <code style="background: #1a1a2e; padding: 0.25rem 0.5rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-weight: bold; 
+                                 color: {% if code.status == 'ACTIVE' %}#00ff88{% elif code.status == 'USED' %}#888{% else %}#ff4444{% endif %};">
+                        {{ code.code }}
+                    </code>
+                </td>
+                <td style="color: #888;">{{ code.label or '-' }}</td>
+                <td>
+                    <span class="status-badge" style="
+                        background: {% if code.status == 'ACTIVE' %}rgba(0, 255, 136, 0.2){% elif code.status == 'USED' %}rgba(136, 136, 136, 0.2){% else %}rgba(255, 68, 68, 0.2){% endif %};
+                        color: {% if code.status == 'ACTIVE' %}#00ff88{% elif code.status == 'USED' %}#888{% else %}#ff4444{% endif %};
+                        padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+                        {{ code.status }}
+                    </span>
+                </td>
+                <td>{{ code.redeemed_by or '-' }}</td>
+                <td>
+                    {% if code.redeemed_business %}
+                    <a href="/admin/business/{{ code.redeemed_business_id }}" style="color: #00f0ff;">{{ code.redeemed_business }}</a>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td style="color: #888;">{{ code.created_at.strftime('%Y-%m-%d') if code.created_at else '-' }}</td>
+                <td>
+                    {% if code.status == 'ACTIVE' %}
+                    <form action="/admin/activation-codes/{{ code.id }}/delete" method="POST" style="display: inline;" 
+                          onsubmit="return confirm('Delete this code?');">
+                        <button type="submit" style="background: transparent; border: none; color: #ff4444; cursor: pointer; font-size: 0.875rem;">
+                            Delete
+                        </button>
+                    </form>
+                    {% else %}
+                    <span style="color: #444;">-</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="padding: 2rem; text-align: center; color: #888;">No activation codes yet. Generate some above!</p>
+    {% endif %}
+</div>
+{% endblock %}

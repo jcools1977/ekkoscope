@@ -310,6 +310,56 @@ class RoadmapTask(Base):
     business = relationship("Business")
 
 
+class ActivationCode(Base):
+    """Activation codes for promotional free reports (LinkedIn campaign, etc.)."""
+    __tablename__ = "activation_codes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String(20), unique=True, nullable=False, index=True)
+    label = Column(String(100), nullable=True)
+    max_uses = Column(Integer, default=1)
+    uses_remaining = Column(Integer, default=1)
+    expires_at = Column(DateTime, nullable=True)
+    
+    created_by_admin_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    redeemed_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    redeemed_business_id = Column(Integer, ForeignKey("businesses.id"), nullable=True)
+    redeemed_at = Column(DateTime, nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    created_by = relationship("User", foreign_keys=[created_by_admin_id])
+    redeemed_by = relationship("User", foreign_keys=[redeemed_by_user_id])
+    redeemed_business = relationship("Business")
+    
+    @property
+    def is_valid(self) -> bool:
+        """Check if code can still be redeemed."""
+        if self.uses_remaining <= 0:
+            return False
+        if self.expires_at and datetime.utcnow() > self.expires_at:
+            return False
+        return True
+    
+    @property
+    def status(self) -> str:
+        """Get human-readable status."""
+        if self.uses_remaining <= 0:
+            return "USED"
+        if self.expires_at and datetime.utcnow() > self.expires_at:
+            return "EXPIRED"
+        return "ACTIVE"
+
+
+def generate_activation_code(length: int = 8) -> str:
+    """Generate a short, URL-safe activation code."""
+    import secrets
+    import string
+    chars = string.ascii_uppercase + string.digits
+    chars = chars.replace('O', '').replace('0', '').replace('I', '').replace('1', '').replace('L', '')
+    return ''.join(secrets.choice(chars) for _ in range(length))
+
+
 def derive_region_group(regions: List[str]) -> str:
     """Derive a region group from a list of regions for pattern matching."""
     if not regions:
