@@ -36,6 +36,13 @@ EkkoScope is a premium SaaS web application designed to analyze and improve "AI 
 
 ## Recent Changes (November 2025)
 
+### Activation Code System (December 1, 2025)
+- **LinkedIn Campaign Support**: Generate one-time-use activation codes for prospects
+- **Admin Panel**: `/admin/activation-codes` - generate single or batch codes (up to 100)
+- **User Flow**: `/activate?code=XXXXXXXX` - users redeem codes for free report
+- **Tracking**: Each code tracks who redeemed it, which business, and when
+- **Database**: `ActivationCode` model with code, label, uses_remaining, expiration
+
 ### Final Pricing Model (December 1, 2025)
 - **$490 Full GEO Report**: One-time 19-page AI visibility report (12 slots/month)
 - **$290/month Continuous**: Bi-weekly reports only + visibility delta tracking
