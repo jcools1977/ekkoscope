@@ -186,6 +186,8 @@ class Audit(Base):
     pdf_path = Column(String(500), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
+    remediation_result = Column(Text, nullable=True)
+    fixed_report_path = Column(String(500), nullable=True)
     
     business = relationship("Business", back_populates="audits")
     
@@ -214,6 +216,15 @@ class Audit(Base):
     
     def set_suggestions(self, data: dict):
         self.suggestions_json = json.dumps(data)
+    
+    @property
+    def report_path(self) -> Optional[str]:
+        """Alias for pdf_path for compatibility."""
+        return self.pdf_path
+    
+    @report_path.setter
+    def report_path(self, value: str):
+        self.pdf_path = value
 
 
 class AuditQuery(Base):

@@ -893,6 +893,197 @@ async def checkout_continuous(request: Request):
         return RedirectResponse(url="/dashboard?error=checkout_failed", status_code=302)
 
 
+@app.get("/dashboard/business/{business_id}/audit/{audit_id}/remediate", response_class=HTMLResponse)
+async def dashboard_remediate_audit(request: Request, business_id: int, audit_id: int):
+    """View remediation options for a completed audit."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(
+            Business.id == business_id,
+            Business.owner_user_id == user.id
+        ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        audit = db.query(Audit).filter(
+            Audit.id == audit_id,
+            Audit.business_id == business.id
+        ).first()
+        
+        if not audit or audit.status not in ("completed", "done"):
+            return RedirectResponse(url=f"/dashboard/business/{business_id}", status_code=302)
+        
+        return templates.TemplateResponse(
+            "dashboard/remediate.html",
+            {"request": request, "user": user, "business": business, "audit": audit}
+        )
+    finally:
+        db.close()
+
+
+@app.post("/dashboard/business/{business_id}/audit/{audit_id}/run-remediation")
+async def run_remediation(request: Request, business_id: int, audit_id: int, background_tasks: BackgroundTasks):
+    """Run full auto-remediation on an audit."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(
+            Business.id == business_id,
+            Business.owner_user_id == user.id
+        ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        audit = db.query(Audit).filter(
+            Audit.id == audit_id,
+            Audit.business_id == business.id,
+            Audit.status.in_(["completed", "done"])
+        ).first()
+        
+        if not audit:
+            return RedirectResponse(url=f"/dashboard/business/{business_id}", status_code=302)
+        
+        from services.pdf_parser import parse_geo_report
+        from services.fix_planner import generate_fix_plan
+        from services.remediation_agents import RemediationOrchestrator
+        from services.fixed_report import save_fixed_report
+        
+        report_path = audit.report_path
+        if not report_path or not os.path.exists(report_path):
+            return RedirectResponse(url=f"/dashboard/business/{business_id}/audit/{audit_id}?error=no_report", status_code=302)
+        
+        try:
+            parsed_report = parse_geo_report(report_path)
+            
+            business_context = {
+                "business_type": business.business_type or "",
+                "domain": business.domain or "",
+                "categories": business.categories or []
+            }
+            
+            fix_plan = generate_fix_plan(parsed_report, business_context)
+            
+            orchestrator = RemediationOrchestrator(parsed_report, business_context)
+            remediation_result = orchestrator.run_full_remediation(fix_plan)
+            
+            fixed_report_path = save_fixed_report(
+                business.business_name,
+                remediation_result
+            )
+            
+            audit.remediation_result = json.dumps(remediation_result)
+            audit.fixed_report_path = fixed_report_path
+            db.commit()
+            
+            return RedirectResponse(
+                url=f"/dashboard/business/{business_id}/audit/{audit_id}/fixed-report",
+                status_code=302
+            )
+            
+        except Exception as e:
+            print(f"Remediation error: {e}")
+            return RedirectResponse(
+                url=f"/dashboard/business/{business_id}/audit/{audit_id}?error=remediation_failed",
+                status_code=302
+            )
+    finally:
+        db.close()
+
+
+@app.get("/dashboard/business/{business_id}/audit/{audit_id}/fixed-report")
+async def get_fixed_report(request: Request, business_id: int, audit_id: int):
+    """Download the fixed report PDF."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(
+            Business.id == business_id,
+            Business.owner_user_id == user.id
+        ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        audit = db.query(Audit).filter(
+            Audit.id == audit_id,
+            Audit.business_id == business.id
+        ).first()
+        
+        if not audit or not audit.fixed_report_path:
+            return RedirectResponse(url=f"/dashboard/business/{business_id}/audit/{audit_id}", status_code=302)
+        
+        if not os.path.exists(audit.fixed_report_path):
+            return RedirectResponse(url=f"/dashboard/business/{business_id}/audit/{audit_id}", status_code=302)
+        
+        return FileResponse(
+            audit.fixed_report_path,
+            media_type="application/pdf",
+            filename=os.path.basename(audit.fixed_report_path)
+        )
+    finally:
+        db.close()
+
+
+@app.get("/checkout/bundle")
+async def checkout_bundle(request: Request):
+    """Checkout for $1188 Sentinel OS + EkkoScope Fix Bundle."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login?next=/checkout/bundle", status_code=302)
+    
+    try:
+        await load_stripe_config()
+        stripe_client = get_stripe_client()
+        
+        domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
+        if not domain:
+            domain = "localhost:5000"
+        
+        protocol = "https" if "replit" in domain else "http"
+        base_url = f"{protocol}://{domain}"
+        
+        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}&product=bundle"
+        cancel_url = f"{base_url}/dashboard"
+        
+        session = stripe_client.checkout.Session.create(
+            mode="payment",
+            line_items=[{
+                "price_data": {
+                    "currency": "usd",
+                    "unit_amount": 118800,
+                    "product_data": {
+                        "name": "Sentinel OS + EkkoScope Fix Bundle",
+                        "description": "Complete AI visibility monitoring and auto-remediation suite"
+                    }
+                },
+                "quantity": 1
+            }],
+            success_url=success_url,
+            cancel_url=cancel_url,
+            customer_email=user.email,
+            metadata={
+                "user_id": str(user.id),
+                "product": "bundle_1188"
+            }
+        )
+        return RedirectResponse(url=session.url, status_code=302)
+    except Exception as e:
+        print(f"Bundle checkout error: {e}")
+        return RedirectResponse(url="/dashboard?error=checkout_failed", status_code=302)
+
+
 @app.get("/dashboard/business/{business_id}/audits", response_class=HTMLResponse)
 async def dashboard_business_audits(request: Request, business_id: int):
     user = get_current_user(request)

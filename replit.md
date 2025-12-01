@@ -2,7 +2,37 @@
 
 ## Overview
 
-EkkoScope is a premium SaaS web application designed to analyze and improve "AI visibility" for businesses. It assesses how frequently businesses are recommended by AI assistants like ChatGPT by running comprehensive queries against AI APIs. The system determines prominence compared to competitors and provides actionable content recommendations. The project aims to empower businesses to understand and optimize their presence in AI-driven search and recommendation landscapes. Key capabilities include AI visibility audits, premium PDF report generation, and integrated content recommendations.
+EkkoScope is a premium SaaS web application designed to analyze and improve "AI visibility" for businesses. It assesses how frequently businesses are recommended by AI assistants like ChatGPT by running comprehensive queries against AI APIs. The system determines prominence compared to competitors and provides actionable content recommendations. The project aims to empower businesses to understand and optimize their presence in AI-driven search and recommendation landscapes. Key capabilities include AI visibility audits, premium PDF report generation, integrated content recommendations, and now **autonomous auto-remediation** via 4 specialized AI agents.
+
+## Recent Changes (December 2025)
+
+### EkkoScope v4 - Auto-Fix Agents (December 1, 2025)
+- **FixEngine Core**: Full auto-remediation system that parses GEO reports and generates fixes automatically
+- **PDF Parser**: PyPDF2-based extraction of visibility issues, scores, competitors, and recommendations
+- **AI Fix Planner**: GPT-4o powered analysis that generates comprehensive remediation plans
+- **4 Autonomous Agents**:
+  - **Content Agent**: Generates optimized meta descriptions, FAQ sections, page content
+  - **SEO Agent**: Creates JSON-LD schema markup (LocalBusiness, FAQPage, Service)
+  - **Deploy Agent**: Generates WordPress PHP, raw HTML, and API payloads
+  - **Verification Agent**: Calculates before/after metrics and improvement projections
+- **Fixed Report PDF**: Before/after comparison showing visibility improvement (e.g., 0% -> 90%)
+- **$1188 Bundle**: Sentinel OS + EkkoScope Fix combo checkout
+
+### New v4 Files
+- `services/pdf_parser.py` - PyPDF2 report extraction with issue/competitor/query parsing
+- `services/fix_planner.py` - GPT-4o powered fix plan generation
+- `services/remediation_agents.py` - 4 agent orchestration system
+- `services/fixed_report.py` - Before/after PDF generation with neon green theme
+- `templates/dashboard/remediate.html` - Agent launch UI with $1188 bundle upsell
+
+### Database Updates
+- `remediation_result` - JSON storage for complete agent outputs
+- `fixed_report_path` - Path to generated fixed report PDF
+
+### Sentinel OS Integration
+- Real-time logging of AI queries to Sentinel OS dashboard
+- Report generation events tracked
+- Connected via `services/ekkoscope_sentinel.py`
 
 ## Recent Changes (November 2025)
 

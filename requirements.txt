@@ -22,3 +22,4 @@ passlib
 google-generativeai
 pinecone
 requests
+PyPDF2

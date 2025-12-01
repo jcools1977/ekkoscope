@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Fix Agents - {{ business.business_name }} | EkkoScope</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .remediate-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .hero-section {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .hero-section h1 {
+            font-size: 2.5rem;
+            color: var(--accent-green, #00ff80);
+            margin-bottom: 10px;
+        }
+        
+        .hero-section p {
+            color: var(--text-secondary, #888);
+            font-size: 1.1rem;
+        }
+        
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 768px) {
+            .agents-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .agent-card {
+            background: var(--bg-card, #1a1a1f);
+            border: 1px solid var(--border-color, #333);
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .agent-card:hover {
+            border-color: var(--accent-cyan, #00f0ff);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+        }
+        
+        .agent-icon {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 15px;
+        }
+        
+        .agent-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .agent-card h3 {
+            color: var(--accent-cyan, #00f0ff);
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .agent-card p {
+            color: var(--text-secondary, #888);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .agent-features {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color, #333);
+        }
+        
+        .agent-features li {
+            color: var(--text-primary, #fff);
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .agent-features li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ff80, #00f0ff);
+        }
+        
+        .run-section {
+            background: linear-gradient(135deg, rgba(0, 255, 128, 0.1), rgba(0, 240, 255, 0.1));
+            border: 2px solid var(--accent-green, #00ff80);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .run-section h2 {
+            color: var(--accent-green, #00ff80);
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+        
+        .run-section p {
+            color: var(--text-secondary, #888);
+            margin-bottom: 25px;
+        }
+        
+        .run-btn {
+            background: linear-gradient(135deg, #00ff80, #00f0ff);
+            color: #000;
+            border: none;
+            padding: 18px 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.3s ease;
+        }
+        
+        .run-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 128, 0.3);
+        }
+        
+        .run-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .bundle-section {
+            background: var(--bg-card, #1a1a1f);
+            border: 2px solid var(--accent-cyan, #00f0ff);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .bundle-price {
+            font-size: 3rem;
+            color: var(--accent-green, #00ff80);
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .bundle-features {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .bundle-feature {
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid var(--accent-cyan, #00f0ff);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            color: var(--text-primary, #fff);
+        }
+        
+        .bundle-btn {
+            background: var(--accent-cyan, #00f0ff);
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.3s ease;
+        }
+        
+        .bundle-btn:hover {
+            background: #fff;
+            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.3);
+        }
+        
+        .audit-info {
+            background: var(--bg-card, #1a1a1f);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .audit-info-item {
+            text-align: center;
+        }
+        
+        .audit-info-item label {
+            display: block;
+            color: var(--text-secondary, #888);
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .audit-info-item span {
+            color: var(--text-primary, #fff);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            color: var(--accent-cyan, #00f0ff);
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="remediate-container">
+        <a href="/dashboard/business/{{ business.id }}" class="back-link">
+            &larr; Back to {{ business.business_name }}
+        </a>
+        
+        <div class="hero-section">
+            <svg width="80" height="80" viewBox="0 0 80 80" style="margin-bottom: 20px;">
+                <defs>
+                    <linearGradient id="agentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#00ff80"/>
+                        <stop offset="100%" style="stop-color:#00f0ff"/>
+                    </linearGradient>
+                </defs>
+                <circle cx="40" cy="40" r="35" fill="none" stroke="url(#agentGradient)" stroke-width="2"/>
+                <circle cx="40" cy="40" r="25" fill="none" stroke="url(#agentGradient)" stroke-width="1.5"/>
+                <circle cx="40" cy="40" r="15" fill="none" stroke="url(#agentGradient)" stroke-width="1"/>
+                <circle cx="40" cy="40" r="5" fill="url(#agentGradient)"/>
+                <line x1="55" y1="30" x2="55" y2="50" stroke="url(#agentGradient)" stroke-width="3"/>
+                <line x1="62" y1="25" x2="62" y2="55" stroke="url(#agentGradient)" stroke-width="2"/>
+                <line x1="69" y1="32" x2="69" y2="48" stroke="url(#agentGradient)" stroke-width="1.5"/>
+            </svg>
+            <h1>EkkoScope FixEngine</h1>
+            <p>4 Autonomous AI Agents Ready to Fix Your Visibility Issues</p>
+        </div>
+        
+        <div class="audit-info">
+            <div class="audit-info-item">
+                <label>Business</label>
+                <span>{{ business.business_name }}</span>
+            </div>
+            <div class="audit-info-item">
+                <label>Audit ID</label>
+                <span>#{{ audit.id }}</span>
+            </div>
+            <div class="audit-info-item">
+                <label>Status</label>
+                <span style="color: #00ff80;">{{ audit.status | upper }}</span>
+            </div>
+            <div class="audit-info-item">
+                <label>Created</label>
+                <span>{{ audit.created_at.strftime('%b %d, %Y') }}</span>
+            </div>
+        </div>
+        
+        <div class="agents-grid">
+            <div class="agent-card">
+                <div class="agent-icon">
+                    <svg viewBox="0 0 50 50">
+                        <defs>
+                            <linearGradient id="contentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#00ff80"/>
+                                <stop offset="100%" style="stop-color:#00f0ff"/>
+                            </linearGradient>
+                        </defs>
+                        <rect x="5" y="5" width="40" height="40" rx="5" fill="none" stroke="url(#contentGrad)" stroke-width="2"/>
+                        <line x1="12" y1="15" x2="38" y2="15" stroke="url(#contentGrad)" stroke-width="2"/>
+                        <line x1="12" y1="23" x2="32" y2="23" stroke="url(#contentGrad)" stroke-width="2"/>
+                        <line x1="12" y1="31" x2="28" y2="31" stroke="url(#contentGrad)" stroke-width="2"/>
+                    </svg>
+                </div>
+                <h3>Content Agent</h3>
+                <p>Generates AI-optimized content to maximize visibility</p>
+                <ul class="agent-features">
+                    <li>Homepage meta descriptions</li>
+                    <li>FAQ sections for AI comprehension</li>
+                    <li>Service page content outlines</li>
+                    <li>Emergency/high-intent pages</li>
+                </ul>
+            </div>
+            
+            <div class="agent-card">
+                <div class="agent-icon">
+                    <svg viewBox="0 0 50 50">
+                        <defs>
+                            <linearGradient id="seoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#00ff80"/>
+                                <stop offset="100%" style="stop-color:#00f0ff"/>
+                            </linearGradient>
+                        </defs>
+                        <circle cx="25" cy="25" r="18" fill="none" stroke="url(#seoGrad)" stroke-width="2"/>
+                        <text x="25" y="30" text-anchor="middle" fill="url(#seoGrad)" font-size="12" font-weight="bold">{}</text>
+                    </svg>
+                </div>
+                <h3>SEO Agent</h3>
+                <p>Adds structured data and local SEO signals</p>
+                <ul class="agent-features">
+                    <li>JSON-LD schema markup</li>
+                    <li>LocalBusiness schema</li>
+                    <li>FAQPage schema</li>
+                    <li>Service/Product schemas</li>
+                </ul>
+            </div>
+            
+            <div class="agent-card">
+                <div class="agent-icon">
+                    <svg viewBox="0 0 50 50">
+                        <defs>
+                            <linearGradient id="deployGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#00ff80"/>
+                                <stop offset="100%" style="stop-color:#00f0ff"/>
+                            </linearGradient>
+                        </defs>
+                        <polygon points="25,5 45,25 25,45 5,25" fill="none" stroke="url(#deployGrad)" stroke-width="2"/>
+                        <circle cx="25" cy="25" r="8" fill="url(#deployGrad)"/>
+                    </svg>
+                </div>
+                <h3>Deploy Agent</h3>
+                <p>Generates ready-to-deploy code for your platform</p>
+                <ul class="agent-features">
+                    <li>WordPress PHP code</li>
+                    <li>Raw HTML snippets</li>
+                    <li>API/headless CMS payloads</li>
+                    <li>Step-by-step instructions</li>
+                </ul>
+            </div>
+            
+            <div class="agent-card">
+                <div class="agent-icon">
+                    <svg viewBox="0 0 50 50">
+                        <defs>
+                            <linearGradient id="verifyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#00ff80"/>
+                                <stop offset="100%" style="stop-color:#00f0ff"/>
+                            </linearGradient>
+                        </defs>
+                        <circle cx="25" cy="25" r="20" fill="none" stroke="url(#verifyGrad)" stroke-width="2"/>
+                        <polyline points="15,25 22,32 35,18" fill="none" stroke="url(#verifyGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3>Verification Agent</h3>
+                <p>Validates fixes and calculates improvement metrics</p>
+                <ul class="agent-features">
+                    <li>Before/after comparison</li>
+                    <li>Impact calculation</li>
+                    <li>Confidence scoring</li>
+                    <li>Next steps recommendations</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="run-section">
+            <h2>Run Auto-Remediation</h2>
+            <p>Launch all 4 agents to analyze your report and generate fixes automatically.</p>
+            <form action="/dashboard/business/{{ business.id }}/audit/{{ audit.id }}/run-remediation" method="POST">
+                <button type="submit" class="run-btn">
+                    Launch FixEngine Agents
+                </button>
+            </form>
+        </div>
+        
+        <div class="bundle-section">
+            <h3 style="color: var(--accent-cyan, #00f0ff); margin-bottom: 10px;">UNLOCK FULL POWER</h3>
+            <p style="color: var(--text-secondary, #888);">Sentinel OS + EkkoScope Fix Bundle</p>
+            <div class="bundle-price">$1,188</div>
+            <div class="bundle-features">
+                <span class="bundle-feature">Sentinel OS Dashboard</span>
+                <span class="bundle-feature">Full GEO Report ($490)</span>
+                <span class="bundle-feature">Auto-Fix Agents ($498)</span>
+                <span class="bundle-feature">Before/After Report</span>
+                <span class="bundle-feature">Priority Support</span>
+                <span class="bundle-feature">12-Month Tracking</span>
+            </div>
+            <a href="/checkout/bundle">
+                <button class="bundle-btn">Get the Bundle</button>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
