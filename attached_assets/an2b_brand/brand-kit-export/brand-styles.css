@@ -1,0 +1,37 @@
+/* AN2B Brand Styles - Add to your main CSS file */
+
+/* Neon glow effect for logo */
+.neon {
+  filter: 
+    drop-shadow(0 0 2px #00e5ff)
+    drop-shadow(0 0 6px #00e5ff)
+    drop-shadow(0 0 14px rgba(0, 229, 255, 0.6));
+}
+
+/* Optional: Animated glow pulse */
+.neon-pulse {
+  animation: neon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    filter: 
+      drop-shadow(0 0 2px #00e5ff)
+      drop-shadow(0 0 6px #00e5ff)
+      drop-shadow(0 0 14px rgba(0, 229, 255, 0.6));
+  }
+  50% {
+    filter: 
+      drop-shadow(0 0 4px #00e5ff)
+      drop-shadow(0 0 12px #00e5ff)
+      drop-shadow(0 0 24px rgba(0, 229, 255, 0.8));
+  }
+}
+
+/* Brand colors reference */
+:root {
+  --an2b-cyan: #00e5ff;
+  --an2b-purple: #7c3aed;
+  --an2b-pink: #f0abfc;
+  --an2b-blue: #3b82f6;
+}

@@ -1,0 +1,299 @@
+import { cn } from "@/lib/utils";
+
+interface LogoMarkProps {
+  size?: number;
+  variant?: "flat" | "neon" | "holographic";
+  simplified?: boolean;
+  className?: string;
+}
+
+export function LogoMark({ size = 24, variant = "holographic", simplified, className }: LogoMarkProps) {
+  const useSimplified = simplified ?? size < 32;
+  
+  const neonStyles = variant === "neon" ? {
+    filter: "drop-shadow(0 0 4px currentColor) drop-shadow(0 0 8px currentColor)"
+  } : undefined;
+  
+  if (useSimplified) {
+    return (
+      <svg
+        viewBox="0 0 512 512"
+        width={size}
+        height={size}
+        style={neonStyles}
+        className={cn("text-foreground", className)}
+        data-testid={`logo-mark-${size}`}
+      >
+        {/* Simplified - Organic silhouette for <32px */}
+        
+        {/* Antennae with neural tips */}
+        <path d="M232 112 Q216 80 200 48 L192 40 L208 40 Q220 72 236 108 Z" fill="currentColor"/>
+        <path d="M280 112 Q296 80 312 48 L320 40 L304 40 Q292 72 276 108 Z" fill="currentColor"/>
+        <circle cx="200" cy="44" r="10" fill="currentColor"/>
+        <circle cx="312" cy="44" r="10" fill="currentColor"/>
+        
+        {/* Head - Organic ellipse */}
+        <ellipse cx="256" cy="136" rx="60" ry="52" fill="currentColor"/>
+        
+        {/* Left Wings */}
+        <path d="M200 200 Q120 156 56 176 Q40 208 56 248 Q80 288 128 296 Q168 300 200 272 Z" fill="currentColor"/>
+        <path d="M192 288 Q120 300 72 328 Q56 360 80 384 Q120 400 176 368 Q208 340 208 304 Z" fill="currentColor"/>
+        
+        {/* Right Wings */}
+        <path d="M312 200 Q392 156 456 176 Q472 208 456 248 Q432 288 384 296 Q344 300 312 272 Z" fill="currentColor"/>
+        <path d="M320 288 Q392 300 440 328 Q456 360 432 384 Q392 400 336 368 Q304 340 304 304 Z" fill="currentColor"/>
+        
+        {/* Thorax */}
+        <path d="M200 168 Q200 200 208 248 Q224 296 256 304 Q288 296 304 248 Q312 200 312 168 Q288 180 256 180 Q224 180 200 168 Z" fill="currentColor"/>
+        
+        {/* Abdomen */}
+        <path d="M228 304 Q224 352 248 400 L256 424 L264 400 Q288 352 284 304 Q272 312 256 312 Q240 312 228 304 Z" fill="currentColor"/>
+        
+        {/* Stinger */}
+        <path d="M256 424 L244 444 L256 480 L268 444 Z" fill="currentColor"/>
+      </svg>
+    );
+  }
+
+  if (variant === "flat") {
+    return (
+      <svg
+        viewBox="0 0 512 512"
+        width={size}
+        height={size}
+        className={cn("text-foreground", className)}
+        data-testid={`logo-mark-${size}`}
+      >
+        {/* Flat variant - monochrome with currentColor */}
+        
+        {/* Antennae */}
+        <g stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="none">
+          <path d="M232 112 Q216 80 200 48"/>
+          <path d="M280 112 Q296 80 312 48"/>
+        </g>
+        <circle cx="200" cy="48" r="8" fill="currentColor"/>
+        <circle cx="312" cy="48" r="8" fill="currentColor"/>
+        <circle cx="208" cy="72" r="4" fill="currentColor"/>
+        <circle cx="304" cy="72" r="4" fill="currentColor"/>
+
+        {/* Wings */}
+        <path d="M200 200 Q120 160 64 176 Q48 200 56 240 Q64 280 120 296 Q160 304 192 280" 
+              fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="2"/>
+        <path d="M192 288 Q128 296 80 320 Q64 344 80 376 Q112 392 168 368 Q200 344 200 312" 
+              fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="2"/>
+        <path d="M312 200 Q392 160 448 176 Q464 200 456 240 Q448 280 392 296 Q352 304 320 280" 
+              fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="2"/>
+        <path d="M320 288 Q384 296 432 320 Q448 344 432 376 Q400 392 344 368 Q312 344 312 312" 
+              fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="2"/>
+
+        {/* Wing data streams */}
+        <g stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.6">
+          <path d="M192 220 Q140 200 80 208"/>
+          <path d="M188 248 Q120 240 64 248"/>
+          <path d="M184 276 Q136 284 96 280"/>
+          <path d="M320 220 Q372 200 432 208"/>
+          <path d="M324 248 Q392 240 448 248"/>
+          <path d="M328 276 Q376 284 416 280"/>
+        </g>
+
+        {/* Neural nodes */}
+        <g fill="currentColor">
+          <circle cx="80" cy="208" r="5"/>
+          <circle cx="64" cy="248" r="4"/>
+          <circle cx="96" cy="280" r="5"/>
+          <circle cx="432" cy="208" r="5"/>
+          <circle cx="448" cy="248" r="4"/>
+          <circle cx="416" cy="280" r="5"/>
+        </g>
+
+        {/* Head */}
+        <ellipse cx="256" cy="136" rx="56" ry="48" fill="currentColor" fillOpacity="0.9"/>
+        <ellipse cx="256" cy="136" rx="32" ry="28" fill="currentColor" fillOpacity="0.3"/>
+        <circle cx="256" cy="136" r="12" fill="currentColor"/>
+
+        {/* Thorax */}
+        <path d="M200 168 Q200 200 208 240 Q216 280 256 296 Q296 280 304 240 Q312 200 312 168 Q288 176 256 176 Q224 176 200 168" 
+              fill="currentColor" fillOpacity="0.85"/>
+        
+        {/* Body neural pattern */}
+        <g stroke="currentColor" strokeWidth="1" fill="none" opacity="0.3">
+          <path d="M232 192 L256 208 L280 192"/>
+          <path d="M224 224 L256 240 L288 224"/>
+          <path d="M240 256 L256 272 L272 256"/>
+        </g>
+
+        {/* Abdomen */}
+        <path d="M232 296 Q232 336 248 376 L256 400 L264 376 Q280 336 280 296" 
+              fill="currentColor" fillOpacity="0.8"/>
+        
+        {/* Stinger */}
+        <path d="M256 400 L248 416 L256 456 L264 416 Z" fill="currentColor"/>
+      </svg>
+    );
+  }
+
+  // Holographic or Neon variant - Full detail with gradients
+  return (
+    <svg
+      viewBox="0 0 512 512"
+      width={size}
+      height={size}
+      style={neonStyles}
+      className={className}
+      data-testid={`logo-mark-${size}`}
+    >
+      {/* AN2B Legendary AI Bee - Neural Network / Holographic */}
+      
+      <defs>
+        {/* Holographic gradient - Primary */}
+        <linearGradient id="holoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#00f0ff"/>
+          <stop offset="25%" stopColor="#7c3aed"/>
+          <stop offset="50%" stopColor="#f0abfc"/>
+          <stop offset="75%" stopColor="#3b82f6"/>
+          <stop offset="100%" stopColor="#00f0ff"/>
+        </linearGradient>
+        
+        {/* Neural glow gradient */}
+        <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ffffff"/>
+          <stop offset="40%" stopColor="#00f0ff"/>
+          <stop offset="100%" stopColor="#7c3aed" stopOpacity="0"/>
+        </radialGradient>
+        
+        {/* Wing data stream gradient */}
+        <linearGradient id="wingFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#00f0ff" stopOpacity="0.2"/>
+          <stop offset="50%" stopColor="#7c3aed"/>
+          <stop offset="100%" stopColor="#00f0ff" stopOpacity="0.2"/>
+        </linearGradient>
+
+        {/* Glow filter for neural nodes */}
+        <filter id="nodeGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      {/* WINGS - Abstract crystalline data streams */}
+      {/* Left Wing - Upper */}
+      <path d="M200 200 Q120 160 64 176 Q48 200 56 240 Q64 280 120 296 Q160 304 192 280" 
+            fill="url(#wingFlow)" stroke="url(#holoGradient)" strokeWidth="2"/>
+      {/* Left Wing - Lower */}
+      <path d="M192 288 Q128 296 80 320 Q64 344 80 376 Q112 392 168 368 Q200 344 200 312" 
+            fill="url(#wingFlow)" stroke="url(#holoGradient)" strokeWidth="2"/>
+      
+      {/* Right Wing - Upper */}
+      <path d="M312 200 Q392 160 448 176 Q464 200 456 240 Q448 280 392 296 Q352 304 320 280" 
+            fill="url(#wingFlow)" stroke="url(#holoGradient)" strokeWidth="2"/>
+      {/* Right Wing - Lower */}
+      <path d="M320 288 Q384 296 432 320 Q448 344 432 376 Q400 392 344 368 Q312 344 312 312" 
+            fill="url(#wingFlow)" stroke="url(#holoGradient)" strokeWidth="2"/>
+
+      {/* Wing neural pathways - Data flow lines */}
+      <g stroke="url(#holoGradient)" strokeWidth="1.5" fill="none" opacity="0.8">
+        {/* Left wing data streams */}
+        <path d="M192 220 Q140 200 80 208"/>
+        <path d="M188 248 Q120 240 64 248"/>
+        <path d="M184 276 Q136 284 96 280"/>
+        <path d="M188 304 Q144 320 96 336"/>
+        <path d="M180 332 Q140 352 112 368"/>
+        
+        {/* Right wing data streams (mirrored) */}
+        <path d="M320 220 Q372 200 432 208"/>
+        <path d="M324 248 Q392 240 448 248"/>
+        <path d="M328 276 Q376 284 416 280"/>
+        <path d="M324 304 Q368 320 416 336"/>
+        <path d="M332 332 Q372 352 400 368"/>
+      </g>
+
+      {/* Neural nodes on wings */}
+      <g fill="url(#holoGradient)" filter="url(#nodeGlow)">
+        {/* Left wing nodes */}
+        <circle cx="80" cy="208" r="5"/>
+        <circle cx="64" cy="248" r="4"/>
+        <circle cx="96" cy="280" r="5"/>
+        <circle cx="96" cy="336" r="4"/>
+        <circle cx="112" cy="368" r="5"/>
+        <circle cx="136" cy="232" r="3"/>
+        <circle cx="128" cy="296" r="3"/>
+        
+        {/* Right wing nodes (mirrored) */}
+        <circle cx="432" cy="208" r="5"/>
+        <circle cx="448" cy="248" r="4"/>
+        <circle cx="416" cy="280" r="5"/>
+        <circle cx="416" cy="336" r="4"/>
+        <circle cx="400" cy="368" r="5"/>
+        <circle cx="376" cy="232" r="3"/>
+        <circle cx="384" cy="296" r="3"/>
+      </g>
+
+      {/* ANTENNAE - Neural sensors */}
+      <g stroke="url(#holoGradient)" strokeWidth="3" strokeLinecap="round" fill="none">
+        <path d="M232 112 Q216 80 200 48"/>
+        <path d="M280 112 Q296 80 312 48"/>
+      </g>
+      {/* Antenna tip nodes */}
+      <g fill="url(#holoGradient)" filter="url(#nodeGlow)">
+        <circle cx="200" cy="48" r="8"/>
+        <circle cx="312" cy="48" r="8"/>
+        <circle cx="208" cy="72" r="4"/>
+        <circle cx="304" cy="72" r="4"/>
+      </g>
+
+      {/* HEAD - Neural processor core */}
+      <ellipse cx="256" cy="136" rx="56" ry="48" fill="url(#holoGradient)" opacity="0.9"/>
+      {/* Inner eye/processor */}
+      <ellipse cx="256" cy="136" rx="32" ry="28" fill="url(#coreGlow)"/>
+      {/* Central AI core */}
+      <circle cx="256" cy="136" r="12" fill="#ffffff" filter="url(#nodeGlow)"/>
+
+      {/* THORAX - Data processing body */}
+      <path d="M200 168 Q200 200 208 240 Q216 280 256 296 Q296 280 304 240 Q312 200 312 168 Q288 176 256 176 Q224 176 200 168" 
+            fill="url(#holoGradient)" opacity="0.85"/>
+      
+      {/* Body neural network pattern */}
+      <g stroke="#ffffff" strokeWidth="1" fill="none" opacity="0.5">
+        <path d="M232 192 L256 208 L280 192"/>
+        <path d="M224 224 L256 240 L288 224"/>
+        <path d="M240 256 L256 272 L272 256"/>
+      </g>
+      {/* Body processing nodes */}
+      <g fill="#ffffff" opacity="0.8">
+        <circle cx="256" cy="208" r="4"/>
+        <circle cx="256" cy="240" r="4"/>
+        <circle cx="256" cy="272" r="3"/>
+        <circle cx="232" cy="192" r="2"/>
+        <circle cx="280" cy="192" r="2"/>
+      </g>
+
+      {/* ABDOMEN - Tapered energy core */}
+      <path d="M232 296 Q232 336 248 376 L256 400 L264 376 Q280 336 280 296" 
+            fill="url(#holoGradient)" opacity="0.8"/>
+      
+      {/* Abdomen segments - energy bands */}
+      <g stroke="#ffffff" strokeWidth="2" opacity="0.6">
+        <path d="M236 312 Q256 320 276 312"/>
+        <path d="M244 344 Q256 352 268 344"/>
+        <path d="M252 376 Q256 380 260 376"/>
+      </g>
+
+      {/* STINGER - Precision point */}
+      <path d="M256 400 L248 416 L256 456 L264 416 Z" fill="url(#holoGradient)"/>
+      <circle cx="256" cy="432" r="3" fill="#ffffff" filter="url(#nodeGlow)"/>
+
+      {/* Ambient data particles */}
+      <g fill="url(#holoGradient)" opacity="0.6">
+        <circle cx="168" cy="168" r="2"/>
+        <circle cx="344" cy="168" r="2"/>
+        <circle cx="144" cy="256" r="2"/>
+        <circle cx="368" cy="256" r="2"/>
+        <circle cx="176" cy="392" r="2"/>
+        <circle cx="336" cy="392" r="2"/>
+      </g>
+    </svg>
+  );
+}
