@@ -97,7 +97,9 @@ class Business(Base):
     contact_email = Column(String(255), nullable=True)
     source = Column(String(20), default="public")
     subscription_active = Column(Boolean, default=False)
+    autofix_enabled = Column(Boolean, default=False)  # True for $1188/month subscribers
     stripe_subscription_id = Column(String(255), nullable=True)
+    stripe_autofix_subscription_id = Column(String(255), nullable=True)  # For $1188 plan
     stripe_ekkobrain_subscription_id = Column(String(255), nullable=True)
     plan = Column(String(20), default="free")
     ekkobrain_access = Column(Boolean, default=False)

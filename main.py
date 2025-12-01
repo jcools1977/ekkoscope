@@ -1036,12 +1036,12 @@ async def get_fixed_report(request: Request, business_id: int, audit_id: int):
         db.close()
 
 
-@app.get("/checkout/bundle")
-async def checkout_bundle(request: Request):
-    """Checkout for $1188 Sentinel OS + EkkoScope Fix Bundle."""
+@app.get("/checkout/autofix")
+async def checkout_autofix(request: Request):
+    """Checkout for $1188/month Auto-Fix subscription (reports + agents)."""
     user = get_current_user(request)
     if not user:
-        return RedirectResponse(url="/auth/login?next=/checkout/bundle", status_code=302)
+        return RedirectResponse(url="/auth/login?next=/checkout/autofix", status_code=302)
     
     try:
         await load_stripe_config()
@@ -1054,18 +1054,19 @@ async def checkout_bundle(request: Request):
         protocol = "https" if "replit" in domain else "http"
         base_url = f"{protocol}://{domain}"
         
-        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}&product=bundle"
-        cancel_url = f"{base_url}/dashboard"
+        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}&product=autofix"
+        cancel_url = f"{base_url}/pricing"
         
         session = stripe_client.checkout.Session.create(
-            mode="payment",
+            mode="subscription",
             line_items=[{
                 "price_data": {
                     "currency": "usd",
                     "unit_amount": 118800,
+                    "recurring": {"interval": "month"},
                     "product_data": {
-                        "name": "Sentinel OS + EkkoScope Fix Bundle",
-                        "description": "Complete AI visibility monitoring and auto-remediation suite"
+                        "name": "EkkoScope Auto-Fix",
+                        "description": "Bi-weekly reports + 4 AI agents auto-generate fixes"
                     }
                 },
                 "quantity": 1
@@ -1075,13 +1076,74 @@ async def checkout_bundle(request: Request):
             customer_email=user.email,
             metadata={
                 "user_id": str(user.id),
-                "product": "bundle_1188"
+                "product": "autofix_1188"
             }
         )
         return RedirectResponse(url=session.url, status_code=302)
     except Exception as e:
-        print(f"Bundle checkout error: {e}")
+        print(f"Auto-fix checkout error: {e}")
         return RedirectResponse(url="/dashboard?error=checkout_failed", status_code=302)
+
+
+@app.post("/dashboard/business/{business_id}/checkout/autofix")
+async def dashboard_checkout_autofix(request: Request, business_id: int):
+    """Checkout for $1188/month Auto-Fix subscription for a specific business."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(
+            Business.id == business_id,
+            Business.owner_user_id == user.id
+        ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        await load_stripe_config()
+        stripe_client = get_stripe_client()
+        
+        domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
+        if not domain:
+            domain = "localhost:5000"
+        
+        protocol = "https" if "replit" in domain else "http"
+        base_url = f"{protocol}://{domain}"
+        
+        success_url = f"{base_url}/dashboard/success?session_id={{CHECKOUT_SESSION_ID}}&product=autofix&business_id={business.id}"
+        cancel_url = f"{base_url}/dashboard/business/{business.id}"
+        
+        session = stripe_client.checkout.Session.create(
+            mode="subscription",
+            line_items=[{
+                "price_data": {
+                    "currency": "usd",
+                    "unit_amount": 118800,
+                    "recurring": {"interval": "month"},
+                    "product_data": {
+                        "name": "EkkoScope Auto-Fix",
+                        "description": f"Bi-weekly reports + 4 AI agents for {business.name}"
+                    }
+                },
+                "quantity": 1
+            }],
+            success_url=success_url,
+            cancel_url=cancel_url,
+            customer_email=user.email,
+            metadata={
+                "user_id": str(user.id),
+                "business_id": str(business.id),
+                "product": "autofix_1188"
+            }
+        )
+        return RedirectResponse(url=session.url, status_code=302)
+    except Exception as e:
+        print(f"Auto-fix checkout error: {e}")
+        return RedirectResponse(url=f"/dashboard/business/{business_id}?error=checkout_failed", status_code=302)
+    finally:
+        db.close()
 
 
 @app.get("/dashboard/business/{business_id}/audits", response_class=HTMLResponse)
@@ -2472,9 +2534,49 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
             ekkobrain = data_object.get("metadata", {}).get("ekkobrain")
             subscription_id = data_object.get("subscription")
             
+            if product_type == "autofix_1188" and business_id:
+                db = get_db_session()
+                try:
+                    from services.audit_scheduler import schedule_first_audit
+                    
+                    business = db.query(Business).filter(Business.id == int(business_id)).first()
+                    if business:
+                        business.subscription_active = True
+                        business.autofix_enabled = True
+                        business.plan = "autofix"
+                        if subscription_id:
+                            business.stripe_autofix_subscription_id = subscription_id
+                        db.commit()
+                        
+                        schedule_first_audit(business.id)
+                        print(f"Activated Auto-Fix subscription for business {business.id}")
+                        
+                        existing_audit = (
+                            db.query(Audit)
+                            .filter(Audit.business_id == business.id)
+                            .filter(Audit.channel.in_(["self_serve", "scheduled"]))
+                            .filter(Audit.status.in_(["pending", "running"]))
+                            .first()
+                        )
+                        
+                        if not existing_audit:
+                            audit = Audit(
+                                business_id=business.id,
+                                channel="self_serve",
+                                status="pending"
+                            )
+                            db.add(audit)
+                            db.commit()
+                            db.refresh(audit)
+                            
+                            background_tasks.add_task(run_audit_background, business.id, audit.id)
+                            print(f"Created initial audit {audit.id} for Auto-Fix subscriber {business.id}")
+                finally:
+                    db.close()
+            
             valid_products = (
                 "echoscope_snapshot", "echoscope_ongoing", "ekkoscope_snapshot", "ekkoscope_ongoing",
-                "ekkoscope_standard", "ekkoscope_ekkobrain_addon"
+                "ekkoscope_standard", "ekkoscope_ekkobrain_addon", "continuous_290"
             )
             valid_plans = ("ongoing", "standard", "standard_ekkobrain", "ekkobrain_addon")
             
@@ -2486,7 +2588,7 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
                     business = db.query(Business).filter(Business.id == int(business_id)).first()
                     
                     if business:
-                        if plan in ("standard", "standard_ekkobrain", "ongoing"):
+                        if plan in ("standard", "standard_ekkobrain", "ongoing") or product_type == "continuous_290":
                             business.subscription_active = True
                             business.plan = "standard"
                             if subscription_id:
@@ -2507,7 +2609,7 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
                             db.commit()
                             print(f"Activated EkkoBrain add-on for business {business.id}")
                         
-                        if plan in ("standard", "standard_ekkobrain"):
+                        if plan in ("standard", "standard_ekkobrain") or product_type == "continuous_290":
                             existing_audit = (
                                 db.query(Audit)
                                 .filter(Audit.business_id == business.id)

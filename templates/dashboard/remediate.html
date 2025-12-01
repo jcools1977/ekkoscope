@@ -379,9 +379,9 @@
         
         <div class="run-section">
             <h2>Run Auto-Remediation</h2>
-            {% if business.subscription_active %}
+            {% if business.autofix_enabled %}
             <p style="color: var(--accent-green, #00ff80);">
-                As a Continuous subscriber, agents run automatically after each bi-weekly report.
+                As an Auto-Fix subscriber, agents run automatically after each bi-weekly report.
             </p>
             <p style="color: var(--text-secondary, #888); margin-top: 10px;">
                 You can also run agents manually on any completed audit.
@@ -396,27 +396,10 @@
             </form>
         </div>
         
-        {% if not business.subscription_active %}
-        <div class="bundle-section">
-            <h3 style="color: var(--accent-cyan, #00f0ff); margin-bottom: 10px;">UNLOCK CONTINUOUS AUTO-FIX</h3>
-            <p style="color: var(--text-secondary, #888);">$290/month - Reports + Auto-Fix Every 14 Days</p>
-            <div class="bundle-price">$290<span style="font-size: 1rem; color: var(--text-muted);">/mo</span></div>
-            <div class="bundle-features">
-                <span class="bundle-feature">New Report Every 14 Days</span>
-                <span class="bundle-feature">Auto-Fix Agents Run Automatically</span>
-                <span class="bundle-feature">Visibility Delta Tracking</span>
-                <span class="bundle-feature">Before/After Fixed Reports</span>
-                <span class="bundle-feature">4 AI Agents Included</span>
-                <span class="bundle-feature">Cancel Anytime</span>
-            </div>
-            <a href="/dashboard/business/{{ business.id }}/checkout/continuous">
-                <button class="bundle-btn">Start Continuous Monitoring</button>
-            </a>
-        </div>
-        {% else %}
+        {% if business.autofix_enabled %}
         <div class="bundle-section" style="border-color: var(--accent-green, #00ff80);">
-            <h3 style="color: var(--accent-green, #00ff80); margin-bottom: 10px;">CONTINUOUS SUBSCRIBER</h3>
-            <p style="color: var(--text-secondary, #888);">Your auto-fix agents run automatically every 14 days</p>
+            <h3 style="color: var(--accent-green, #00ff80); margin-bottom: 10px;">AUTO-FIX SUBSCRIBER</h3>
+            <p style="color: var(--text-secondary, #888);">Your AI agents run automatically every 14 days</p>
             <div class="bundle-features" style="margin-top: 20px;">
                 <span class="bundle-feature" style="background: rgba(0, 255, 128, 0.1); border-color: var(--accent-green, #00ff80);">Content Agent - Active</span>
                 <span class="bundle-feature" style="background: rgba(0, 255, 128, 0.1); border-color: var(--accent-green, #00ff80);">SEO Agent - Active</span>
@@ -426,6 +409,40 @@
             <p style="color: var(--text-muted, #666); margin-top: 20px; font-size: 0.9rem;">
                 Next scheduled report + auto-fix: {{ business.next_audit_at.strftime('%b %d, %Y') if business.next_audit_at else 'Pending' }}
             </p>
+        </div>
+        {% elif business.subscription_active %}
+        <div class="bundle-section">
+            <h3 style="color: var(--accent-cyan, #00f0ff); margin-bottom: 10px;">UPGRADE TO AUTO-FIX</h3>
+            <p style="color: var(--text-secondary, #888);">You have bi-weekly reports. Add auto-fix agents!</p>
+            <div class="bundle-price">$1,188<span style="font-size: 1rem; color: var(--text-muted);">/mo</span></div>
+            <div class="bundle-features">
+                <span class="bundle-feature">Everything in your current plan</span>
+                <span class="bundle-feature">+ Content Agent</span>
+                <span class="bundle-feature">+ SEO Agent</span>
+                <span class="bundle-feature">+ Deploy Agent</span>
+                <span class="bundle-feature">+ Verification Agent</span>
+                <span class="bundle-feature">+ Before/After Fixed Reports</span>
+            </div>
+            <a href="/dashboard/business/{{ business.id }}/checkout/autofix">
+                <button class="bundle-btn">Upgrade to Auto-Fix</button>
+            </a>
+        </div>
+        {% else %}
+        <div class="bundle-section">
+            <h3 style="color: var(--accent-cyan, #00f0ff); margin-bottom: 10px;">GET AUTO-FIX</h3>
+            <p style="color: var(--text-secondary, #888);">Bi-weekly reports + AI agents that fix issues automatically</p>
+            <div class="bundle-price">$1,188<span style="font-size: 1rem; color: var(--text-muted);">/mo</span></div>
+            <div class="bundle-features">
+                <span class="bundle-feature">New Report Every 14 Days</span>
+                <span class="bundle-feature">Auto-Fix Agents Run Automatically</span>
+                <span class="bundle-feature">Visibility Delta Tracking</span>
+                <span class="bundle-feature">Before/After Fixed Reports</span>
+                <span class="bundle-feature">4 AI Agents Included</span>
+                <span class="bundle-feature">Cancel Anytime</span>
+            </div>
+            <a href="/dashboard/business/{{ business.id }}/checkout/autofix">
+                <button class="bundle-btn">Start Auto-Fix</button>
+            </a>
         </div>
         {% endif %}
     </div>

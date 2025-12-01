@@ -130,7 +130,7 @@ def run_auto_remediation(business_id: int, audit_id: int) -> bool:
 async def run_scheduled_audit(business_id: int) -> Optional[int]:
     """
     Run a scheduled audit for a business.
-    After audit completes, automatically runs remediation agents.
+    Auto-remediation only runs for $1188/month subscribers (autofix_enabled=True).
     Returns the audit ID if successful.
     """
     db = get_db_session()
@@ -154,8 +154,11 @@ async def run_scheduled_audit(business_id: int) -> Optional[int]:
             run_audit_for_business(business.id, audit_id)
             update_next_audit_date(business.id)
             
-            run_auto_remediation(business.id, audit_id)
-            print(f"[SCHEDULER] Completed audit + remediation for business {business_id}")
+            if business.autofix_enabled:
+                run_auto_remediation(business.id, audit_id)
+                print(f"[SCHEDULER] Completed audit + auto-fix for business {business_id}")
+            else:
+                print(f"[SCHEDULER] Completed audit for business {business_id} (no auto-fix)")
             
         except Exception as e:
             print(f"Scheduled audit failed for business {business.id}: {e}")
