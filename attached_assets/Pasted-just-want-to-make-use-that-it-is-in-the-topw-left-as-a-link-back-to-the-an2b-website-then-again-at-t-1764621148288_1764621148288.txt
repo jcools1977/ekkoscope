@@ -1,0 +1,65 @@
+just want to make use that it is in the topw left as a link back to the an2b website then again at the bottom of every page saying fueled by an2b
+
+2 minutes ago
+
+Decided on instructions for EkkoScope
+Since EkkoScope is a separate Replit project, here's exactly what you need to do:
+
+Step-by-Step for EkkoScope
+1. Create the brand folder
+In your EkkoScope Replit project, create this folder structure:
+
+src/components/brand/
+
+2. Create these 3 files:
+File 1: src/components/brand/LogoMark.tsx
+Copy the entire content from this project's brand-kit-export/LogoMark.tsx
+
+File 2: src/components/brand/LogoFull.tsx
+Copy from brand-kit-export/LogoFull.tsx
+
+File 3: src/components/brand/index.ts
+
+export { LogoMark } from "./LogoMark";
+export { LogoFull } from "./LogoFull";
+
+3. Add the CSS glow effect
+In your main CSS file (likely src/index.css), add:
+
+.neon {
+  filter: 
+    drop-shadow(0 0 2px #00e5ff)
+    drop-shadow(0 0 6px #00e5ff)
+    drop-shadow(0 0 14px rgba(0, 229, 255, 0.6));
+}
+
+4. Update your header/navbar
+import { LogoFull } from "@/components/brand";
+// In your header component:
+<a href="https://www.an2b.com" target="_blank" rel="noopener noreferrer">
+  <LogoFull size={28} variant="neon" />
+</a>
+
+5. Create a footer component
+import { LogoMark } from "@/components/brand";
+export function Footer() {
+  return (
+    <footer className="border-t border-white/10 py-6 mt-auto">
+      <div className="container mx-auto px-4 flex justify-center items-center gap-2 text-muted-foreground">
+        <span>Fueled by</span>
+        <a 
+          href="https://www.an2b.com" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 hover:text-primary transition-colors"
+        >
+          <LogoMark size={20} variant="neon" />
+          <span className="font-heading font-bold bg-gradient-to-r from-[#00f0ff] via-[#7c3aed] to-[#f0abfc] bg-clip-text text-transparent">
+            AN2B
+          </span>
+        </a>
+      </div>
+    </footer>
+  );
+}
+
