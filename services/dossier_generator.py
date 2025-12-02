@@ -39,22 +39,24 @@ COACH_BLUE = (50, 130, 200)
 
 
 def sanitize_text(text: str) -> str:
-    """Replace unsupported Unicode characters."""
+    """Replace unsupported Unicode characters for PDF rendering."""
     if not text:
         return ""
     
     replacements = {
         '"': '"', '"': '"', ''': "'", ''': "'",
-        '–': '-', '—': '-', '…': '...', '•': '*',
-        '→': '->', '←': '<-', '✓': '[OK]', '✗': '[X]',
-        '\u00A0': ' ', '\u2002': ' ', '\u2003': ' ',
-        '×': 'x', '≤': '<=', '≥': '>=',
+        '–': '-', '—': '-', '…': '...', '•': '*', '·': '*',
+        '→': '->', '←': '<-', '↔': '<->', '✓': '[OK]', '✗': '[X]',
+        '×': 'x', '≤': '<=', '≥': '>=', '≠': '!=', '±': '+/-',
+        '°': ' deg', '™': '(TM)', '®': '(R)', '©': '(C)',
+        '\u00A0': ' ', '\u2002': ' ', '\u2003': ' ', '\u2009': ' ',
+        '\u200b': '', '\u200c': '', '\u200d': '', '\ufeff': '',
     }
     
     for u, a in replacements.items():
         text = text.replace(u, a)
     
-    return ''.join(c if ord(c) < 128 else '?' for c in text)
+    return ''.join(c if ord(c) < 128 else '' for c in text)
 
 
 class DossierPDF(FPDF):
@@ -118,11 +120,24 @@ class DossierPDF(FPDF):
         self.cell(0, 10, f"Page {self.page_no()}/{{nb}} | EkkoScope Intelligence Dossier", align="C")
 
 
+def get_fabricator_url(business_id: int, tool_type: str) -> str:
+    """Generate URL to download fabricated assets."""
+    tool_endpoints = {
+        "schema": f"/api/sherlock/fabricate/schema/{business_id}",
+        "html": f"/api/sherlock/fabricate/landing/{business_id}",
+        "content": f"/api/sherlock/fabricate/content/{business_id}",
+        "faq": f"/api/sherlock/fabricate/faq/{business_id}",
+        "list": f"/api/sherlock/fabricate/list/{business_id}",
+    }
+    return tool_endpoints.get(tool_type, f"/api/sherlock/fabricate/{tool_type}/{business_id}")
+
+
 def build_dossier_pdf(
     business_name: str,
     analysis: Dict[str, Any],
     sherlock_data: Optional[Dict[str, Any]] = None,
-    competitor_evidence: Optional[List[Dict[str, Any]]] = None
+    competitor_evidence: Optional[List[Dict[str, Any]]] = None,
+    business_id: Optional[int] = None
 ) -> bytes:
     """
     Generate narrative-driven dossier PDF.
@@ -132,38 +147,86 @@ def build_dossier_pdf(
         analysis: The visibility analysis results
         sherlock_data: Gap analysis data from Sherlock
         competitor_evidence: Smoking gun evidence from Pinecone
+        business_id: Optional business ID for fabricator links
     
     Returns:
         PDF bytes
     """
-    visibility_score = analysis.get("avg_score", 0)
-    mentioned_count = analysis.get("mentioned_count", 0)
-    total_queries = analysis.get("total_queries", 10)
+    try:
+        if not analysis:
+            analysis = {}
+        
+        visibility_score = analysis.get("avg_score", 0) or 0
+        mentioned_count = analysis.get("mentioned_count", 0) or 0
+        total_queries = analysis.get("total_queries", 10) or 10
+        
+        is_detected = mentioned_count > 0 and visibility_score > 0.5
+        
+        pdf = DossierPDF(business_name, is_detected)
+        pdf.alias_nb_pages()
+        
+        try:
+            _add_dossier_cover(pdf, business_name, analysis, is_detected)
+        except Exception as e:
+            logger.warning(f"Error adding dossier cover: {e}")
+            pdf.add_page()
+        
+        pdf.current_section = "forensic"
+        
+        try:
+            _add_forensic_verdict(pdf, analysis, is_detected)
+        except Exception as e:
+            logger.warning(f"Error adding forensic verdict: {e}")
+        
+        try:
+            _add_suspect_lineup(pdf, analysis)
+        except Exception as e:
+            logger.warning(f"Error adding suspect lineup: {e}")
+        
+        try:
+            _add_smoking_gun(pdf, analysis, sherlock_data, competitor_evidence)
+        except Exception as e:
+            logger.warning(f"Error adding smoking gun: {e}")
+        
+        pdf.current_section = "coach"
+        
+        try:
+            _add_playbook_intro(pdf, business_name, analysis)
+        except Exception as e:
+            logger.warning(f"Error adding playbook intro: {e}")
+        
+        try:
+            _add_week_1_triage(pdf, analysis, sherlock_data, business_id)
+        except Exception as e:
+            logger.warning(f"Error adding week 1: {e}")
+        
+        try:
+            _add_week_2_content_attack(pdf, analysis, sherlock_data, business_id)
+        except Exception as e:
+            logger.warning(f"Error adding week 2: {e}")
+        
+        try:
+            _add_week_3_authority(pdf, analysis, business_id)
+        except Exception as e:
+            logger.warning(f"Error adding week 3: {e}")
+        
+        try:
+            _add_week_4_rescan(pdf, business_name)
+        except Exception as e:
+            logger.warning(f"Error adding week 4: {e}")
+        
+        try:
+            _add_next_steps(pdf, business_name)
+        except Exception as e:
+            logger.warning(f"Error adding next steps: {e}")
+        
+        log_report_generated(business_name, "dossier", pages=pdf.page_no())
+        
+        return pdf.output()
     
-    is_detected = mentioned_count > 0 and visibility_score > 0.5
-    
-    pdf = DossierPDF(business_name, is_detected)
-    pdf.alias_nb_pages()
-    
-    _add_dossier_cover(pdf, business_name, analysis, is_detected)
-    
-    pdf.current_section = "forensic"
-    _add_forensic_verdict(pdf, analysis, is_detected)
-    _add_suspect_lineup(pdf, analysis)
-    _add_smoking_gun(pdf, analysis, sherlock_data, competitor_evidence)
-    
-    pdf.current_section = "coach"
-    _add_playbook_intro(pdf, business_name, analysis)
-    _add_week_1_triage(pdf, analysis, sherlock_data)
-    _add_week_2_content_attack(pdf, analysis, sherlock_data)
-    _add_week_3_authority(pdf, analysis)
-    _add_week_4_rescan(pdf, business_name)
-    
-    _add_next_steps(pdf, business_name)
-    
-    log_report_generated(business_name, "dossier", pages=pdf.page_no())
-    
-    return pdf.output()
+    except Exception as e:
+        logger.error(f"Critical error generating dossier PDF: {e}")
+        raise
 
 
 def _add_dossier_cover(pdf: DossierPDF, business_name: str, analysis: Dict[str, Any], is_detected: bool):
@@ -392,48 +455,67 @@ def _add_smoking_gun(pdf: DossierPDF, analysis: Dict[str, Any],
     
     gaps = []
     
-    if sherlock_data:
-        missions = sherlock_data.get("missions", [])
-        for mission in missions[:5]:
-            gaps.append({
-                "topic": mission.get("title", mission.get("topic", "Unknown")),
-                "competitor_mentions": mission.get("competitor_mentions", "Multiple competitors"),
-                "your_mentions": 0,
-                "severity": mission.get("severity", "high")
-            })
-    
-    if not gaps and competitor_evidence:
-        for ev in competitor_evidence[:5]:
-            gaps.append({
-                "topic": ev.get("topic", "Unknown Topic"),
-                "competitor_mentions": ev.get("source", "Competitor"),
-                "your_mentions": 0,
-                "severity": "high"
-            })
-    
-    if not gaps:
-        results = analysis.get("results", [])
-        missed_intents = []
-        for r in results:
-            if r.get("score", 0) == 0:
-                query = r.get("query", "")
-                intent = r.get("intent_type", "general")
-                competitors = r.get("competitors", [])
-                if competitors:
+    if sherlock_data and isinstance(sherlock_data, dict):
+        missions = sherlock_data.get("missions", []) or []
+        if isinstance(missions, list):
+            for mission in missions[:5]:
+                if isinstance(mission, dict):
                     gaps.append({
-                        "topic": query[:50],
-                        "competitor_mentions": competitors[0] if competitors else "Competitors",
+                        "topic": str(mission.get("title", mission.get("topic", "Unknown"))),
+                        "competitor_mentions": str(mission.get("competitor_mentions", "Multiple competitors")),
                         "your_mentions": 0,
-                        "severity": "high" if intent in ["emergency", "high_ticket"] else "medium"
+                        "severity": str(mission.get("severity", "high"))
                     })
-                if len(gaps) >= 5:
-                    break
+    
+    if not gaps and competitor_evidence and isinstance(competitor_evidence, list):
+        for ev in competitor_evidence[:5]:
+            if isinstance(ev, dict):
+                gaps.append({
+                    "topic": str(ev.get("topic", "Unknown Topic")),
+                    "competitor_mentions": str(ev.get("source", "Competitor")),
+                    "your_mentions": 0,
+                    "severity": "high"
+                })
     
     if not gaps:
-        pdf.set_font(pdf.default_font, "", 12)
+        results = analysis.get("results", []) or []
+        if isinstance(results, list):
+            for r in results:
+                if isinstance(r, dict) and r.get("score", 0) == 0:
+                    query = str(r.get("query", ""))
+                    intent = str(r.get("intent_type", "general"))
+                    competitors = r.get("competitors", []) or []
+                    if competitors and isinstance(competitors, list):
+                        gaps.append({
+                            "topic": query[:50] if query else "Query Analysis Gap",
+                            "competitor_mentions": str(competitors[0]) if competitors else "Competitors",
+                            "your_mentions": 0,
+                            "severity": "high" if intent in ["emergency", "high_ticket"] else "medium"
+                        })
+                    if len(gaps) >= 5:
+                        break
+    
+    if not gaps:
+        pdf.set_fill_color(40, 40, 50)
+        fallback_y = pdf.get_y()
+        pdf.rect(20, fallback_y, 170, 60, 'F')
+        
+        pdf.set_font(pdf.default_font, "B", 12)
         pdf.set_text_color(*WARNING_YELLOW)
-        pdf.multi_cell(0, 6, "Run the Sherlock Semantic Scanner to identify specific content gaps. "
-                       "This will reveal exactly what topics competitors cover that you're missing.")
+        pdf.set_xy(30, fallback_y + 10)
+        pdf.cell(150, 8, "INVESTIGATION IN PROGRESS", align="C")
+        
+        pdf.set_font(pdf.default_font, "", 10)
+        pdf.set_text_color(*LIGHT_GRAY)
+        pdf.set_xy(30, fallback_y + 25)
+        pdf.multi_cell(150, 5, "Run the Sherlock Semantic Scanner to identify specific content gaps. "
+                       "This advanced analysis will reveal exactly what topics competitors cover "
+                       "that you're missing - the 'smoking gun' evidence for your visibility gaps.", align="C")
+        
+        pdf.ln(10)
+        pdf.set_font(pdf.default_font, "B", 10)
+        pdf.set_text_color(*CYAN_GLOW)
+        pdf.cell(0, 8, "Recommended: Run Deep Semantic Scan from Mission Control", align="C")
         return
     
     pdf.set_font(pdf.default_font, "B", 12)
@@ -445,25 +527,31 @@ def _add_smoking_gun(pdf: DossierPDF, analysis: Dict[str, Any],
         if pdf.get_y() > 240:
             pdf.add_page()
         
-        pdf.set_fill_color(50, 30, 30) if gap["severity"] == "high" else pdf.set_fill_color(40, 40, 30)
+        severity = str(gap.get("severity", "medium")).lower()
+        if severity == "high":
+            pdf.set_fill_color(50, 30, 30)
+        else:
+            pdf.set_fill_color(40, 40, 30)
+        
         evidence_y = pdf.get_y()
         pdf.rect(20, evidence_y, 170, 30, 'F')
         
         pdf.set_font(pdf.default_font, "B", 10)
-        pdf.set_text_color(*BLOOD_RED if gap["severity"] == "high" else WARNING_YELLOW)
+        pdf.set_text_color(*BLOOD_RED if severity == "high" else WARNING_YELLOW)
         pdf.set_xy(25, evidence_y + 3)
-        pdf.cell(160, 6, f"EVIDENCE #{i}: {sanitize_text(gap['topic'][:60])}", align="L")
+        topic_text = sanitize_text(str(gap.get("topic", "Unknown"))[:60])
+        pdf.cell(160, 6, f"EVIDENCE #{i}: {topic_text}", align="L")
         
         pdf.set_font(pdf.default_font, "", 9)
         pdf.set_text_color(*WHITE_TEXT)
         pdf.set_xy(25, evidence_y + 12)
-        competitor_text = gap.get("competitor_mentions", "Competitor")
-        if isinstance(competitor_text, str):
-            pdf.cell(160, 5, f"Competitor '{sanitize_text(competitor_text[:30])}' covers this topic", align="L")
+        competitor_text = sanitize_text(str(gap.get("competitor_mentions", "Competitor"))[:30])
+        pdf.cell(160, 5, f"Competitor '{competitor_text}' covers this topic", align="L")
         
         pdf.set_text_color(*BLOOD_RED)
         pdf.set_xy(25, evidence_y + 20)
-        pdf.cell(160, 5, f"You mention this topic: {gap['your_mentions']} times", align="L")
+        your_mentions = gap.get("your_mentions", 0) or 0
+        pdf.cell(160, 5, f"You mention this topic: {your_mentions} times", align="L")
         
         pdf.ln(35)
 
@@ -518,7 +606,7 @@ def _add_playbook_intro(pdf: DossierPDF, business_name: str, analysis: Dict[str,
     pdf.ln(60)
 
 
-def _add_week_1_triage(pdf: DossierPDF, analysis: Dict[str, Any], sherlock_data: Optional[Dict[str, Any]]):
+def _add_week_1_triage(pdf: DossierPDF, analysis: Dict[str, Any], sherlock_data: Optional[Dict[str, Any]], business_id: Optional[int] = None):
     """Add Week 1: Triage & Patching section."""
     pdf.add_page()
     
@@ -535,25 +623,29 @@ def _add_week_1_triage(pdf: DossierPDF, analysis: Dict[str, Any], sherlock_data:
             "task": "Implement JSON-LD Schema markup on homepage and service pages",
             "why": "AI assistants prioritize structured data when forming recommendations",
             "tool": "Schema.json",
-            "tool_type": "schema"
+            "tool_type": "schema",
+            "tool_url": get_fabricator_url(business_id, "schema") if business_id else None
         },
         {
             "task": "Verify and optimize sitemap.xml and robots.txt",
             "why": "Ensures AI crawlers can properly index your content",
             "tool": None,
-            "tool_type": None
+            "tool_type": None,
+            "tool_url": None
         },
         {
             "task": "Add FAQ schema to key service pages",
             "why": "FAQ content is heavily weighted in AI training data",
             "tool": "FAQ_Schema.json",
-            "tool_type": "schema"
+            "tool_type": "faq",
+            "tool_url": get_fabricator_url(business_id, "faq") if business_id else None
         },
         {
             "task": "Optimize meta descriptions with location + service keywords",
             "why": "Meta descriptions directly influence how AI summarizes your business",
             "tool": "Meta_Tags.txt",
-            "tool_type": "content"
+            "tool_type": "content",
+            "tool_url": get_fabricator_url(business_id, "content") if business_id else None
         }
     ]
     
@@ -561,7 +653,7 @@ def _add_week_1_triage(pdf: DossierPDF, analysis: Dict[str, Any], sherlock_data:
         _add_task_card(pdf, task_data)
 
 
-def _add_week_2_content_attack(pdf: DossierPDF, analysis: Dict[str, Any], sherlock_data: Optional[Dict[str, Any]]):
+def _add_week_2_content_attack(pdf: DossierPDF, analysis: Dict[str, Any], sherlock_data: Optional[Dict[str, Any]], business_id: Optional[int] = None):
     """Add Week 2: Content Counter-Attack section."""
     pdf.add_page()
     
@@ -574,10 +666,12 @@ def _add_week_2_content_attack(pdf: DossierPDF, analysis: Dict[str, Any], sherlo
     pdf.ln(8)
     
     gap_topics = []
-    if sherlock_data:
-        missions = sherlock_data.get("missions", [])
-        for m in missions[:3]:
-            gap_topics.append(m.get("title", m.get("topic", "Service Page")))
+    if sherlock_data and isinstance(sherlock_data, dict):
+        missions = sherlock_data.get("missions", []) or []
+        if isinstance(missions, list):
+            for m in missions[:3]:
+                if isinstance(m, dict):
+                    gap_topics.append(str(m.get("title", m.get("topic", "Service Page"))))
     
     if not gap_topics:
         gap_topics = ["Emergency Services Page", "Service Area Page", "Industry FAQ Page"]
@@ -585,24 +679,26 @@ def _add_week_2_content_attack(pdf: DossierPDF, analysis: Dict[str, Any], sherlo
     tasks = []
     for i, topic in enumerate(gap_topics):
         tasks.append({
-            "task": f"Create landing page: {topic}",
+            "task": f"Create landing page: {sanitize_text(topic)}",
             "why": "This is a topic your competitors cover but you don't",
             "tool": "Landing_Page_Template.html",
-            "tool_type": "html"
+            "tool_type": "html",
+            "tool_url": get_fabricator_url(business_id, "html") if business_id else None
         })
     
     tasks.append({
         "task": "Interlink all new pages to existing service pages",
         "why": "Internal links help AI understand your content hierarchy",
         "tool": None,
-        "tool_type": None
+        "tool_type": None,
+        "tool_url": None
     })
     
     for task_data in tasks:
         _add_task_card(pdf, task_data)
 
 
-def _add_week_3_authority(pdf: DossierPDF, analysis: Dict[str, Any]):
+def _add_week_3_authority(pdf: DossierPDF, analysis: Dict[str, Any], business_id: Optional[int] = None):
     """Add Week 3: Authority & Signals section."""
     pdf.add_page()
     
@@ -620,25 +716,29 @@ def _add_week_3_authority(pdf: DossierPDF, analysis: Dict[str, Any]):
             "task": "Submit to Google Business Profile (if not already)",
             "why": "Google data directly feeds AI training sets",
             "tool": None,
-            "tool_type": None
+            "tool_type": None,
+            "tool_url": None
         },
         {
             "task": "Submit to industry-specific directories",
             "why": "Vertical directories are heavily weighted for local recommendations",
             "tool": "Directory_List.txt",
-            "tool_type": "list"
+            "tool_type": "list",
+            "tool_url": get_fabricator_url(business_id, "list") if business_id else None
         },
         {
             "task": "Request reviews from recent customers",
             "why": "Review volume and recency influence AI recommendations",
             "tool": "Review_Request_Template.txt",
-            "tool_type": "content"
+            "tool_type": "content",
+            "tool_url": get_fabricator_url(business_id, "content") if business_id else None
         },
         {
             "task": "Ensure NAP consistency across all listings",
             "why": "Inconsistent data confuses AI and lowers trust scores",
             "tool": None,
-            "tool_type": None
+            "tool_type": None,
+            "tool_url": None
         }
     ]
     
@@ -728,24 +828,39 @@ def _add_task_card(pdf: DossierPDF, task_data: Dict[str, Any]):
     
     pdf.set_fill_color(35, 35, 45)
     card_y = pdf.get_y()
-    card_height = 28 if task_data.get("tool") else 22
+    has_tool = task_data.get("tool") and task_data.get("tool_url")
+    card_height = 32 if has_tool else 22
     pdf.rect(20, card_y, 170, card_height, 'F')
     
     pdf.set_font(pdf.default_font, "", 10)
     pdf.set_text_color(*WHITE_TEXT)
     pdf.set_xy(25, card_y + 3)
-    pdf.multi_cell(140, 5, sanitize_text(task_data["task"]))
+    task_text = sanitize_text(str(task_data.get("task", "Task")))
+    pdf.multi_cell(140, 5, task_text)
     
     pdf.set_font(pdf.default_font, "", 8)
     pdf.set_text_color(*CYAN_GLOW)
     pdf.set_xy(25, card_y + 12)
-    pdf.cell(140, 5, f"Why: {sanitize_text(task_data['why'][:80])}", align="L")
+    why_text = sanitize_text(str(task_data.get("why", ""))[:80])
+    pdf.cell(140, 5, f"Why: {why_text}", align="L")
     
-    if task_data.get("tool"):
+    if has_tool:
+        tool_name = sanitize_text(str(task_data.get("tool", "")))
+        tool_url = str(task_data.get("tool_url", ""))
+        
+        pdf.set_fill_color(30, 60, 45)
+        pdf.rect(25, card_y + 20, 160, 10, 'F')
+        
         pdf.set_font(pdf.default_font, "B", 8)
         pdf.set_text_color(*SUCCESS_GREEN)
-        pdf.set_xy(25, card_y + 20)
-        pdf.cell(140, 5, f"[GET TOOL: {task_data['tool']}]", align="L")
+        pdf.set_xy(28, card_y + 22)
+        pdf.cell(80, 6, f"DOWNLOAD: {tool_name}", align="L")
+        
+        if tool_url:
+            pdf.set_text_color(*LIGHT_GRAY)
+            pdf.set_font(pdf.default_font, "", 7)
+            pdf.set_xy(110, card_y + 22)
+            pdf.cell(70, 6, f"{tool_url}", align="R")
     
     pdf.set_y(card_y + card_height + 5)
 

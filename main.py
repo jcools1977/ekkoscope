@@ -1552,7 +1552,8 @@ async def download_dossier(request: Request, business_id: int):
             business_name=business.name,
             analysis=analysis,
             sherlock_data=sherlock_data,
-            competitor_evidence=None
+            competitor_evidence=None,
+            business_id=business_id
         )
         
         safe_name = "".join(c if c.isalnum() or c in "._- " else "_" for c in business.name)

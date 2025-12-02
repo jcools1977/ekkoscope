@@ -22,6 +22,11 @@ The backend is built with FastAPI and Uvicorn on Python 3.11+. It handles AI vis
 
 - **AI Visibility Audits**: Comprehensive reports on how businesses are recommended by AI assistants.
 - **Premium PDF Report Generation**: Detailed, multi-page reports with executive dashboards, competitor analysis, page blueprints, and 30-day action plans. Reports feature full content display with no truncation, list-based layouts, and industry-specific content.
+- **Dossier Report Format**: Narrative-driven "Intelligence Dossier" PDF that transforms data into a compelling forensic-to-coaching story:
+    - **Section A: "The Forensic Audit"**: CLASSIFIED cover page with INVISIBLE/DETECTED verdict stamp, Suspect Lineup (top 3 competitors), and "Smoking Gun" evidence from gap analysis.
+    - **Section B: "The Coach's Playbook"**: 4-week implementation sprint with Week 1 (Triage & Patching), Week 2 (Content Counter-Attack), Week 3 (Authority & Signals), Week 4 (Re-Scan).
+    - **Fabricator Integration**: Each week's tasks include downloadable tools (Schema.json, Landing_Page_Template.html, etc.) with URLs to the Fabricator API.
+    - **Endpoint**: `GET /dossier/{business_id}` generates the narrative PDF on-demand.
 - **Content Recommendations**: Actionable suggestions for improving AI visibility.
 - **Autonomous Auto-Remediation (EkkoScope v4)**: A system called FixEngine Core that parses GEO reports and generates fixes automatically using a PDF Parser, AI Fix Planner (GPT-4o), and 4 specialized AI agents:
     - **Content Agent**: Generates optimized meta descriptions, FAQs, and page content.
