@@ -11,7 +11,7 @@ from io import BytesIO
 from typing import Optional
 
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, Cookie, BackgroundTasks
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse, FileResponse, Response
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse, FileResponse, Response, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware

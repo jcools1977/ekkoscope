@@ -301,23 +301,26 @@
             margin-top: 0.2rem;
         }
         
-        /* Rescan Modal */
+        /* Rescan Modal - Use isolation to create new stacking context */
         .rescan-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.95);
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(0,0,0,0.95) !important;
             backdrop-filter: blur(10px);
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 99999;
+            z-index: 2147483647 !important;
+            isolation: isolate;
         }
         
         .rescan-modal.active {
-            display: flex;
+            display: flex !important;
         }
         
         .rescan-terminal {
