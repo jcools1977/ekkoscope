@@ -33,9 +33,17 @@ from .database import (
 
 logger = logging.getLogger(__name__)
 
-SHERLOCK_INDEX_NAME = os.getenv("SHERLOCK_INDEX_NAME", "ekkoscope-memory")
-SHERLOCK_EMBED_MODEL = "text-embedding-3-small"
-SHERLOCK_EMBED_DIMENSIONS = 1536
+SHERLOCK_INDEX_NAME = os.getenv("SHERLOCK_INDEX_NAME", "ekkobrain")
+SHERLOCK_EMBED_MODEL = "text-embedding-3-large"
+SHERLOCK_EMBED_DIMENSIONS = 3072
+
+SHERLOCK_NAMESPACES = {
+    "business": "business-content",
+    "competitor": "competitor-content", 
+    "patterns": "audit-patterns",
+    "missions": "gap-missions",
+    "insights": "strategic-insights"
+}
 
 pc = None
 sherlock_index = None
@@ -97,7 +105,7 @@ def is_sherlock_enabled() -> bool:
 
 
 def embed_text(text: str) -> Optional[List[float]]:
-    """Generate embedding using OpenAI text-embedding-3-small."""
+    """Generate embedding using OpenAI text-embedding-3-large (3072 dimensions)."""
     if not OPENAI_API_KEY:
         logger.warning("No OPENAI_API_KEY for Sherlock embedding.")
         return None
@@ -311,7 +319,8 @@ def ingest_knowledge(
         }
         
         try:
-            sherlock_index.upsert(vectors=[(vector_id, embedding, metadata)])
+            namespace = SHERLOCK_NAMESPACES.get(content_type, SHERLOCK_NAMESPACES["business"])
+            sherlock_index.upsert(vectors=[(vector_id, embedding, metadata)], namespace=namespace)
         except Exception as upsert_err:
             logger.error("Pinecone upsert error: %s", upsert_err)
             result["error"] = f"Vector storage failed: {str(upsert_err)[:100]}"
@@ -365,12 +374,14 @@ def get_vectors_by_type(business_id: int, content_type: str) -> List[Dict[str, A
         }
         
         zero_vector = [0.0] * SHERLOCK_EMBED_DIMENSIONS
+        namespace = SHERLOCK_NAMESPACES.get(content_type, SHERLOCK_NAMESPACES["business"])
         
         results = sherlock_index.query(
             vector=zero_vector,
             filter=query_filter,
             top_k=100,
-            include_metadata=True
+            include_metadata=True,
+            namespace=namespace
         )
         
         if not results or not hasattr(results, 'matches'):
@@ -878,41 +889,56 @@ def consult_strategist(
         
         query_filter = {"business_id": {"$eq": str(business_id)}}
         
-        pinecone_results = sherlock_index.query(
-            vector=query_embedding,
-            filter=query_filter,
-            top_k=top_k,
-            include_metadata=True
-        )
-        
         evidence_chunks = []
         sources = []
         
-        if pinecone_results and hasattr(pinecone_results, 'matches'):
-            for match in pinecone_results.matches:
-                if match.score < 0.3:
-                    continue
-                    
-                metadata = match.metadata or {}
-                source_url = metadata.get("url", "Unknown source")
-                source_title = metadata.get("title", "")
-                content_type = metadata.get("type", "unknown")
-                topics_str = metadata.get("topics", "[]")
+        namespaces_to_search = [
+            SHERLOCK_NAMESPACES["business"],
+            SHERLOCK_NAMESPACES["competitor"]
+        ]
+        
+        for namespace in namespaces_to_search:
+            try:
+                pinecone_results = sherlock_index.query(
+                    vector=query_embedding,
+                    filter=query_filter,
+                    top_k=top_k,
+                    include_metadata=True,
+                    namespace=namespace
+                )
                 
-                try:
-                    topics = json.loads(topics_str) if isinstance(topics_str, str) else []
-                except:
-                    topics = []
-                
-                evidence_chunks.append({
-                    "source": source_url,
-                    "title": source_title,
-                    "type": content_type,
-                    "topics": topics,
-                    "relevance": round(match.score, 3)
-                })
-                
-                sources.append(f"[{content_type.upper()}] {source_title or source_url}")
+                if pinecone_results and hasattr(pinecone_results, 'matches'):
+                    for match in pinecone_results.matches:
+                        if match.score < 0.3:
+                            continue
+                            
+                        metadata = match.metadata or {}
+                        source_url = metadata.get("url", "Unknown source")
+                        source_title = metadata.get("title", "")
+                        content_type = metadata.get("type", "unknown")
+                        topics_str = metadata.get("topics", "[]")
+                        
+                        try:
+                            topics = json.loads(topics_str) if isinstance(topics_str, str) else []
+                        except:
+                            topics = []
+                        
+                        evidence_chunks.append({
+                            "source": source_url,
+                            "title": source_title,
+                            "type": content_type,
+                            "topics": topics,
+                            "relevance": round(match.score, 3),
+                            "namespace": namespace
+                        })
+                        
+                        sources.append(f"[{content_type.upper()}] {source_title or source_url}")
+            except Exception as ns_err:
+                logger.warning("Error querying namespace %s: %s", namespace, ns_err)
+                continue
+        
+        evidence_chunks.sort(key=lambda x: x["relevance"], reverse=True)
+        evidence_chunks = evidence_chunks[:top_k]
         
         if not evidence_chunks:
             result["answer"] = "I don't have enough data yet to answer that question. Please ingest some competitor websites first using the Sherlock scanner."
