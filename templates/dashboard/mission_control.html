@@ -265,9 +265,18 @@
         .kpi-delta.negative { color: var(--status-critical); }
         .kpi-delta.neutral { color: var(--text-muted); }
         
-        .kpi-sparkline {
+        .kpi-sparkline-container {
             height: 30px;
             margin-top: 0.5rem;
+            position: relative;
+        }
+        
+        .kpi-sparkline {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
         }
         
         /* Time Travel Chart */
@@ -767,7 +776,7 @@
                         Critical
                         {% endif %}
                     </div>
-                    <canvas id="sparkline1" class="kpi-sparkline"></canvas>
+                    <div class="kpi-sparkline-container"><canvas id="sparkline1" class="kpi-sparkline"></canvas></div>
                 </div>
                 
                 <div class="kpi-card opportunity">
@@ -777,7 +786,7 @@
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                         Multi-AI Scan
                     </div>
-                    <canvas id="sparkline2" class="kpi-sparkline"></canvas>
+                    <div class="kpi-sparkline-container"><canvas id="sparkline2" class="kpi-sparkline"></canvas></div>
                 </div>
                 
                 <div class="kpi-card critical">
@@ -787,7 +796,7 @@
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                         {{ competitors[0].dominance if competitors else 0 }}% Dominance
                     </div>
-                    <canvas id="sparkline3" class="kpi-sparkline"></canvas>
+                    <div class="kpi-sparkline-container"><canvas id="sparkline3" class="kpi-sparkline"></canvas></div>
                 </div>
                 
                 <div class="kpi-card projected">
@@ -797,7 +806,7 @@
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                         If tasks completed
                     </div>
-                    <canvas id="sparkline4" class="kpi-sparkline"></canvas>
+                    <div class="kpi-sparkline-container"><canvas id="sparkline4" class="kpi-sparkline"></canvas></div>
                 </div>
             </div>
             
@@ -1115,10 +1124,13 @@
             }
         });
         
-        // Sparklines
+        // Sparklines - use responsive:false to prevent infinite growth
         function createSparkline(canvasId, data, color) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
+            const container = canvas.parentElement;
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
             new Chart(canvas, {
                 type: 'line',
                 data: {
@@ -1133,8 +1145,9 @@
                     }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: false,
                     maintainAspectRatio: false,
+                    animation: false,
                     plugins: { legend: { display: false }, tooltip: { enabled: false } },
                     scales: {
                         x: { display: false },
