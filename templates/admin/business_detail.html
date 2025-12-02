@@ -104,6 +104,14 @@
     </div>
     
     <div class="actions">
+        <a href="/admin/business/{{ business.id }}/mission" class="btn btn-secondary" style="background: linear-gradient(135deg, #00E5A0, #18A3FF); color: #000; border: none; padding: 0.75rem 1.5rem; font-weight: 600;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem; vertical-align: middle;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="6"></circle>
+                <circle cx="12" cy="12" r="2"></circle>
+            </svg>
+            Mission Control
+        </a>
         <form method="POST" action="/admin/business/{{ business.id }}/run" style="display: inline;" class="audit-form">
             <button type="submit" class="radar-button">
                 <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">

@@ -1954,6 +1954,31 @@ async def admin_business_detail(request: Request, business_id: int):
         db.close()
 
 
+@app.get("/admin/business/{business_id}/mission", response_class=HTMLResponse)
+async def admin_business_mission_control(request: Request, business_id: int):
+    """Redirect admin to the latest Mission Control for a business."""
+    if not is_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return RedirectResponse(url="/admin/businesses", status_code=302)
+        
+        completed_audits = [a for a in business.audits if a.status in ('done', 'completed')]
+        if not completed_audits:
+            return RedirectResponse(url=f"/admin/business/{business_id}", status_code=302)
+        
+        latest_audit = max(completed_audits, key=lambda a: a.completed_at or a.created_at)
+        return RedirectResponse(
+            url=f"/dashboard/business/{business_id}/audit/{latest_audit.id}/mission",
+            status_code=302
+        )
+    finally:
+        db.close()
+
+
 @app.post("/admin/business/{business_id}/run")
 async def admin_run_audit(request: Request, business_id: int, background_tasks: BackgroundTasks):
     """Run an EkkoScope audit for a business (runs in background)."""
