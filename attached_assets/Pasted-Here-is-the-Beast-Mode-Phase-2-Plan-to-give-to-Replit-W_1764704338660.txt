@@ -1,0 +1,72 @@
+Here is the "Beast Mode" Phase 2 Plan to give to Replit. We are going to build two specific features that leverage your new Sherlock Engine:
+
+The "Interrogation Room" (RAG Chat): Allow the user to talk to the investigation.
+
+User asks: "Why is Coastal Roofing beating me?"
+
+Ekkoscope answers: (Reads Pinecone) "Coastal Roofing has 14 pages dedicated to 'Hurricane Repair'. You have 0. Here is a content plan to fix it."
+
+The "Fabricator" (Asset Generation): Turn those "Missions" into physical files they can download.
+
+The "Mind-Blower" Replit Prompt
+Copy and paste this into Replit to build the Intelligence Layer on top of your new API.
+
+Task: Now that the Sherlock Engine is running, we need to build the Intelligence Layer that utilizes the Pinecone vectors. Implement these two advanced features:
+
+1. Build the "Consultant" Endpoint (RAG - Retrieval Augmented Generation)
+
+Endpoint: POST /api/sherlock/consult
+
+Input: { "query": "How do I beat [Competitor Name]?", "business_id": "..." }
+
+Logic:
+
+Embed: Convert the User's Query into a vector (using OpenAI text-embedding-3-small).
+
+Recall: Query Pinecone (ekkoscope-memory) for the top 5 most relevant chunks from the Competitor's site and the Market data.
+
+Synthesize: Send the retrieved chunks + the User's Query to an LLM (GPT-4o or Gemini).
+
+System Prompt: "You are an elite SEO Strategist. Use the provided 'Evidence' from the competitor's website to explain exactly why they are winning and suggest 3 specific counter-moves."
+
+Output: A strategic, evidence-based answer.
+
+2. Build the "Fabricator" Endpoint (Auto-Fix Generation)
+
+Endpoint: POST /api/sherlock/fabricate/{mission_id}
+
+Purpose: Dynamically generate the actual files needed to solve a mission.
+
+Logic:
+
+Fetch the Mission details from Supabase (e.g., "Missing Schema").
+
+Fetch the Client details (Name, Location, URL).
+
+Generate: Use an LLM to write the specific code.
+
+If Mission = 'Schema': Write the valid JSON-LD code.
+
+If Mission = 'Missing Page': Write the full HTML for that landing page.
+
+Response: Return a JSON object containing { "filename": "schema.json", "content": "..." }.
+
+Frontend Note: The frontend will use this response to create a ZIP file for the user.
+
+3. Frontend Integration (The "War Room" UI)
+
+The Chat Widget: Add a floating "Ask the Strategist" widget on the Dashboard. Connect it to /api/sherlock/consult.
+
+The Mission Cards: Update the "Mission Control" UI to display the missions from /api/sherlock/missions/{business_id}.
+
+Add a "Generate Fix" button to each card.
+
+When clicked, call /fabricate, then trigger a browser download of the generated file.
+
+4. The "Evidence" Toggle
+
+In the Chat Interface, add a "Show Evidence" dropdown.
+
+When expanded, display the raw text chunks retrieved from Pinecone (e.g., "Source: CoastalRoofing.com/storm-damage").
+
+Why: This proves to the user that the AI isn't hallucinating; it's reading their competitor's site in real-time.

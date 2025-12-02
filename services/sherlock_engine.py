@@ -826,3 +826,433 @@ def complete_mission(mission_id: int) -> bool:
         return False
     finally:
         db.close()
+
+
+def consult_strategist(
+    query: str,
+    business_id: int,
+    top_k: int = 5
+) -> Dict[str, Any]:
+    """
+    The "Interrogation Room" - RAG-powered strategic consultation.
+    
+    User asks: "Why is Coastal Roofing beating me?"
+    System: Retrieves relevant vectors from Pinecone, synthesizes with LLM.
+    
+    Args:
+        query: The user's strategic question
+        business_id: The client's business ID
+        top_k: Number of evidence chunks to retrieve
+    
+    Returns:
+        Dict with strategic answer and evidence sources
+    """
+    if not is_sherlock_enabled() or sherlock_index is None:
+        return {
+            "success": False,
+            "error": "Sherlock not enabled. Configure Pinecone to use the Strategist."
+        }
+    
+    if not OPENAI_API_KEY:
+        return {"success": False, "error": "OpenAI API key required for consultation"}
+    
+    result = {
+        "success": False,
+        "query": query,
+        "answer": "",
+        "evidence": [],
+        "sources": []
+    }
+    
+    db = SessionLocal()
+    
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        business_name = business.name if business else "Your Business"
+        business_industry = business.industry if business else "general"
+        
+        query_embedding = embed_text(query)
+        if query_embedding is None:
+            result["error"] = "Failed to process your question"
+            return result
+        
+        query_filter = {"business_id": {"$eq": str(business_id)}}
+        
+        pinecone_results = sherlock_index.query(
+            vector=query_embedding,
+            filter=query_filter,
+            top_k=top_k,
+            include_metadata=True
+        )
+        
+        evidence_chunks = []
+        sources = []
+        
+        if pinecone_results and hasattr(pinecone_results, 'matches'):
+            for match in pinecone_results.matches:
+                if match.score < 0.3:
+                    continue
+                    
+                metadata = match.metadata or {}
+                source_url = metadata.get("url", "Unknown source")
+                source_title = metadata.get("title", "")
+                content_type = metadata.get("type", "unknown")
+                topics_str = metadata.get("topics", "[]")
+                
+                try:
+                    topics = json.loads(topics_str) if isinstance(topics_str, str) else []
+                except:
+                    topics = []
+                
+                evidence_chunks.append({
+                    "source": source_url,
+                    "title": source_title,
+                    "type": content_type,
+                    "topics": topics,
+                    "relevance": round(match.score, 3)
+                })
+                
+                sources.append(f"[{content_type.upper()}] {source_title or source_url}")
+        
+        if not evidence_chunks:
+            result["answer"] = "I don't have enough data yet to answer that question. Please ingest some competitor websites first using the Sherlock scanner."
+            result["success"] = True
+            return result
+        
+        evidence_text = ""
+        for i, chunk in enumerate(evidence_chunks, 1):
+            topics_str = ", ".join(chunk["topics"][:5]) if chunk["topics"] else "No specific topics"
+            evidence_text += f"""
+--- EVIDENCE #{i} (Relevance: {chunk['relevance']}) ---
+Source: {chunk['source']}
+Type: {chunk['type']}
+Topics Covered: {topics_str}
+"""
+        
+        system_prompt = f"""You are an elite SEO and AI Visibility Strategist working for {business_name} in the {business_industry} industry.
+
+Your role is to analyze competitor intelligence and provide actionable strategic advice.
+
+RULES:
+1. Use ONLY the provided Evidence to form your answer - do not make up information
+2. Be specific and tactical - give exact counter-moves, not generic advice
+3. Reference the sources when making claims
+4. Focus on AI visibility (how AI assistants like ChatGPT recommend businesses)
+5. If the evidence doesn't support an answer, say so honestly
+
+Format your response with:
+- A direct answer to the question
+- 3 specific counter-moves they can implement immediately
+- Why these moves will work based on the evidence"""
+
+        user_message = f"""QUESTION: {query}
+
+EVIDENCE FROM COMPETITOR ANALYSIS:
+{evidence_text}
+
+Based on this evidence, provide your strategic analysis and recommendations."""
+
+        from openai import OpenAI
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message}
+            ],
+            temperature=0.7,
+            max_tokens=1500
+        )
+        
+        answer = response.choices[0].message.content
+        
+        result["success"] = True
+        result["answer"] = answer
+        result["evidence"] = evidence_chunks
+        result["sources"] = sources
+        result["chunks_retrieved"] = len(evidence_chunks)
+        
+        logger.info("Strategist consultation for business %d: %d evidence chunks used", 
+                    business_id, len(evidence_chunks))
+        
+    except Exception as e:
+        logger.error("Strategist consultation error: %s", e)
+        result["error"] = f"Consultation failed: {str(e)[:100]}"
+    finally:
+        db.close()
+    
+    return result
+
+
+def fabricate_fix(mission_id: int) -> Dict[str, Any]:
+    """
+    The "Fabricator" - Generate actual files to solve a mission.
+    
+    Takes a mission like "Add LocalBusiness Schema" and generates
+    the actual JSON-LD code or HTML page the client needs.
+    
+    Args:
+        mission_id: The mission to fabricate a fix for
+    
+    Returns:
+        Dict with filename, content, and file type
+    """
+    if not OPENAI_API_KEY:
+        return {"success": False, "error": "OpenAI API key required for fabrication"}
+    
+    db = SessionLocal()
+    result = {
+        "success": False,
+        "mission_id": mission_id,
+        "files": []
+    }
+    
+    try:
+        mission = db.query(SherlockMission).filter(SherlockMission.id == mission_id).first()
+        if not mission:
+            result["error"] = "Mission not found"
+            return result
+        
+        business = db.query(Business).filter(Business.id == mission.business_id).first()
+        if not business:
+            result["error"] = "Business not found"
+            return result
+        
+        mission_type = mission.mission_type
+        missing_topic = mission.missing_topic or "general topic"
+        title = mission.title or ""
+        description = mission.description or ""
+        
+        business_name = business.name or "Your Business"
+        business_url = business.url or "https://example.com"
+        business_phone = business.phone or "(555) 123-4567"
+        business_city = business.city or "Your City"
+        business_state = business.state or "ST"
+        business_industry = business.industry or "general"
+        
+        topic_context = []
+        try:
+            if mission.topic_context:
+                topic_context = json.loads(mission.topic_context)
+        except:
+            pass
+        
+        from openai import OpenAI
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        
+        files_generated = []
+        
+        if mission_type in ["schema", "trust_building", "create_schema"]:
+            schema_prompt = f"""Generate valid JSON-LD schema markup for a local business.
+
+Business Details:
+- Name: {business_name}
+- Website: {business_url}
+- Phone: {business_phone}
+- City: {business_city}, {business_state}
+- Industry: {business_industry}
+- Topic to highlight: {missing_topic}
+
+Requirements:
+1. Create a LocalBusiness schema with all relevant properties
+2. Include the topic "{missing_topic}" in the description and services
+3. Make it comprehensive with address, geo coordinates placeholder, hours, etc.
+4. Return ONLY valid JSON - no markdown, no explanation
+
+The JSON should be ready to paste into a <script type="application/ld+json"> tag."""
+
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": schema_prompt}],
+                temperature=0.3,
+                max_tokens=2000
+            )
+            
+            schema_content = response.choices[0].message.content
+            schema_content = schema_content.strip()
+            if schema_content.startswith("```"):
+                lines = schema_content.split("\n")
+                schema_content = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+            
+            files_generated.append({
+                "filename": f"schema-{missing_topic.lower().replace(' ', '-')[:30]}.json",
+                "content": schema_content,
+                "type": "json-ld",
+                "description": f"LocalBusiness schema highlighting {missing_topic}"
+            })
+        
+        elif mission_type in ["create_page", "content_creation", "content_expansion"]:
+            slug = re.sub(r'[^a-z0-9]+', '-', missing_topic.lower()).strip('-')
+            
+            page_prompt = f"""Generate a complete, SEO-optimized landing page for a local business.
+
+Business Details:
+- Name: {business_name}
+- Website: {business_url}
+- Phone: {business_phone}
+- Location: {business_city}, {business_state}
+- Industry: {business_industry}
+
+Page Topic: {missing_topic}
+Context phrases to include: {', '.join(topic_context[:5]) if topic_context else 'N/A'}
+
+Requirements:
+1. Create a full HTML page with proper semantic structure
+2. Include meta title and description optimized for "{missing_topic}"
+3. Write compelling, conversion-focused content (minimum 800 words)
+4. Include FAQ section with 5 relevant questions
+5. Add clear calls-to-action with phone number
+6. Use proper heading hierarchy (H1, H2, H3)
+7. Make it mobile-friendly with viewport meta tag
+8. Include embedded JSON-LD schema for the service
+9. Style it cleanly with embedded CSS (dark professional theme)
+
+Return ONLY the complete HTML - no markdown code blocks or explanation."""
+
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": page_prompt}],
+                temperature=0.7,
+                max_tokens=4000
+            )
+            
+            html_content = response.choices[0].message.content
+            html_content = html_content.strip()
+            if html_content.startswith("```"):
+                lines = html_content.split("\n")
+                html_content = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+            
+            files_generated.append({
+                "filename": f"{slug}.html",
+                "content": html_content,
+                "type": "html",
+                "description": f"Landing page for {missing_topic}"
+            })
+        
+        elif mission_type in ["faq", "content_faq"]:
+            faq_prompt = f"""Generate a comprehensive FAQ section about "{missing_topic}" for a {business_industry} business.
+
+Business: {business_name} in {business_city}, {business_state}
+
+Requirements:
+1. Create 10 frequently asked questions about {missing_topic}
+2. Write detailed, helpful answers (100-200 words each)
+3. Format as valid JSON with this structure:
+{{
+  "faqs": [
+    {{"question": "...", "answer": "..."}},
+    ...
+  ]
+}}
+4. Include local context where relevant
+5. Make answers authoritative and trustworthy
+
+Return ONLY valid JSON - no markdown or explanation."""
+
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": faq_prompt}],
+                temperature=0.7,
+                max_tokens=3000
+            )
+            
+            faq_content = response.choices[0].message.content
+            faq_content = faq_content.strip()
+            if faq_content.startswith("```"):
+                lines = faq_content.split("\n")
+                faq_content = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+            
+            files_generated.append({
+                "filename": f"faq-{missing_topic.lower().replace(' ', '-')[:30]}.json",
+                "content": faq_content,
+                "type": "json",
+                "description": f"FAQ content about {missing_topic}"
+            })
+        
+        else:
+            content_prompt = f"""Generate optimized content about "{missing_topic}" for a {business_industry} business.
+
+Business: {business_name}
+Location: {business_city}, {business_state}
+
+Create a comprehensive content piece (minimum 500 words) that:
+1. Explains the topic thoroughly
+2. Establishes expertise and authority
+3. Includes relevant keywords naturally
+4. Has a clear structure with headings
+5. Ends with a call-to-action
+
+Format as clean HTML with proper heading tags. No full page structure needed - just the content section."""
+
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": content_prompt}],
+                temperature=0.7,
+                max_tokens=2000
+            )
+            
+            content = response.choices[0].message.content
+            content = content.strip()
+            if content.startswith("```"):
+                lines = content.split("\n")
+                content = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+            
+            files_generated.append({
+                "filename": f"content-{missing_topic.lower().replace(' ', '-')[:30]}.html",
+                "content": content,
+                "type": "html-fragment",
+                "description": f"Content section about {missing_topic}"
+            })
+        
+        mission.status = "in_progress"
+        db.commit()
+        
+        result["success"] = True
+        result["files"] = files_generated
+        result["mission_title"] = title
+        result["business_name"] = business_name
+        
+        logger.info("Fabricator generated %d files for mission %d", 
+                    len(files_generated), mission_id)
+        
+    except Exception as e:
+        logger.error("Fabricator error: %s", e)
+        result["error"] = f"Fabrication failed: {str(e)[:100]}"
+        db.rollback()
+    finally:
+        db.close()
+    
+    return result
+
+
+def get_mission_by_id(mission_id: int) -> Optional[Dict[str, Any]]:
+    """Get a single mission by ID."""
+    db = SessionLocal()
+    
+    try:
+        mission = db.query(SherlockMission).filter(SherlockMission.id == mission_id).first()
+        if not mission:
+            return None
+        
+        return {
+            "id": mission.id,
+            "business_id": mission.business_id,
+            "title": mission.title,
+            "description": mission.description,
+            "mission_type": mission.mission_type,
+            "priority": mission.priority,
+            "status": mission.status,
+            "missing_topic": mission.missing_topic,
+            "recommended_action": mission.recommended_action,
+            "estimated_impact": mission.estimated_impact,
+            "target_url": mission.target_url_slug,
+            "topic_context": mission.topic_context,
+            "competitor_coverage": mission.competitor_coverage,
+            "created_at": mission.created_at.isoformat() if mission.created_at else None
+        }
+    except Exception as e:
+        logger.error("Error fetching mission: %s", e)
+        return None
+    finally:
+        db.close()

@@ -2921,9 +2921,124 @@ async def sherlock_status(request: Request):
             "Semantic topic extraction",
             "Vector embedding storage",
             "Competitor gap analysis",
-            "Mission generation"
+            "Mission generation",
+            "Strategic consultation (RAG)",
+            "Fix fabrication"
         ]
     })
+
+
+@app.post("/api/sherlock/consult")
+async def sherlock_consult(request: Request):
+    """
+    The 'Interrogation Room' - RAG-powered strategic consultation.
+    
+    User asks: "Why is Coastal Roofing beating me?"
+    System: Retrieves relevant vectors, synthesizes with LLM.
+    """
+    from services.sherlock_engine import consult_strategist, is_sherlock_enabled
+    
+    user = get_current_user(request)
+    if not user:
+        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    
+    if not is_sherlock_enabled():
+        return JSONResponse({"error": "Sherlock is not enabled"}, status_code=503)
+    
+    try:
+        data = await request.json()
+    except:
+        return JSONResponse({"error": "Invalid JSON"}, status_code=400)
+    
+    query = data.get("query", "").strip()
+    business_id = data.get("business_id")
+    
+    if not query:
+        return JSONResponse({"error": "Query is required"}, status_code=400)
+    
+    if not business_id:
+        return JSONResponse({"error": "business_id is required"}, status_code=400)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return JSONResponse({"error": "Business not found"}, status_code=404)
+        
+        if business.owner_user_id != user.id and not user.is_admin:
+            return JSONResponse({"error": "Not authorized"}, status_code=403)
+        
+        result = consult_strategist(query, business_id)
+        return JSONResponse(result)
+        
+    except Exception as e:
+        logger.error("Consultation error: %s", e)
+        return JSONResponse({"error": str(e)[:100]}, status_code=500)
+    finally:
+        db.close()
+
+
+@app.post("/api/sherlock/fabricate/{mission_id}")
+async def sherlock_fabricate(request: Request, mission_id: int):
+    """
+    The 'Fabricator' - Generate actual files to solve a mission.
+    
+    Takes a mission and generates the schema, HTML, or content files needed.
+    Returns JSON with files array that frontend uses to create ZIP download.
+    """
+    from services.sherlock_engine import fabricate_fix, get_mission_by_id, is_sherlock_enabled
+    
+    user = get_current_user(request)
+    if not user:
+        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    
+    if not is_sherlock_enabled():
+        return JSONResponse({"error": "Sherlock not enabled. Configure OpenAI API key."}, status_code=503)
+    
+    mission = get_mission_by_id(mission_id)
+    if not mission:
+        return JSONResponse({"error": "Mission not found"}, status_code=404)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == mission["business_id"]).first()
+        if not business:
+            return JSONResponse({"error": "Business not found"}, status_code=404)
+        
+        if business.owner_user_id != user.id and not user.is_admin:
+            return JSONResponse({"error": "Not authorized"}, status_code=403)
+        
+        result = fabricate_fix(mission_id)
+        return JSONResponse(result)
+        
+    except Exception as e:
+        logger.error("Fabrication error: %s", e)
+        return JSONResponse({"error": str(e)[:100]}, status_code=500)
+    finally:
+        db.close()
+
+
+@app.get("/api/sherlock/mission/{mission_id}")
+async def sherlock_get_mission(request: Request, mission_id: int):
+    """Get a single mission by ID."""
+    from services.sherlock_engine import get_mission_by_id
+    
+    user = get_current_user(request)
+    if not user:
+        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    
+    mission = get_mission_by_id(mission_id)
+    if not mission:
+        return JSONResponse({"error": "Mission not found"}, status_code=404)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == mission["business_id"]).first()
+        if business and (business.owner_user_id == user.id or user.is_admin):
+            return JSONResponse(mission)
+        return JSONResponse({"error": "Not authorized"}, status_code=403)
+    finally:
+        db.close()
 
 
 # =============================================================================

@@ -35,7 +35,10 @@ The backend is built with FastAPI and Uvicorn on Python 3.11+. It handles AI vis
     - **Topic Extraction**: Uses GPT to identify semantic themes (not just keywords).
     - **Gap Analysis**: Compares client vs competitor vector spaces to find missing topics.
     - **Mission Generation**: Creates actionable tasks like "Create a page about Storm Damage Insurance."
-    - **API Endpoints**: Full REST API at `/api/sherlock/*` for integration.
+    - **Strategic Consultant (RAG Chat)**: "Interrogation Room" feature - users ask questions like "Why is Coastal Roofing beating me?" and receive evidence-based strategic advice with Pinecone-retrieved sources.
+    - **Fabricator (Asset Generation)**: Turns missions into downloadable files - generates JSON-LD schema, HTML landing pages, FAQ content based on business details and missing topics.
+    - **Evidence Display**: Shows "Show Evidence" toggle in chat responses linking to Pinecone source documents.
+    - **API Endpoints**: Full REST API at `/api/sherlock/*` including `/consult` (RAG) and `/fabricate/{mission_id}` (file generation).
 - **Activation Code System**: Supports one-time-use activation codes for prospects.
 - **Free First Report Feature**: New users receive one free AI visibility report upon signup.
 - **Sentinel OS Integration**: Real-time logging of AI queries and report generation events to the Sentinel OS dashboard.
