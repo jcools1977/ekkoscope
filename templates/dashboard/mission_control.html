@@ -2530,9 +2530,12 @@ Instructions:
             input.focus();
         }
         
-        document.getElementById('strategistInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') sendStrategistQuery();
-        });
+        const strategistInputEl = document.getElementById('strategistInput');
+        if (strategistInputEl) {
+            strategistInputEl.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendStrategistQuery();
+            });
+        }
         
         // ================================================================
         // MISSIONS PANEL - Sherlock Generated Missions
