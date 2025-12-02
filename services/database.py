@@ -457,6 +457,46 @@ class SherlockMission(Base):
     competitor = relationship("SherlockCompetitor")
 
 
+class ClaimToken(Base):
+    """Magic claim tokens for client handoff - time-limited invite links."""
+    __tablename__ = "claim_tokens"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    business_id = Column(Integer, ForeignKey("businesses.id"), nullable=False, index=True)
+    created_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    
+    token = Column(String(64), unique=True, nullable=False, index=True)
+    client_email = Column(String(255), nullable=True)
+    client_name = Column(String(255), nullable=True)
+    
+    expires_at = Column(DateTime, nullable=False)
+    redeemed_at = Column(DateTime, nullable=True)
+    redeemed_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    
+    status = Column(String(20), default="active")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    business = relationship("Business")
+    created_by = relationship("User", foreign_keys=[created_by_user_id])
+    redeemed_by = relationship("User", foreign_keys=[redeemed_by_user_id])
+    
+    @classmethod
+    def generate_token(cls) -> str:
+        """Generate a secure random token."""
+        import secrets
+        return secrets.token_urlsafe(32)
+    
+    def is_valid(self) -> bool:
+        """Check if token is still valid (not expired, not redeemed)."""
+        if self.status != "active":
+            return False
+        if self.redeemed_at is not None:
+            return False
+        if datetime.utcnow() > self.expires_at:
+            return False
+        return True
+
+
 def derive_region_group(regions: List[str]) -> str:
     """Derive a region group from a list of regions for pattern matching."""
     if not regions:

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link Error - EkkoScope</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <style>
+        :root {
+            --brand-teal: #2EE6A8;
+            --brand-blue: #18A3FF;
+            --bg-void: #050A0F;
+            --bg-card: #0d1b2a;
+            --border-glass: rgba(239, 68, 68, 0.3);
+            --text-primary: #F5F7FA;
+            --text-secondary: #94a3b8;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-void);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .error-container {
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+        }
+        
+        .error-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 50px 40px;
+        }
+        
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: rgba(239, 68, 68, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .error-icon svg {
+            width: 40px;
+            height: 40px;
+            color: #ef4444;
+        }
+        
+        .error-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #ef4444;
+        }
+        
+        .error-message {
+            color: var(--text-secondary);
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        
+        .action-btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            border: none;
+            border-radius: 10px;
+            color: var(--bg-void);
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(46, 230, 168, 0.3);
+        }
+        
+        .logo {
+            margin-bottom: 30px;
+        }
+        
+        .logo img {
+            height: 32px;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-card">
+            <div class="logo">
+                <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope">
+            </div>
+            
+            <div class="error-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+            </div>
+            
+            <h1 class="error-title">Link Error</h1>
+            <p class="error-message">{{ error }}</p>
+            
+            <a href="/login" class="action-btn">Go to Login</a>
+        </div>
+    </div>
+</body>
+</html>

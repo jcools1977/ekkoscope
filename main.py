@@ -2216,6 +2216,291 @@ async def admin_business_edit(
         db.close()
 
 
+# =============================================================================
+# CLIENT HANDOFF MODULE
+# =============================================================================
+
+@app.post("/admin/business/{business_id}/generate-claim")
+async def admin_generate_claim_link(request: Request, business_id: int):
+    """Generate a magic claim link for client handoff."""
+    if not is_authenticated(request):
+        return JSONResponse({"error": "Admin access required"}, status_code=403)
+    
+    from services.database import ClaimToken
+    from datetime import timedelta
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return JSONResponse({"error": "Business not found"}, status_code=404)
+        
+        user = get_current_user(request)
+        if not user:
+            return JSONResponse({"error": "User not found"}, status_code=403)
+        
+        claim = ClaimToken(
+            business_id=business.id,
+            created_by_user_id=user.id,
+            token=ClaimToken.generate_token(),
+            expires_at=datetime.utcnow() + timedelta(days=7)
+        )
+        
+        db.add(claim)
+        db.commit()
+        db.refresh(claim)
+        
+        domain = os.getenv("REPLIT_DEV_DOMAIN", request.base_url.hostname)
+        claim_url = f"https://{domain}/claim?token={claim.token}"
+        
+        return JSONResponse({
+            "success": True,
+            "claim_url": claim_url,
+            "token": claim.token,
+            "expires_at": claim.expires_at.isoformat(),
+            "business_name": business.name
+        })
+        
+    finally:
+        db.close()
+
+
+@app.get("/admin/business/{business_id}/email-script")
+async def admin_get_email_script(request: Request, business_id: int):
+    """Generate personalized sales email script for client handoff."""
+    if not is_authenticated(request):
+        return JSONResponse({"error": "Admin access required"}, status_code=403)
+    
+    from services.database import SherlockMission, SherlockCompetitor
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return JSONResponse({"error": "Business not found"}, status_code=404)
+        
+        latest_audit = (
+            db.query(Audit)
+            .filter(Audit.business_id == business_id, Audit.status.in_(["done", "completed"]))
+            .order_by(Audit.completed_at.desc())
+            .first()
+        )
+        
+        visibility_score = 0
+        if latest_audit:
+            summary = latest_audit.get_visibility_summary()
+            if summary:
+                visibility_score = summary.get("overall_score", 0)
+        
+        competitors = db.query(SherlockCompetitor).filter(
+            SherlockCompetitor.business_id == business_id
+        ).limit(3).all()
+        
+        competitor_names = [c.name for c in competitors] if competitors else ["[Competitor 1]", "[Competitor 2]"]
+        
+        missions = db.query(SherlockMission).filter(
+            SherlockMission.business_id == business_id,
+            SherlockMission.status == "pending"
+        ).limit(3).all()
+        
+        gap_topic = missions[0].missing_topic if missions else "key service areas"
+        
+        email_script = f"""Hey [Client Name],
+
+I ran that scan on {business.name}.
+
+STATUS: Your AI visibility is at {visibility_score}%. Your competitor {competitor_names[0]} has significantly more coverage.
+
+I found a semantic gap in your "{gap_topic}" content.
+
+The good news: I've already identified {len(missions) if missions else 3} specific fixes that could dramatically improve your visibility.
+
+View the full evidence here: [INSERT CLAIM LINK]
+
+Want me to walk you through the findings? I can show you exactly what your competitors are doing that you're not.
+
+Best,
+[Your Name]
+
+---
+P.S. The link expires in 7 days. The longer you wait, the more leads go to {competitor_names[0]}."""
+
+        return JSONResponse({
+            "success": True,
+            "email_script": email_script,
+            "business_name": business.name,
+            "visibility_score": visibility_score,
+            "competitors": competitor_names,
+            "gap_topic": gap_topic
+        })
+        
+    finally:
+        db.close()
+
+
+@app.get("/claim", response_class=HTMLResponse)
+async def claim_page(request: Request, token: str = None):
+    """Public claim page - client sets password to access their dashboard."""
+    if not token:
+        return templates.TemplateResponse(
+            "public/claim_error.html",
+            {"request": request, "error": "No claim token provided"}
+        )
+    
+    from services.database import ClaimToken
+    
+    db = get_db_session()
+    try:
+        claim = db.query(ClaimToken).filter(ClaimToken.token == token).first()
+        
+        if not claim:
+            return templates.TemplateResponse(
+                "public/claim_error.html",
+                {"request": request, "error": "Invalid claim link"}
+            )
+        
+        if not claim.is_valid():
+            if claim.redeemed_at:
+                return templates.TemplateResponse(
+                    "public/claim_error.html",
+                    {"request": request, "error": "This link has already been used. Please login to access your dashboard."}
+                )
+            else:
+                return templates.TemplateResponse(
+                    "public/claim_error.html",
+                    {"request": request, "error": "This link has expired. Please contact us for a new link."}
+                )
+        
+        business = db.query(Business).filter(Business.id == claim.business_id).first()
+        if not business:
+            return templates.TemplateResponse(
+                "public/claim_error.html",
+                {"request": request, "error": "Business not found"}
+            )
+        
+        return templates.TemplateResponse(
+            "public/claim.html",
+            {
+                "request": request,
+                "token": token,
+                "business_name": business.name,
+                "business_domain": business.primary_domain
+            }
+        )
+        
+    finally:
+        db.close()
+
+
+@app.post("/claim")
+async def claim_submit(
+    request: Request,
+    token: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    first_name: str = Form(""),
+    last_name: str = Form("")
+):
+    """Handle claim form submission - create user account and link to business."""
+    from services.database import ClaimToken
+    
+    db = get_db_session()
+    try:
+        claim = db.query(ClaimToken).filter(ClaimToken.token == token).first()
+        
+        if not claim or not claim.is_valid():
+            return templates.TemplateResponse(
+                "public/claim_error.html",
+                {"request": request, "error": "Invalid or expired claim link"}
+            )
+        
+        business = db.query(Business).filter(Business.id == claim.business_id).first()
+        if not business:
+            return templates.TemplateResponse(
+                "public/claim_error.html",
+                {"request": request, "error": "Business not found"}
+            )
+        
+        if business.owner_user_id:
+            existing_owner = db.query(User).filter(User.id == business.owner_user_id).first()
+            if existing_owner and existing_owner.email.lower() != email.lower().strip():
+                return templates.TemplateResponse(
+                    "public/claim_error.html",
+                    {
+                        "request": request,
+                        "error": "This business already has an owner. Please contact support if you believe this is an error."
+                    }
+                )
+        
+        existing_user = db.query(User).filter(User.email == email.lower().strip()).first()
+        
+        if existing_user:
+            if not existing_user.verify_password(password):
+                return templates.TemplateResponse(
+                    "public/claim.html",
+                    {
+                        "request": request,
+                        "token": token,
+                        "business_name": business.name,
+                        "business_domain": business.primary_domain,
+                        "error": "An account with this email exists. Please enter the correct password or use a different email."
+                    }
+                )
+            user = existing_user
+        else:
+            user = User(
+                email=email.lower().strip(),
+                first_name=first_name.strip() if first_name else None,
+                last_name=last_name.strip() if last_name else None
+            )
+            user.set_password(password)
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        
+        if not business.owner_user_id:
+            business.owner_user_id = user.id
+        
+        other_tokens = db.query(ClaimToken).filter(
+            ClaimToken.business_id == business.id,
+            ClaimToken.id != claim.id,
+            ClaimToken.status == "active"
+        ).all()
+        for other_token in other_tokens:
+            other_token.status = "revoked"
+        
+        claim.redeemed_at = datetime.utcnow()
+        claim.redeemed_by_user_id = user.id
+        claim.client_email = email
+        claim.client_name = f"{first_name} {last_name}".strip() if first_name or last_name else None
+        claim.status = "redeemed"
+        
+        db.commit()
+        
+        login_user(request, user)
+        
+        completed_audits = [a for a in business.audits if a.status in ('done', 'completed')]
+        if completed_audits:
+            latest_audit = max(completed_audits, key=lambda a: a.completed_at or a.created_at)
+            return RedirectResponse(
+                url=f"/dashboard/business/{business.id}/audit/{latest_audit.id}/mission?welcome=true",
+                status_code=302
+            )
+        
+        return RedirectResponse(
+            url=f"/dashboard/business/{business.id}?welcome=true",
+            status_code=302
+        )
+        
+    except Exception as e:
+        return templates.TemplateResponse(
+            "public/claim_error.html",
+            {"request": request, "error": f"An error occurred: {str(e)}"}
+        )
+    finally:
+        db.close()
+
+
 @app.post("/admin/audit/{audit_id}/delete")
 async def admin_delete_audit(request: Request, audit_id: int):
     """Delete an audit (Admin)."""

@@ -34,6 +34,165 @@
         flex-wrap: wrap;
         margin-top: 1.5rem;
     }
+    
+    .handoff-section {
+        background: linear-gradient(135deg, rgba(46, 230, 168, 0.08) 0%, rgba(24, 163, 255, 0.05) 100%);
+        border: 1px solid rgba(46, 230, 168, 0.25);
+        border-radius: 12px;
+        padding: 25px;
+        margin-top: 25px;
+    }
+    
+    .handoff-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--brand-teal);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .handoff-title svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .handoff-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+    
+    .handoff-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 20px 15px;
+        background: var(--bg-dark);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .handoff-btn:hover {
+        border-color: var(--brand-teal);
+        background: rgba(46, 230, 168, 0.05);
+        transform: translateY(-2px);
+    }
+    
+    .handoff-btn svg {
+        width: 28px;
+        height: 28px;
+        color: var(--brand-teal);
+    }
+    
+    .handoff-btn-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-align: center;
+    }
+    
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 10, 15, 0.95);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-overlay.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 30px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .modal-header h3 {
+        font-size: 20px;
+        color: var(--brand-teal);
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 24px;
+    }
+    
+    .modal-close:hover {
+        color: var(--text-primary);
+    }
+    
+    .copy-field {
+        background: var(--bg-dark);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 15px;
+        font-family: monospace;
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 15px;
+        word-break: break-all;
+    }
+    
+    .copy-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        background: var(--brand-teal);
+        border: none;
+        border-radius: 8px;
+        color: var(--bg-dark);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .copy-btn:hover {
+        background: #25c991;
+    }
+    
+    .copy-btn.copied {
+        background: #22c55e;
+    }
+    
+    .email-script {
+        background: var(--bg-dark);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 20px;
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.8;
+        white-space: pre-wrap;
+        max-height: 400px;
+        overflow-y: auto;
+    }
 </style>
 
 <div class="page-header">
@@ -166,6 +325,92 @@
         {% endif %}
         <a href="/admin/business/{{ business.id }}/edit" class="btn btn-secondary">Edit Business</a>
     </div>
+    
+    <div class="handoff-section">
+        <div class="handoff-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            Client Handoff
+        </div>
+        
+        <div class="handoff-grid">
+            <button class="handoff-btn" onclick="generateClaimLink()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                <span class="handoff-btn-label">Generate Claim Link</span>
+            </button>
+            
+            <button class="handoff-btn" onclick="copyEmailScript()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <span class="handoff-btn-label">Copy Email Script</span>
+            </button>
+            
+            <a href="/dossier/{{ business.id }}" target="_blank" class="handoff-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                </svg>
+                <span class="handoff-btn-label">Generate Dossier PDF</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="claimModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Claim Link Generated</h3>
+            <button class="modal-close" onclick="closeModal('claimModal')">&times;</button>
+        </div>
+        <p style="color: var(--text-secondary); margin-bottom: 15px;">
+            Share this link with your client. They'll set a password to access their Mission Control dashboard.
+        </p>
+        <div class="copy-field" id="claimLinkField"></div>
+        <button class="copy-btn" id="copyClaimBtn" onclick="copyToClipboard('claimLinkField', 'copyClaimBtn')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            Copy Link
+        </button>
+        <p style="color: var(--text-muted); font-size: 12px; margin-top: 15px;">
+            Link expires in 7 days
+        </p>
+    </div>
+</div>
+
+<div class="modal-overlay" id="emailModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Sales Email Script</h3>
+            <button class="modal-close" onclick="closeModal('emailModal')">&times;</button>
+        </div>
+        <p style="color: var(--text-secondary); margin-bottom: 15px;">
+            Personalized outreach email based on discovered intelligence. Edit as needed.
+        </p>
+        <div class="email-script" id="emailScriptField"></div>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="copy-btn" id="copyEmailBtn" onclick="copyToClipboard('emailScriptField', 'copyEmailBtn')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                Copy Email
+            </button>
+        </div>
+    </div>
 </div>
 
 <div class="card">
@@ -220,6 +465,82 @@ document.querySelectorAll('.audit-form').forEach(form => {
         if (btn) {
             btn.classList.add('loading');
             btn.disabled = true;
+        }
+    });
+});
+
+const businessId = {{ business.id }};
+let currentClaimUrl = '';
+
+async function generateClaimLink() {
+    try {
+        const response = await fetch(`/admin/business/${businessId}/generate-claim`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            currentClaimUrl = data.claim_url;
+            document.getElementById('claimLinkField').textContent = data.claim_url;
+            document.getElementById('claimModal').classList.add('active');
+        } else {
+            alert('Error: ' + (data.error || 'Failed to generate claim link'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to generate claim link');
+    }
+}
+
+async function copyEmailScript() {
+    try {
+        const response = await fetch(`/admin/business/${businessId}/email-script`);
+        const data = await response.json();
+        
+        if (data.success) {
+            let script = data.email_script;
+            if (currentClaimUrl) {
+                script = script.replace('[INSERT CLAIM LINK]', currentClaimUrl);
+            }
+            document.getElementById('emailScriptField').textContent = script;
+            document.getElementById('emailModal').classList.add('active');
+        } else {
+            alert('Error: ' + (data.error || 'Failed to generate email script'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to generate email script');
+    }
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+}
+
+function copyToClipboard(fieldId, btnId) {
+    const text = document.getElementById(fieldId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById(btnId);
+        btn.classList.add('copied');
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+        
+        setTimeout(() => {
+            btn.classList.remove('copied');
+            if (btnId === 'copyClaimBtn') {
+                btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Link';
+            } else {
+                btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Email';
+            }
+        }, 2000);
+    });
+}
+
+document.querySelectorAll('.modal-overlay').forEach(modal => {
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.remove('active');
         }
     });
 });

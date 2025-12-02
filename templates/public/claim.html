@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claim Your Dashboard - EkkoScope</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <style>
+        :root {
+            --brand-teal: #2EE6A8;
+            --brand-blue: #18A3FF;
+            --bg-void: #050A0F;
+            --bg-card: #0d1b2a;
+            --border-glass: rgba(46, 230, 168, 0.2);
+            --text-primary: #F5F7FA;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-void);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .claim-container {
+            width: 100%;
+            max-width: 480px;
+        }
+        
+        .claim-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .claim-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--brand-teal), var(--brand-blue));
+        }
+        
+        .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(46, 230, 168, 0.15);
+            border: 1px solid var(--brand-teal);
+            border-radius: 20px;
+            padding: 8px 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: var(--brand-teal);
+        }
+        
+        .verified-badge svg {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .claim-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--text-primary), var(--brand-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .claim-subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+        
+        .business-highlight {
+            color: var(--brand-teal);
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(5, 10, 15, 0.8);
+            border: 1px solid rgba(46, 230, 168, 0.2);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--brand-teal);
+            box-shadow: 0 0 20px rgba(46, 230, 168, 0.15);
+        }
+        
+        .form-group input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            border: none;
+            border-radius: 12px;
+            color: var(--bg-void);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(46, 230, 168, 0.3);
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .security-note {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .security-note svg {
+            width: 14px;
+            height: 14px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo img {
+            height: 36px;
+        }
+    </style>
+</head>
+<body>
+    <div class="claim-container">
+        <div class="claim-card">
+            <div class="logo">
+                <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope">
+            </div>
+            
+            <div class="verified-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                Verified Intelligence Report Ready
+            </div>
+            
+            <h1 class="claim-title">{{ business_name }}</h1>
+            <p class="claim-subtitle">
+                Your AI visibility analysis is complete. Set your password to unlock 
+                <span class="business-highlight">Mission Control</span> and view your intelligence dashboard.
+            </p>
+            
+            {% if error %}
+            <div class="error-message">{{ error }}</div>
+            {% endif %}
+            
+            <form method="POST" action="/claim">
+                <input type="hidden" name="token" value="{{ token }}">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="first_name">First Name</label>
+                        <input type="text" id="first_name" name="first_name" placeholder="John">
+                    </div>
+                    <div class="form-group">
+                        <label for="last_name">Last Name</label>
+                        <input type="text" id="last_name" name="last_name" placeholder="Smith">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="john@{{ business_domain }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Create Password</label>
+                    <input type="password" id="password" name="password" required minlength="8" placeholder="Minimum 8 characters">
+                </div>
+                
+                <button type="submit" class="submit-btn">
+                    Unlock Mission Control
+                </button>
+                
+                <div class="security-note">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    Secure 256-bit encryption
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
