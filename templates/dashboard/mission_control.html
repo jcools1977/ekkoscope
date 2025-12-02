@@ -2080,10 +2080,10 @@
     "reviewCount": "127"
   }
 }
-</script>
+<` + `/script>
 
 <!-- Meta Description Fix -->
-<meta name="description" content="Professional ${businessName} services. Available 24/7 for emergency needs. Top-rated with 4.9★ reviews.">
+<meta name="description" content="Professional ${businessName} services. Available 24/7 for emergency needs. Top-rated with 4.9 reviews.">
 
 <!-- FAQ Schema -->
 <script type="application/ld+json">
@@ -2099,7 +2099,7 @@
     }
   }]
 }
-</script>`;
+<` + `/script>`;
             
             navigator.clipboard.writeText(code).then(() => {
                 alert('Code copied to clipboard!');
@@ -2116,7 +2116,7 @@
   "@type": "LocalBusiness",
   "name": "${businessName}"
 }
-</script>`);
+<` + `/script>`);
             
             zip.file("meta-fix.html", `<meta name="description" content="Professional ${businessName} services.">`);
             
@@ -2124,7 +2124,7 @@
 Generated: ${new Date().toISOString()}
 
 Instructions:
-1. Open schema-fix.html and copy the schema to your site's <head>
+1. Open schema-fix.html and copy the schema to your site's head section
 2. Update your meta description using meta-fix.html
 3. Re-run your EkkoScope audit to verify improvements`);
             
