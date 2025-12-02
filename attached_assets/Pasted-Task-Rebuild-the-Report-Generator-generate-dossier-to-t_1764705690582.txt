@@ -1,0 +1,61 @@
+Task: Rebuild the Report Generator (generate_dossier) to tell a coherent story. Transition from "Forensic Analyst" (The Problem) to "Success Coach" (The Solution).
+
+1. Section A: The Forensic Audit (The "Crime Scene")
+
+Visual Style: "Evidence Folder" / "Redacted File".
+
+Content:
+
+The Verdict: A large stamp: "INVISIBLE" (Red) or "DETECTED" (Green).
+
+The Suspect Lineup: Show the Top 3 Competitors identified by the Scraper.
+
+The "Smoking Gun": Use Pinecone to find the exact text the competitor uses that the client lacks.
+
+Example: "Competitor 'Coastal Roofing' mentions 'Hurricane Insurance Claims' 12 times. You mention it 0 times."
+
+2. Section B: The "Coach's Playbook" (The 30-Day Plan)
+
+Tone: Shift from analytical to motivational and prescriptive.
+
+Logic: Instead of generic tasks ("Fix SEO"), use the Gap Analysis to write the tasks dynamically.
+
+Structure (The 4-Week Sprint):
+
+Week 1: Triage & Patching (The "Stop the Bleeding" Phase)
+
+Focus: Technical fixes found in the scan (Schema, Sitemap, Robots.txt).
+
+Narrative: "Before we attack, we must fix the foundation. Coastal Roofing has perfect Schema. We need to match that by Friday."
+
+Week 2: The Content Counter-Attack (The "Gap Closure" Phase)
+
+Focus: Creating the missing pages identified by Pinecone.
+
+Narrative: "The Detective found a gap in 'Emergency Services'. Your job this week is to launch the 'Emergency' landing page using the text we generated."
+
+Week 3: Authority & Signals (The "Reputation" Phase)
+
+Focus: Citations and Social Proof (from the 'Wiretap' engine).
+
+Narrative: "We need to get you cited. Submit your business to these 3 directories where your competitor is listed but you are not."
+
+Week 4: The Re-Scan (The "Weigh-In" Phase)
+
+Focus: Monitoring and adjustment.
+
+Narrative: "We will re-run the Private Eye scan on Day 30 to measure your visibility lift."
+
+3. The "Fabricator" Integration:
+
+Next to each "Weekly Task" in the PDF/Dashboard, add a "Get Tools" link.
+
+Week 1 Link: Downloads the Schema.json.
+
+Week 2 Link: Downloads the Landing_Page_Template.zip.
+
+4. Technical Execution:
+
+Use the LLM to write the "Coaching Voice" text based on the specific Pinecone data.
+
+Ensure the PDF output looks clean, professional, and high-value (like a $2,000 consulting report).

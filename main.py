@@ -18,6 +18,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from services.analysis import run_analysis, MissingAPIKeyError
 from services.reporting import build_ekkoscope_pdf
+from services.dossier_generator import build_dossier_pdf
 from services.database import init_db, get_db_session, Business, Audit, User, Purchase
 from services.audit_runner import run_audit_for_business, get_audit_analysis_data
 from services.stripe_client import load_stripe_config, create_checkout_session, create_subscription_checkout_session, create_ekkobrain_addon_checkout_session, verify_webhook_signature, get_stripe_client
@@ -1508,6 +1509,65 @@ async def download_report(request: Request, tenant_id: str):
                 "error": f"Error generating report: {str(e)}"
             }
         )
+
+
+@app.get("/dossier/{business_id}")
+async def download_dossier(request: Request, business_id: int):
+    """Generate and download an EkkoScope Intelligence Dossier PDF."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            raise HTTPException(status_code=404, detail="Business not found")
+        
+        is_admin = user.email.lower() in [e.lower() for e in ADMIN_EMAILS] if ADMIN_EMAILS else False
+        if business.user_id != user.id and not is_admin:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        latest_audit = db.query(Audit).filter(
+            Audit.business_id == business_id
+        ).order_by(Audit.created_at.desc()).first()
+        
+        if not latest_audit or not latest_audit.results:
+            raise HTTPException(status_code=400, detail="No audit results available. Run an audit first.")
+        
+        import json
+        analysis = json.loads(latest_audit.results) if isinstance(latest_audit.results, str) else latest_audit.results
+        
+        sherlock_data = None
+        try:
+            from services.sherlock_engine import get_missions_for_business, is_sherlock_enabled
+            if is_sherlock_enabled():
+                missions = get_missions_for_business(business_id)
+                if missions:
+                    sherlock_data = {"missions": missions}
+        except Exception:
+            pass
+        
+        pdf_bytes = build_dossier_pdf(
+            business_name=business.name,
+            analysis=analysis,
+            sherlock_data=sherlock_data,
+            competitor_evidence=None
+        )
+        
+        safe_name = "".join(c if c.isalnum() or c in "._- " else "_" for c in business.name)
+        filename = f"ekkoscope_dossier_{safe_name}.pdf"
+        
+        return StreamingResponse(
+            BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"'
+            }
+        )
+    
+    finally:
+        db.close()
 
 
 @app.get("/admin/login", response_class=HTMLResponse)
