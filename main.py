@@ -3114,8 +3114,6 @@ async def admin_onboarding_create(
                 name=business_name,
                 primary_domain=clean_domain,
                 owner_user_id=user.id,
-                is_demo=False,
-                has_free_report=True,
                 industry=industry,
                 competitors=competitors
             )
