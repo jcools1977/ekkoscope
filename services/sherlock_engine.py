@@ -775,6 +775,186 @@ def run_full_analysis(
     return result
 
 
+def clear_vectors_for_business(business_id: int) -> Dict[str, Any]:
+    """
+    Clear all Sherlock vectors and database records for a business.
+    Used for Force Intelligence Rescan to start fresh.
+    
+    Args:
+        business_id: The business ID to clear data for
+    
+    Returns:
+        Dict with success status and counts of deleted items
+    """
+    result = {
+        "success": False,
+        "vectors_deleted": 0,
+        "scans_deleted": 0,
+        "competitors_deleted": 0,
+        "missions_deleted": 0
+    }
+    
+    if not is_sherlock_enabled() or sherlock_index is None:
+        result["error"] = "Sherlock not enabled"
+        return result
+    
+    db = SessionLocal()
+    
+    try:
+        scans = db.query(SherlockScan).filter(
+            SherlockScan.business_id == business_id
+        ).all()
+        
+        vector_ids_to_delete = []
+        for scan in scans:
+            if scan.vector_id:
+                vector_ids_to_delete.append(scan.vector_id)
+        
+        for namespace in SHERLOCK_NAMESPACES.values():
+            try:
+                if vector_ids_to_delete:
+                    sherlock_index.delete(ids=vector_ids_to_delete, namespace=namespace)
+                    result["vectors_deleted"] += len(vector_ids_to_delete)
+            except Exception as del_err:
+                logger.warning("Error deleting vectors from namespace %s: %s", namespace, del_err)
+        
+        missions_count = db.query(SherlockMission).filter(
+            SherlockMission.business_id == business_id
+        ).delete()
+        result["missions_deleted"] = missions_count
+        
+        competitors_count = db.query(SherlockCompetitor).filter(
+            SherlockCompetitor.business_id == business_id
+        ).delete()
+        result["competitors_deleted"] = competitors_count
+        
+        scans_count = db.query(SherlockScan).filter(
+            SherlockScan.business_id == business_id
+        ).delete()
+        result["scans_deleted"] = scans_count
+        
+        db.commit()
+        result["success"] = True
+        
+        logger.info(
+            "Sherlock cleared data for business %d: %d vectors, %d scans, %d competitors, %d missions",
+            business_id, result["vectors_deleted"], result["scans_deleted"],
+            result["competitors_deleted"], result["missions_deleted"]
+        )
+        
+    except Exception as e:
+        logger.error("Error clearing Sherlock data: %s", e)
+        db.rollback()
+        result["error"] = str(e)
+    finally:
+        db.close()
+    
+    return result
+
+
+def rescan_intelligence(
+    business_id: int,
+    client_url: str,
+    competitor_urls: Optional[List[str]] = None
+) -> Dict[str, Any]:
+    """
+    Force Intelligence Rescan - clears existing data and re-runs full analysis.
+    
+    This is the "Fix It" function for legacy data issues.
+    Uses stored competitors from the database if none are explicitly provided.
+    
+    Args:
+        business_id: The business ID to rescan
+        client_url: The client's primary domain URL
+        competitor_urls: Optional list of competitor URLs to analyze (uses stored if None)
+    
+    Returns:
+        Dict with rescan results
+    """
+    result = {
+        "success": False,
+        "cleared": None,
+        "analysis": None
+    }
+    
+    logger.info("Starting Force Intelligence Rescan for business %d", business_id)
+    
+    stored_competitors = []
+    if not competitor_urls:
+        db = SessionLocal()
+        try:
+            business = db.query(Business).filter(Business.id == business_id).first()
+            if business and business.competitors:
+                import json
+                try:
+                    stored_competitors = json.loads(business.competitors)
+                    if isinstance(stored_competitors, list):
+                        parsed_urls = []
+                        for c in stored_competitors:
+                            if not c:
+                                continue
+                            if isinstance(c, dict):
+                                url = c.get("domain") or c.get("url") or c.get("website")
+                            else:
+                                url = str(c)
+                            if url:
+                                parsed_urls.append(url)
+                        competitor_urls = parsed_urls
+                        if competitor_urls:
+                            logger.info("Using %d stored competitors for rescan", len(competitor_urls))
+                        else:
+                            logger.warning("No valid competitor URLs found in stored data")
+                except (json.JSONDecodeError, TypeError) as parse_err:
+                    logger.warning("Failed to parse stored competitors JSON: %s", parse_err)
+        except Exception as e:
+            logger.warning("Could not retrieve stored competitors: %s", e)
+        finally:
+            db.close()
+    
+    clear_result = clear_vectors_for_business(business_id)
+    result["cleared"] = clear_result
+    
+    if not clear_result.get("success"):
+        result["error"] = f"Failed to clear existing data: {clear_result.get('error', 'unknown')}"
+        return result
+    
+    if competitor_urls and len(competitor_urls) > 0:
+        analysis_result = run_full_analysis(business_id, client_url, competitor_urls)
+    else:
+        client_result = ingest_knowledge(client_url, "client_site", business_id)
+        if client_result.get("success"):
+            gap_analysis = analyze_semantic_gap(business_id)
+            if gap_analysis.get("success"):
+                missions = generate_missions(business_id, gap_analysis)
+                analysis_result = {
+                    "success": True,
+                    "client_ingested": True,
+                    "gap_analysis": gap_analysis,
+                    "missions": missions
+                }
+            else:
+                analysis_result = {
+                    "success": True,
+                    "client_ingested": True,
+                    "gap_analysis": gap_analysis,
+                    "missions": [],
+                    "note": "Client ingested but no competitor data for gap analysis"
+                }
+        else:
+            analysis_result = {
+                "success": False,
+                "error": client_result.get("error", "Failed to ingest client site")
+            }
+    
+    result["analysis"] = analysis_result
+    result["success"] = analysis_result.get("success", False)
+    
+    logger.info("Force Intelligence Rescan complete for business %d: success=%s", 
+                business_id, result["success"])
+    
+    return result
+
+
 def get_missions_for_business(business_id: int, status: str = None) -> List[Dict[str, Any]]:
     """Get all missions for a business, optionally filtered by status."""
     db = SessionLocal()

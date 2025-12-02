@@ -2969,6 +2969,47 @@ async def sherlock_full_analysis(
         db.close()
 
 
+@app.post("/api/sherlock/rescan")
+async def sherlock_rescan(
+    request: Request,
+    business_id: int = Form(...),
+    competitor_urls: str = Form("")
+):
+    """
+    Force Intelligence Rescan - clears existing data and re-runs full analysis.
+    Use this to fix legacy data issues or refresh stale intelligence.
+    """
+    from services.sherlock_engine import rescan_intelligence, is_sherlock_enabled
+    
+    user = get_current_user(request)
+    if not user:
+        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    
+    if not is_sherlock_enabled():
+        return JSONResponse({"error": "Sherlock is not enabled"}, status_code=503)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return JSONResponse({"error": "Business not found"}, status_code=404)
+        
+        if business.owner_user_id != user.id and not user.is_admin:
+            return JSONResponse({"error": "Not authorized"}, status_code=403)
+        
+        client_url = f"https://{business.primary_domain}"
+        
+        competitor_list = [u.strip() for u in competitor_urls.split("\n") if u.strip()] if competitor_urls else None
+        
+        result = rescan_intelligence(business_id, client_url, competitor_list)
+        return JSONResponse(result)
+        
+    except Exception as e:
+        return JSONResponse({"error": f"Rescan failed: {str(e)}"}, status_code=500)
+    finally:
+        db.close()
+
+
 @app.get("/api/sherlock/status")
 async def sherlock_status(request: Request):
     """Check if Sherlock semantic analysis is enabled."""
@@ -2984,7 +3025,8 @@ async def sherlock_status(request: Request):
             "Competitor gap analysis",
             "Mission generation",
             "Strategic consultation (RAG)",
-            "Fix fabrication"
+            "Fix fabrication",
+            "Force Intelligence Rescan"
         ]
     })
 
