@@ -3086,8 +3086,10 @@ async def admin_onboarding_create(
         if not normalized_url.startswith(("http://", "https://")):
             normalized_url = f"https://{normalized_url}"
         
+        clean_domain = normalized_url.replace("https://", "").replace("http://", "").replace("www.", "").rstrip("/")
+        
         existing = db.query(Business).filter(
-            Business.domains.contains(normalized_url.replace("https://", "").replace("http://", "").replace("www.", ""))
+            Business.primary_domain.contains(clean_domain)
         ).first()
         
         if existing:
@@ -3099,8 +3101,7 @@ async def admin_onboarding_create(
         
         business = Business(
             name=business_name,
-            display_name=business_name,
-            domains=normalized_url.replace("https://", "").replace("http://", ""),
+            primary_domain=clean_domain,
             owner_user_id=user.id,
             is_demo=False,
             has_free_report=True,
