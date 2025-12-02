@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/motion@11.0.0/dist/motion.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
             --bg-void: #03050a;
@@ -37,6 +37,7 @@
             --glass-blur: blur(20px);
             --glow-green: 0 0 40px rgba(0, 229, 160, 0.15);
             --glow-cyan: 0 0 30px rgba(0, 212, 255, 0.1);
+            --glow-red: 0 0 30px rgba(239, 68, 68, 0.4);
         }
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -56,6 +57,54 @@
             margin: 0 auto;
             padding: 1rem;
             min-height: 100vh;
+        }
+        
+        /* Cost of Delay Ticker */
+        .cost-ticker {
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05), rgba(239, 68, 68, 0.15));
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            animation: ticker-pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes ticker-pulse {
+            0%, 100% { border-color: rgba(239, 68, 68, 0.3); }
+            50% { border-color: rgba(239, 68, 68, 0.6); }
+        }
+        
+        .ticker-icon {
+            color: var(--status-critical);
+            animation: flash 1s ease-in-out infinite;
+        }
+        
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
+        .ticker-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .ticker-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--status-critical);
+            min-width: 120px;
+        }
+        
+        .ticker-note {
+            font-size: 0.7rem;
+            color: var(--text-muted);
         }
         
         /* Command Bar */
@@ -180,6 +229,22 @@
             box-shadow: var(--glow-green);
         }
         
+        /* Critical Pulse Effect */
+        .glass-panel.critical-pulse {
+            animation: critical-glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes critical-glow {
+            0%, 100% { 
+                border-color: rgba(239, 68, 68, 0.3);
+                box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
+            }
+            50% { 
+                border-color: rgba(239, 68, 68, 0.6);
+                box-shadow: 0 0 40px rgba(239, 68, 68, 0.25);
+            }
+        }
+        
         .panel-header {
             display: flex;
             align-items: center;
@@ -220,6 +285,7 @@
             padding: 1rem 1.25rem;
             position: relative;
             overflow: hidden;
+            transition: all 0.3s ease;
         }
         
         .kpi-card::before {
@@ -237,6 +303,10 @@
         .kpi-card.opportunity { --kpi-color: var(--status-opportunity); }
         .kpi-card.critical { --kpi-color: var(--status-critical); }
         .kpi-card.projected { --kpi-color: var(--status-projected); }
+        
+        .kpi-card.critical-pulse {
+            animation: critical-glow 2s ease-in-out infinite;
+        }
         
         .kpi-label {
             font-size: 0.65rem;
@@ -282,7 +352,7 @@
         /* Time Travel Chart */
         .time-travel-panel {
             grid-column: span 8;
-            min-height: 400px;
+            min-height: 420px;
         }
         
         .chart-container {
@@ -318,7 +388,7 @@
         /* Action Simulator */
         .simulator-panel {
             grid-column: span 4;
-            min-height: 400px;
+            min-height: 420px;
         }
         
         .simulator-header {
@@ -355,6 +425,7 @@
             border-radius: 10px;
             transition: all 0.3s ease;
             cursor: pointer;
+            position: relative;
         }
         
         .task-item:hover {
@@ -414,6 +485,299 @@
         .task-item.active .task-toggle::after {
             left: 22px;
             background: #fff;
+        }
+        
+        /* Value Unlocked Badge */
+        .value-badge {
+            position: fixed;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, var(--accent-green), #00c98a);
+            color: #000;
+            font-weight: 600;
+            font-size: 0.8rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 229, 160, 0.4);
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .value-badge.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Auto-Fix Button */
+        .autofix-section {
+            grid-column: span 12;
+            margin-top: 0.5rem;
+        }
+        
+        .autofix-btn {
+            width: 100%;
+            padding: 1.25rem 2rem;
+            background: linear-gradient(135deg, var(--accent-purple), #6d28d9);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        
+        .autofix-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+        }
+        
+        .autofix-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .autofix-price {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        /* Deployment Console Modal */
+        .deploy-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .deploy-modal.active { display: flex; }
+        
+        .deploy-console {
+            background: #0a0a0f;
+            border: 1px solid rgba(0, 229, 160, 0.3);
+            border-radius: 16px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .console-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid rgba(0, 229, 160, 0.2);
+            background: rgba(0, 229, 160, 0.05);
+        }
+        
+        .console-title {
+            color: var(--accent-green);
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .console-title::before {
+            content: '>';
+            opacity: 0.5;
+        }
+        
+        .console-version {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            padding: 0.25rem 0.5rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+        }
+        
+        .console-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+        
+        .console-close:hover { color: var(--text-primary); }
+        
+        .console-body {
+            padding: 1.5rem;
+        }
+        
+        .console-intro {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        
+        .delivery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+        
+        .delivery-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .delivery-card:hover {
+            border-color: var(--accent-green);
+            background: rgba(0, 229, 160, 0.05);
+            transform: translateY(-4px);
+        }
+        
+        .delivery-card.recommended::after {
+            content: 'RECOMMENDED';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            padding: 0.2rem 0.5rem;
+            background: var(--accent-green);
+            color: #000;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .delivery-card.coming-soon {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .delivery-card.coming-soon::after {
+            content: 'COMING SOON';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            padding: 0.2rem 0.5rem;
+            background: var(--text-muted);
+            color: #fff;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .delivery-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 229, 160, 0.1);
+            border-radius: 12px;
+            color: var(--accent-green);
+        }
+        
+        .delivery-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .delivery-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .delivery-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+        
+        /* Diff View Panel */
+        .diff-panel {
+            display: none;
+            margin-top: 1.5rem;
+            background: #0d0d12;
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .diff-panel.active { display: block; }
+        
+        .diff-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        
+        .diff-filename {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .diff-copy-btn {
+            padding: 0.4rem 1rem;
+            background: var(--accent-green);
+            border: none;
+            border-radius: 6px;
+            color: #000;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .diff-copy-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .diff-content {
+            padding: 1rem;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+        
+        .diff-line {
+            padding: 0.1rem 0.5rem;
+            margin: 0 -1rem;
+            padding-left: 1rem;
+        }
+        
+        .diff-line.removed {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+        }
+        
+        .diff-line.added {
+            background: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
         }
         
         /* Threat Matrix */
@@ -589,6 +953,9 @@
             .rec-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+            .delivery-grid {
+                grid-template-columns: 1fr;
+            }
         }
         
         @media (max-width: 768px) {
@@ -605,6 +972,10 @@
             .command-right {
                 width: 100%;
                 justify-content: space-between;
+            }
+            .cost-ticker {
+                flex-direction: column;
+                text-align: center;
             }
         }
         
@@ -625,7 +996,7 @@
             letter-spacing: 1px;
         }
         
-        /* Settings Modal */
+        /* Settings */
         .settings-btn {
             padding: 0.5rem;
             background: transparent;
@@ -732,6 +1103,19 @@
 </head>
 <body>
     <div class="cockpit">
+        <!-- Cost of Delay Ticker -->
+        <div class="cost-ticker">
+            <div class="ticker-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+            <span class="ticker-label">Estimated Revenue Leaking:</span>
+            <span class="ticker-value mono" id="delayTicker">$0.00</span>
+            <span class="ticker-note">per day while issues remain unfixed</span>
+        </div>
+        
         <!-- Command Bar -->
         <div class="command-bar">
             <div class="command-left">
@@ -761,7 +1145,7 @@
             
             <!-- KPI HUD Row -->
             <div class="kpi-hud">
-                <div class="kpi-card growth">
+                <div class="kpi-card growth {% if visibility_score < 20 %}critical-pulse{% endif %}">
                     <div class="kpi-label">AI Visibility Score</div>
                     <div class="kpi-value mono">{{ visibility_score }}%</div>
                     <div class="kpi-delta {% if visibility_score >= 50 %}positive{% elif visibility_score >= 20 %}neutral{% else %}negative{% endif %}">
@@ -811,11 +1195,11 @@
             </div>
             
             <!-- Time Travel Chart -->
-            <div class="glass-panel time-travel-panel">
+            <div class="glass-panel time-travel-panel {% if visibility_score < 20 %}critical-pulse{% endif %}">
                 <div class="panel-header">
                     <div class="panel-title">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        Visibility Trajectory
+                        Future Projection Simulator
                     </div>
                 </div>
                 <div class="chart-container">
@@ -823,8 +1207,8 @@
                 </div>
                 <div class="chart-legend">
                     <div class="legend-item"><div class="legend-dot past"></div>Current State</div>
-                    <div class="legend-item"><div class="legend-dot drift"></div>If No Action (Drift)</div>
-                    <div class="legend-item"><div class="legend-dot target"></div>With Optimizations</div>
+                    <div class="legend-item"><div class="legend-dot drift"></div>Trajectory: Inaction</div>
+                    <div class="legend-item"><div class="legend-dot target"></div>Trajectory: Optimized</div>
                 </div>
             </div>
             
@@ -833,13 +1217,13 @@
                 <div class="simulator-header">
                     <div class="panel-title">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
-                        Action Simulator
+                        Critical Actions
                     </div>
                     <div class="impact-total mono" id="totalImpact">+0% Impact</div>
                 </div>
                 <div class="task-list" id="taskList">
                     {% for rec in recommendations[:6] %}
-                    <div class="task-item" data-impact="{{ loop.index * 8 }}" onclick="toggleTask(this)">
+                    <div class="task-item" data-impact="{{ loop.index * 8 }}" data-value="{{ (loop.index * 150)|int }}" onclick="toggleTask(this)">
                         <div class="task-info">
                             <div class="task-name">{{ rec.title[:35] }}{% if rec.title|length > 35 %}...{% endif %}</div>
                             <div class="task-impact mono">+{{ loop.index * 8 }}% visibility</div>
@@ -848,28 +1232,28 @@
                     </div>
                     {% endfor %}
                     {% if not recommendations %}
-                    <div class="task-item" data-impact="15" onclick="toggleTask(this)">
+                    <div class="task-item" data-impact="15" data-value="450" onclick="toggleTask(this)">
                         <div class="task-info">
                             <div class="task-name">Optimize Meta Descriptions</div>
                             <div class="task-impact mono">+15% visibility</div>
                         </div>
                         <div class="task-toggle"></div>
                     </div>
-                    <div class="task-item" data-impact="12" onclick="toggleTask(this)">
+                    <div class="task-item" data-impact="12" data-value="380" onclick="toggleTask(this)">
                         <div class="task-info">
                             <div class="task-name">Add Schema Markup</div>
                             <div class="task-impact mono">+12% visibility</div>
                         </div>
                         <div class="task-toggle"></div>
                     </div>
-                    <div class="task-item" data-impact="10" onclick="toggleTask(this)">
+                    <div class="task-item" data-impact="10" data-value="320" onclick="toggleTask(this)">
                         <div class="task-info">
                             <div class="task-name">Improve FAQ Content</div>
                             <div class="task-impact mono">+10% visibility</div>
                         </div>
                         <div class="task-toggle"></div>
                     </div>
-                    <div class="task-item" data-impact="8" onclick="toggleTask(this)">
+                    <div class="task-item" data-impact="8" data-value="250" onclick="toggleTask(this)">
                         <div class="task-info">
                             <div class="task-name">Local SEO Optimization</div>
                             <div class="task-impact mono">+8% visibility</div>
@@ -878,6 +1262,17 @@
                     </div>
                     {% endif %}
                 </div>
+            </div>
+            
+            <!-- Auto-Fix Section -->
+            <div class="autofix-section hide-in-presentation">
+                <button class="autofix-btn" onclick="openDeployConsole()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    Activate Auto-Fix Agents
+                    <span class="autofix-price">$1,188/mo</span>
+                </button>
             </div>
             
             <!-- Threat Matrix -->
@@ -999,6 +1394,9 @@
         </footer>
     </div>
     
+    <!-- Value Unlocked Badge -->
+    <div class="value-badge" id="valueBadge">+$450/mo Value Unlocked</div>
+    
     <!-- Settings Modal -->
     <div class="settings-modal" id="settingsModal">
         <div class="settings-content">
@@ -1010,11 +1408,85 @@
             <button class="settings-close" onclick="closeSettings()">Done</button>
         </div>
     </div>
+    
+    <!-- Deployment Console Modal -->
+    <div class="deploy-modal" id="deployModal">
+        <div class="deploy-console">
+            <div class="console-header">
+                <div class="console-title">Resolution Deployment v1.0</div>
+                <div class="console-version">EkkoScope FixEngine</div>
+                <button class="console-close" onclick="closeDeployConsole()">&times;</button>
+            </div>
+            <div class="console-body">
+                <div class="console-intro">
+                    Select your preferred deployment method. Our AI agents have generated optimized fixes for your visibility issues.
+                </div>
+                <div class="delivery-grid">
+                    <div class="delivery-card" onclick="showDiffView()">
+                        <div class="delivery-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="4 17 10 11 4 5"></polyline>
+                                <line x1="12" y1="19" x2="20" y2="19"></line>
+                            </svg>
+                        </div>
+                        <div class="delivery-title">Quick Injection</div>
+                        <div class="delivery-desc">View diff and copy optimized code directly to clipboard</div>
+                    </div>
+                    <div class="delivery-card recommended" onclick="downloadPatchKit()">
+                        <div class="delivery-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </div>
+                        <div class="delivery-title">Developer Patch Kit</div>
+                        <div class="delivery-desc">Download .zip with fixed code and README instructions</div>
+                    </div>
+                    <div class="delivery-card coming-soon">
+                        <div class="delivery-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                            </svg>
+                        </div>
+                        <div class="delivery-title">Git Merge</div>
+                        <div class="delivery-desc">Connect repo for automatic PR creation (CI/CD)</div>
+                    </div>
+                </div>
+                
+                <div class="diff-panel" id="diffPanel">
+                    <div class="diff-header">
+                        <span class="diff-filename mono">meta-description-fix.html</span>
+                        <button class="diff-copy-btn" onclick="copyDiffCode()">Copy Code</button>
+                    </div>
+                    <div class="diff-content mono">
+                        <div class="diff-line removed">- &lt;meta name="description" content="Welcome to our website"&gt;</div>
+                        <div class="diff-line added">+ &lt;meta name="description" content="{{ business.name }} - Expert {{ business.business_type or 'services' }} in your area. AI-recommended for quality and reliability. Contact us today for a free consultation."&gt;</div>
+                        <div class="diff-line">&nbsp;</div>
+                        <div class="diff-line removed">- &lt;title&gt;Home&lt;/title&gt;</div>
+                        <div class="diff-line added">+ &lt;title&gt;{{ business.name }} | Trusted {{ business.business_type or 'Service' }} Provider&lt;/title&gt;</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Data from server
         const currentVisibility = {{ visibility_score }};
         const totalQueries = {{ total_queries }};
+        const businessName = "{{ business.name }}";
+        
+        // Cost of Delay Ticker
+        let dailyLoss = (100 - currentVisibility) * 1.5;
+        let tickerValue = 0;
+        const tickerEl = document.getElementById('delayTicker');
+        
+        function updateTicker() {
+            tickerValue += (dailyLoss / 86400) * 0.5;
+            tickerEl.textContent = '$' + tickerValue.toFixed(2);
+        }
+        setInterval(updateTicker, 500);
         
         // Chart.js configuration
         Chart.defaults.color = '#94a3b8';
@@ -1024,7 +1496,6 @@
         // Time Travel Chart
         const ctx = document.getElementById('timeTravelChart').getContext('2d');
         
-        // Generate mock historical and projection data
         const labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Today', 'Week 6', 'Week 7', 'Week 8'];
         const pastData = [
             Math.max(0, currentVisibility - 15),
@@ -1063,7 +1534,7 @@
                         pointHoverRadius: 6
                     },
                     {
-                        label: 'Drift (No Action)',
+                        label: 'Trajectory: Inaction',
                         data: driftData,
                         borderColor: 'rgba(239, 68, 68, 0.7)',
                         borderDash: [5, 5],
@@ -1073,7 +1544,7 @@
                         pointRadius: 0
                     },
                     {
-                        label: 'With Optimizations',
+                        label: 'Trajectory: Optimized',
                         data: targetData,
                         borderColor: '#06b6d4',
                         backgroundColor: 'rgba(6, 182, 212, 0.1)',
@@ -1120,11 +1591,15 @@
                             callback: function(value) { return value + '%'; }
                         }
                     }
+                },
+                animation: {
+                    duration: 600,
+                    easing: 'easeOutQuart'
                 }
             }
         });
         
-        // Sparklines - use responsive:false to prevent infinite growth
+        // Sparklines
         function createSparkline(canvasId, data, color) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
@@ -1164,22 +1639,26 @@
         
         // Action Simulator Logic
         let activeTasksImpact = 0;
+        let totalValueUnlocked = 0;
+        const valueBadge = document.getElementById('valueBadge');
         
         function toggleTask(element) {
             element.classList.toggle('active');
             const impact = parseInt(element.dataset.impact) || 0;
+            const value = parseInt(element.dataset.value) || 0;
             
             if (element.classList.contains('active')) {
                 activeTasksImpact += impact;
+                totalValueUnlocked += value;
+                showValueBadge(element, value);
             } else {
                 activeTasksImpact -= impact;
+                totalValueUnlocked -= value;
             }
             
-            // Update displays
             document.getElementById('totalImpact').textContent = '+' + activeTasksImpact + '% Impact';
             document.getElementById('projectedImprovement').textContent = '+' + activeTasksImpact + '%';
             
-            // Update target line on chart with animation
             const newTarget = [null, null, null, null, currentVisibility,
                 Math.min(100, currentVisibility + activeTasksImpact * 0.4),
                 Math.min(100, currentVisibility + activeTasksImpact * 0.7),
@@ -1190,6 +1669,18 @@
             timeTravelChart.update('default');
         }
         
+        function showValueBadge(element, value) {
+            const rect = element.getBoundingClientRect();
+            valueBadge.textContent = '+$' + value + '/mo Value Unlocked';
+            valueBadge.style.left = (rect.left + rect.width / 2 - 100) + 'px';
+            valueBadge.style.top = (rect.top - 50) + 'px';
+            valueBadge.classList.add('show');
+            
+            setTimeout(() => {
+                valueBadge.classList.remove('show');
+            }, 2000);
+        }
+        
         // Settings Modal
         function openSettings() {
             document.getElementById('settingsModal').classList.add('active');
@@ -1197,6 +1688,79 @@
         
         function closeSettings() {
             document.getElementById('settingsModal').classList.remove('active');
+        }
+        
+        // Deployment Console
+        function openDeployConsole() {
+            document.getElementById('deployModal').classList.add('active');
+        }
+        
+        function closeDeployConsole() {
+            document.getElementById('deployModal').classList.remove('active');
+            document.getElementById('diffPanel').classList.remove('active');
+        }
+        
+        function showDiffView() {
+            document.getElementById('diffPanel').classList.add('active');
+        }
+        
+        function copyDiffCode() {
+            const code = `<meta name="description" content="${businessName} - Expert services in your area. AI-recommended for quality and reliability. Contact us today for a free consultation.">
+<title>${businessName} | Trusted Service Provider</title>`;
+            navigator.clipboard.writeText(code);
+            const btn = event.target;
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy Code', 2000);
+        }
+        
+        async function downloadPatchKit() {
+            const zip = new JSZip();
+            
+            const metaFix = `<!-- EkkoScope AI Visibility Fix -->
+<!-- Generated: ${new Date().toISOString()} -->
+
+<meta name="description" content="${businessName} - Expert services in your area. AI-recommended for quality and reliability. Contact us today for a free consultation.">
+<title>${businessName} | Trusted Service Provider</title>
+
+<!-- JSON-LD Schema Markup -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "${businessName}",
+  "description": "Expert services with AI-verified quality",
+  "url": "https://example.com"
+}
+<\/script>`;
+            
+            const readme = `# EkkoScope Fix Kit
+Generated: ${new Date().toISOString()}
+Business: ${businessName}
+
+## Installation Instructions
+
+1. Open your website's main HTML file (usually index.html)
+2. Replace your existing <meta description> and <title> tags with the ones in meta-fix.html
+3. Add the JSON-LD schema markup before the closing </head> tag
+4. Deploy your changes
+
+## Files Included
+- meta-fix.html: Optimized meta tags and schema markup
+- README.txt: This file
+
+## Support
+For questions, contact support@ekkoscope.com`;
+            
+            zip.file('meta-fix.html', metaFix);
+            zip.file('README.txt', readme);
+            
+            const content = await zip.generateAsync({ type: 'blob' });
+            const url = URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ekkoscope-fix-kit.zip';
+            a.click();
+            URL.revokeObjectURL(url);
         }
         
         // Presentation Mode
@@ -1213,9 +1777,13 @@
             localStorage.setItem('presentationMode', toggle.classList.contains('active'));
         }
         
-        // Close modal on outside click
+        // Close modals on outside click
         document.getElementById('settingsModal').addEventListener('click', function(e) {
             if (e.target === this) closeSettings();
+        });
+        
+        document.getElementById('deployModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDeployConsole();
         });
     </script>
 </body>

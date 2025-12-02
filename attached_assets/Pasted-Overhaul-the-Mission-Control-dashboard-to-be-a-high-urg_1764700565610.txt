@@ -1,0 +1,69 @@
+Overhaul the "Mission Control" dashboard to be a high-urgency, interactive Command Center. It needs to look less like a report and more like a Fintech Trading Terminal or a Tactical HUD.
+
+1. The "Urgency" Visual Language (UI/UX):
+
+Theme: "Midnight Protocol" (Deep Black/Navy background).
+
+Layout: Use a Bento Grid layout with glassmorphism cards.
+
+The "Pulse" Effect: Any metric that is "Critical" (e.g., Visibility 0%) should have a subtle, slow-pulsing red glow border to create subconscious urgency.
+
+Typography: Use Monospace fonts for all data points (numbers) to feel technical and precise.
+
+2. The Central Feature: "The Time-Travel Simulator" Replace the static main chart with an interactive "Future Projection" Area Chart.
+
+The "Drift" Line (Red/Dotted): Show where the business goes if they do nothing (downward trend). Label it: "Trajectory: Inaction".
+
+The "Target" Line (Green/Glowing): Show where the business goes if they fix the issues. Label it: "Trajectory: Optimized".
+
+Interaction: On the right, list "Critical Actions" (e.g., "Fix Sitemap," "Optimize H1").
+
+Add a Toggle Switch next to each action.
+
+Logic: When I toggle an action "ON", use framer-motion to animate the graph line moving UP instantly. Show a floating badge: "+$450/mo Value Unlocked".
+
+3. The "Auto-Fix" Experience (High Ticket Feature) Refactor the "Activate Auto-Fix" button into a premium "Deployment Console."
+
+Trigger: When the user clicks "Activate Auto-Fix" ($1,188/mo), open a large, terminal-style Modal.
+
+Modal Header: "Resolution Deployment v1.0" (Green text).
+
+The 3-Card Delivery Menu:
+
+Option 1: "Quick Injection" (Clipboard)
+
+Icon: Terminal.
+
+Action: Show a Diff View (Red vs. Green code) and a "Copy" button.
+
+Option 2: "Developer Patch Kit" (.zip)
+
+Icon: Archive/Zipper.
+
+Action: Use JavaScript to generate a .zip file containing the fixed code AND a README.txt file with instructions.
+
+Label: "Best for Handing off to IT."
+
+Option 3: "Git Merge" (GitHub)
+
+Icon: GitHub Logo.
+
+Action: Show a "Connect Repo" button (Mock this for now with a 'Coming Soon' tooltip).
+
+Badge: "Recommended for CI/CD."
+
+4. The "Cost of Delay" Ticker
+
+At the top of the dashboard, add a ticker tape that says: "Estimated Revenue Leaking: $XX.XX per day."
+
+Make this number tick up slowly in real-time (mocked) to create immediate pressure to act.
+
+Tech Stack Requirements:
+
+Use recharts for the simulation graph.
+
+Use framer-motion for all graph transitions and toggle animations.
+
+Use jszip to generate the downloadable Patch Kit on the client side.
+
+Ensure the dashboard collapses into a vertical stack on mobile.
