@@ -60,7 +60,12 @@ The backend is built with FastAPI and Uvicorn on Python 3.11+. It handles AI vis
 -   **Perplexity API**: (Optional) Provides web-grounded, real-time search capabilities.
 -   **Google Gemini API**: (Optional) Additional AI assistant simulation for cross-platform visibility comparison.
 -   **Stripe**: Payment gateway for one-time audits and subscriptions, handling checkout and webhooks.
--   **Pinecone**: (Optional) Vector database for EkkoBrain pattern memory.
+-   **Pinecone**: Vector database using `ekkobrain` index with `text-embedding-3-large` (3072 dimensions). Organized into namespaces:
+    - `business-content`: Client website data
+    - `competitor-content`: Competitor website data
+    - `audit-patterns`: EkkoBrain learning patterns
+    - `gap-missions`: Sherlock gap analysis missions
+    - `strategic-insights`: Strategic recommendations
 
 ### Python Packages
 
