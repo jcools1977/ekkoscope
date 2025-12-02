@@ -30,6 +30,12 @@ The backend is built with FastAPI and Uvicorn on Python 3.11+. It handles AI vis
     - **Verification Agent**: Calculates before/after metrics.
 - **Multi-LLM Visibility System**: Analysis runs across OpenAI, Perplexity, and Google Gemini, providing a unified visibility matrix in reports.
 - **EkkoBrain Memory System**: A two-layer architecture (DB + Pinecone vector search) for persistent pattern learning from completed audits, enhancing future recommendations while ensuring privacy.
+- **Sherlock Semantic Intelligence Engine**: Advanced gap analysis system using Pinecone vector embeddings to identify semantic differences between client and competitor content. Unlike keyword-based tools, Sherlock identifies missing TOPICS - understanding meaning and context. Key features:
+    - **Content Ingestion**: Scrapes and embeds website content into vector space.
+    - **Topic Extraction**: Uses GPT to identify semantic themes (not just keywords).
+    - **Gap Analysis**: Compares client vs competitor vector spaces to find missing topics.
+    - **Mission Generation**: Creates actionable tasks like "Create a page about Storm Damage Insurance."
+    - **API Endpoints**: Full REST API at `/api/sherlock/*` for integration.
 - **Activation Code System**: Supports one-time-use activation codes for prospects.
 - **Free First Report Feature**: New users receive one free AI visibility report upon signup.
 - **Sentinel OS Integration**: Real-time logging of AI queries and report generation events to the Sentinel OS dashboard.

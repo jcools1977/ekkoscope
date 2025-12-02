@@ -360,6 +360,88 @@ def generate_activation_code(length: int = 8) -> str:
     return ''.join(secrets.choice(chars) for _ in range(length))
 
 
+class SherlockScan(Base):
+    """Sherlock scans - stores ingested content for semantic analysis."""
+    __tablename__ = "sherlock_scans"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    business_id = Column(Integer, ForeignKey("businesses.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    
+    url = Column(String(500), nullable=False)
+    content_type = Column(String(50), nullable=False)
+    raw_html = Column(Text, nullable=True)
+    extracted_text = Column(Text, nullable=True)
+    ai_mentions_json = Column(Text, nullable=True)
+    
+    vector_id = Column(String(100), nullable=True, index=True)
+    topics_extracted = Column(Text, nullable=True)
+    
+    status = Column(String(20), default="pending")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    processed_at = Column(DateTime, nullable=True)
+    
+    business = relationship("Business")
+    user = relationship("User")
+
+
+class SherlockCompetitor(Base):
+    """Competitors identified and tracked for semantic gap analysis."""
+    __tablename__ = "sherlock_competitors"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    business_id = Column(Integer, ForeignKey("businesses.id"), nullable=False, index=True)
+    
+    name = Column(String(255), nullable=False)
+    url = Column(String(500), nullable=False)
+    discovered_source = Column(String(100), nullable=True)
+    
+    last_scanned_at = Column(DateTime, nullable=True)
+    visibility_score = Column(Integer, default=0)
+    semantic_coverage = Column(Integer, default=0)
+    
+    topics_json = Column(Text, nullable=True)
+    strengths_json = Column(Text, nullable=True)
+    
+    is_primary = Column(Boolean, default=False)
+    status = Column(String(20), default="active")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    business = relationship("Business")
+
+
+class SherlockMission(Base):
+    """Missions generated from semantic gap analysis - actionable tasks."""
+    __tablename__ = "sherlock_missions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    business_id = Column(Integer, ForeignKey("businesses.id"), nullable=False, index=True)
+    
+    gap_analysis_id = Column(String(100), nullable=True, index=True)
+    competitor_id = Column(Integer, ForeignKey("sherlock_competitors.id"), nullable=True)
+    
+    mission_type = Column(String(50), nullable=False)
+    priority = Column(String(20), default="medium")
+    status = Column(String(20), default="pending")
+    
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    
+    missing_topic = Column(String(255), nullable=True)
+    topic_context = Column(Text, nullable=True)
+    competitor_coverage = Column(Text, nullable=True)
+    
+    recommended_action = Column(Text, nullable=True)
+    estimated_impact = Column(String(100), nullable=True)
+    target_url_slug = Column(String(255), nullable=True)
+    
+    completed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    business = relationship("Business")
+    competitor = relationship("SherlockCompetitor")
+
+
 def derive_region_group(regions: List[str]) -> str:
     """Derive a region group from a list of regions for pattern matching."""
     if not regions:

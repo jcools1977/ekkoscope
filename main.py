@@ -2665,6 +2665,268 @@ async def activate_submit(
 
 
 # =============================================================================
+# SHERLOCK SEMANTIC INTELLIGENCE API
+# =============================================================================
+
+@app.post("/api/sherlock/ingest")
+async def sherlock_ingest(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    url: str = Form(...),
+    content_type: str = Form("client_site"),
+    business_id: int = Form(...)
+):
+    """
+    Ingest content from a URL into Sherlock's semantic memory.
+    Content types: client_site, competitor_site, market_review
+    """
+    from services.sherlock_engine import ingest_knowledge, is_sherlock_enabled
+    
+    user = get_current_user(request)
+    if not user:
+        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    
+    if not is_sherlock_enabled():
+        return JSONResponse({"error": "Sherlock is not enabled. Check Pinecone API key."}, status_code=503)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return JSONResponse({"error": "Business not found"}, status_code=404)
+        
+        if business.owner_user_id != user.id and not user.is_admin:
+            return JSONResponse({"error": "Not authorized"}, status_code=403)
+        
+        result = ingest_knowledge(url, content_type, business_id, user.id)
+        return JSONResponse(result)
+        
+    finally:
+        db.close()
+
+
+@app.post("/api/sherlock/analyze-gap")
+async def sherlock_analyze_gap(
+    request: Request,
+    business_id: int = Form(...),
+    competitor_id: int = Form(None)
+):
+    """
+    Run semantic gap analysis between client and competitor content.
+    This is the killer feature - identifies missing TOPICS, not keywords.
+    """
+    from services.sherlock_engine import analyze_semantic_gap, is_sherlock_enabled
+    
+    user = get_current_user(request)
+    if not user:
+        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    
+    if not is_sherlock_enabled():
+        return JSONResponse({"error": "Sherlock is not enabled"}, status_code=503)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return JSONResponse({"error": "Business not found"}, status_code=404)
+        
+        if business.owner_user_id != user.id and not user.is_admin:
+            return JSONResponse({"error": "Not authorized"}, status_code=403)
+        
+        result = analyze_semantic_gap(business_id, competitor_id)
+        return JSONResponse(result)
+        
+    finally:
+        db.close()
+
+
+@app.post("/api/sherlock/generate-missions")
+async def sherlock_generate_missions(
+    request: Request,
+    business_id: int = Form(...)
+):
+    """
+    Generate actionable missions from gap analysis.
+    Each mission tells the user exactly what content to create.
+    """
+    from services.sherlock_engine import generate_missions, is_sherlock_enabled
+    
+    user = get_current_user(request)
+    if not user:
+        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    
+    if not is_sherlock_enabled():
+        return JSONResponse({"error": "Sherlock is not enabled"}, status_code=503)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return JSONResponse({"error": "Business not found"}, status_code=404)
+        
+        if business.owner_user_id != user.id and not user.is_admin:
+            return JSONResponse({"error": "Not authorized"}, status_code=403)
+        
+        missions = generate_missions(business_id)
+        return JSONResponse({"success": True, "missions": missions})
+        
+    finally:
+        db.close()
+
+
+@app.get("/api/sherlock/missions/{business_id}")
+async def sherlock_get_missions(
+    request: Request,
+    business_id: int,
+    status: str = None
+):
+    """Get all missions for a business."""
+    from services.sherlock_engine import get_missions_for_business
+    
+    user = get_current_user(request)
+    if not user:
+        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return JSONResponse({"error": "Business not found"}, status_code=404)
+        
+        if business.owner_user_id != user.id and not user.is_admin:
+            return JSONResponse({"error": "Not authorized"}, status_code=403)
+        
+        missions = get_missions_for_business(business_id, status)
+        return JSONResponse({"success": True, "missions": missions})
+        
+    finally:
+        db.close()
+
+
+@app.post("/api/sherlock/missions/{mission_id}/complete")
+async def sherlock_complete_mission(
+    request: Request,
+    mission_id: int
+):
+    """Mark a mission as completed."""
+    from services.sherlock_engine import complete_mission
+    from services.database import SherlockMission
+    
+    user = get_current_user(request)
+    if not user:
+        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    
+    db = get_db_session()
+    try:
+        mission = db.query(SherlockMission).filter(SherlockMission.id == mission_id).first()
+        if not mission:
+            return JSONResponse({"error": "Mission not found"}, status_code=404)
+        
+        business = db.query(Business).filter(Business.id == mission.business_id).first()
+        if business.owner_user_id != user.id and not user.is_admin:
+            return JSONResponse({"error": "Not authorized"}, status_code=403)
+        
+        success = complete_mission(mission_id)
+        return JSONResponse({"success": success})
+        
+    finally:
+        db.close()
+
+
+@app.post("/api/sherlock/add-competitor")
+async def sherlock_add_competitor(
+    request: Request,
+    business_id: int = Form(...),
+    name: str = Form(...),
+    url: str = Form(...),
+    is_primary: bool = Form(False)
+):
+    """Add a competitor for tracking and semantic comparison."""
+    from services.sherlock_engine import add_competitor
+    
+    user = get_current_user(request)
+    if not user:
+        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return JSONResponse({"error": "Business not found"}, status_code=404)
+        
+        if business.owner_user_id != user.id and not user.is_admin:
+            return JSONResponse({"error": "Not authorized"}, status_code=403)
+        
+        competitor_id = add_competitor(business_id, name, url, is_primary, "api")
+        if competitor_id:
+            return JSONResponse({"success": True, "competitor_id": competitor_id})
+        return JSONResponse({"error": "Failed to add competitor"}, status_code=500)
+        
+    finally:
+        db.close()
+
+
+@app.post("/api/sherlock/full-analysis")
+async def sherlock_full_analysis(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    business_id: int = Form(...),
+    client_url: str = Form(...),
+    competitor_urls: str = Form("")
+):
+    """
+    Run complete Sherlock analysis pipeline:
+    1. Ingest client site
+    2. Ingest competitor sites  
+    3. Run semantic gap analysis
+    4. Generate missions
+    """
+    from services.sherlock_engine import run_full_analysis, is_sherlock_enabled
+    
+    user = get_current_user(request)
+    if not user:
+        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    
+    if not is_sherlock_enabled():
+        return JSONResponse({"error": "Sherlock is not enabled"}, status_code=503)
+    
+    db = get_db_session()
+    try:
+        business = db.query(Business).filter(Business.id == business_id).first()
+        if not business:
+            return JSONResponse({"error": "Business not found"}, status_code=404)
+        
+        if business.owner_user_id != user.id and not user.is_admin:
+            return JSONResponse({"error": "Not authorized"}, status_code=403)
+        
+        competitor_list = [u.strip() for u in competitor_urls.split("\n") if u.strip()]
+        
+        result = run_full_analysis(business_id, client_url, competitor_list)
+        return JSONResponse(result)
+        
+    finally:
+        db.close()
+
+
+@app.get("/api/sherlock/status")
+async def sherlock_status(request: Request):
+    """Check if Sherlock semantic analysis is enabled."""
+    from services.sherlock_engine import is_sherlock_enabled
+    
+    return JSONResponse({
+        "enabled": is_sherlock_enabled(),
+        "service": "Sherlock Semantic Intelligence",
+        "capabilities": [
+            "URL content ingestion",
+            "Semantic topic extraction",
+            "Vector embedding storage",
+            "Competitor gap analysis",
+            "Mission generation"
+        ]
+    })
+
+
+# =============================================================================
 # ONGOING PUBLIC PAID FLOW (SPRINT 3)
 # =============================================================================
 
