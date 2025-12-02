@@ -1525,7 +1525,7 @@ async def download_dossier(request: Request, business_id: int):
             raise HTTPException(status_code=404, detail="Business not found")
         
         is_admin = user.email.lower() in [e.lower() for e in ADMIN_EMAILS] if ADMIN_EMAILS else False
-        if business.user_id != user.id and not is_admin:
+        if business.owner_user_id != user.id and not is_admin:
             raise HTTPException(status_code=403, detail="Not authorized")
         
         latest_audit = db.query(Audit).filter(
