@@ -3,214 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mission Control | {{ business.name }} | EkkoScope</title>
+    <title>Command Center | {{ business.name }} | EkkoScope</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
-            --bg-void: #03050a;
-            --bg-deep: #080c14;
-            --bg-panel: #0c1220;
-            --bg-card: #101828;
-            --bg-glass: rgba(16, 24, 40, 0.7);
-            --border-subtle: rgba(255, 255, 255, 0.06);
-            --border-glow: rgba(0, 229, 160, 0.2);
-            --border-active: rgba(0, 229, 160, 0.5);
+            --bg-void: #0B0C15;
+            --bg-deep: #0F1119;
+            --bg-panel: #14161F;
+            --bg-card: #1A1D2D;
+            --bg-glass: rgba(20, 22, 31, 0.85);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(0, 255, 157, 0.25);
             
-            --accent-green: #00E5A0;
-            --accent-cyan: #00d4ff;
-            --accent-purple: #8b5cf6;
-            --accent-pink: #ec4899;
+            --neon-green: #00FF9D;
+            --neon-red: #FF4444;
+            --neon-cyan: #00D4FF;
+            --ghost-grey: #6B7280;
             
-            --status-growth: #10b981;
-            --status-opportunity: #f59e0b;
-            --status-critical: #ef4444;
-            --status-projected: #06b6d4;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --text-muted: #64748B;
+            --text-dim: #475569;
             
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --text-muted: #475569;
-            --text-dim: #334155;
-            
-            --glass-blur: blur(20px);
-            --glow-green: 0 0 40px rgba(0, 229, 160, 0.15);
-            --glow-cyan: 0 0 30px rgba(0, 212, 255, 0.1);
-            --glow-red: 0 0 30px rgba(239, 68, 68, 0.4);
+            --glow-green: 0 0 30px rgba(0, 255, 157, 0.3);
+            --glow-red: 0 0 30px rgba(255, 68, 68, 0.4);
+            --glow-cyan: 0 0 20px rgba(0, 212, 255, 0.2);
         }
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg-void);
+            font-family: 'JetBrains Mono', monospace;
+            background: linear-gradient(180deg, var(--bg-void) 0%, #0D0E17 100%);
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
         }
         
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        
-        .cockpit {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 1rem;
-            min-height: 100vh;
-        }
-        
-        /* Cost of Delay Ticker */
-        .cost-ticker {
-            background: linear-gradient(90deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05), rgba(239, 68, 68, 0.15));
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            border-radius: 8px;
-            padding: 0.75rem 1.25rem;
-            margin-bottom: 1rem;
+        /* Revenue Leak Ticker - Sticky Top */
+        .bleed-ticker {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: linear-gradient(90deg, rgba(255, 68, 68, 0.15) 0%, rgba(255, 68, 68, 0.08) 50%, rgba(255, 68, 68, 0.15) 100%);
+            border-bottom: 1px solid rgba(255, 68, 68, 0.4);
+            padding: 0.6rem 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.75rem;
-            animation: ticker-pulse 3s ease-in-out infinite;
+            gap: 1rem;
+            backdrop-filter: blur(10px);
         }
         
-        @keyframes ticker-pulse {
-            0%, 100% { border-color: rgba(239, 68, 68, 0.3); }
-            50% { border-color: rgba(239, 68, 68, 0.6); }
+        .bleed-alert {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: alert-pulse 2s ease-in-out infinite;
         }
         
-        .ticker-icon {
-            color: var(--status-critical);
-            animation: flash 1s ease-in-out infinite;
-        }
-        
-        @keyframes flash {
+        @keyframes alert-pulse {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+            50% { opacity: 0.6; }
         }
         
-        .ticker-label {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
+        .bleed-icon {
+            color: var(--neon-red);
+            font-size: 1rem;
+        }
+        
+        .bleed-label {
+            font-size: 0.65rem;
+            color: var(--neon-red);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            font-weight: 600;
         }
         
-        .ticker-value {
-            font-size: 1.25rem;
+        .bleed-value {
+            font-size: 1.1rem;
             font-weight: 700;
-            color: var(--status-critical);
-            min-width: 120px;
+            color: var(--neon-red);
+            text-shadow: 0 0 20px rgba(255, 68, 68, 0.6);
+            min-width: 100px;
         }
         
-        .ticker-note {
-            font-size: 0.7rem;
+        .bleed-rate {
+            font-size: 0.6rem;
             color: var(--text-muted);
+            padding: 0.2rem 0.5rem;
+            background: rgba(255, 68, 68, 0.1);
+            border-radius: 4px;
         }
         
-        /* Command Bar */
-        .command-bar {
+        /* Command Center Container */
+        .command-center {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        
+        /* Header Bar */
+        .header-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0.75rem 1.25rem;
             background: var(--bg-glass);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--border-subtle);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
             border-radius: 12px;
             margin-bottom: 1rem;
-            gap: 1rem;
-            flex-wrap: wrap;
         }
         
-        .command-left {
+        .header-left {
             display: flex;
             align-items: center;
             gap: 1rem;
         }
         
-        .status-indicator {
+        .status-beacon {
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
         
-        .status-dot {
+        .beacon-dot {
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
+            background: var(--neon-red);
+            box-shadow: 0 0 15px var(--neon-red);
+            animation: beacon-pulse 1.5s ease-in-out infinite;
         }
         
-        .status-dot.critical { background: var(--status-critical); box-shadow: 0 0 15px var(--status-critical); }
-        .status-dot.warning { background: var(--status-opportunity); box-shadow: 0 0 15px var(--status-opportunity); }
-        .status-dot.nominal { background: var(--status-growth); box-shadow: 0 0 15px var(--status-growth); }
+        @keyframes beacon-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.5; }
+        }
         
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(1.15); }
+        .beacon-dot.nominal { background: var(--neon-green); box-shadow: 0 0 15px var(--neon-green); }
+        .beacon-dot.warning { background: #F59E0B; box-shadow: 0 0 15px #F59E0B; }
+        
+        .status-label {
+            font-size: 0.65rem;
+            color: var(--neon-red);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .mission-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
         }
         
         .mission-id {
-            font-size: 0.7rem;
-            color: var(--text-muted);
+            font-size: 0.55rem;
+            color: var(--text-dim);
             letter-spacing: 1px;
-            text-transform: uppercase;
         }
         
-        .mission-name {
-            font-size: 0.95rem;
+        .mission-target {
+            font-size: 0.85rem;
             font-weight: 600;
-            color: var(--accent-green);
+            color: var(--text-primary);
         }
         
-        .command-right {
+        .header-right {
             display: flex;
             align-items: center;
             gap: 0.75rem;
         }
         
-        .timestamp {
-            font-size: 0.7rem;
+        .timestamp-badge {
+            font-size: 0.6rem;
             color: var(--text-muted);
-            padding: 0.4rem 0.8rem;
-            background: rgba(0,0,0,0.3);
+            padding: 0.35rem 0.75rem;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--border-glass);
             border-radius: 6px;
-            border: 1px solid var(--border-subtle);
         }
         
-        .btn-back {
+        .btn-exit {
             padding: 0.5rem 1rem;
             background: transparent;
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border-glass);
             border-radius: 8px;
             color: var(--text-secondary);
-            font-size: 0.75rem;
+            font-size: 0.65rem;
             text-decoration: none;
+            font-family: inherit;
             transition: all 0.2s;
         }
         
-        .btn-back:hover {
-            border-color: var(--accent-green);
-            color: var(--accent-green);
+        .btn-exit:hover {
+            border-color: var(--neon-green);
+            color: var(--neon-green);
         }
         
-        /* Bento Grid */
+        /* Bento Grid Layout */
         .bento-grid {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
-            grid-template-rows: auto;
             gap: 1rem;
         }
         
+        /* Glass Panel Base */
         .glass-panel {
             background: var(--bg-glass);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--border-subtle);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
             border-radius: 16px;
             padding: 1.25rem;
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
         }
         
         .glass-panel::before {
@@ -220,28 +230,7 @@
             left: 0;
             right: 0;
             height: 1px;
-            background: linear-gradient(90deg, transparent, var(--accent-green), transparent);
-            opacity: 0.3;
-        }
-        
-        .glass-panel:hover {
-            border-color: var(--border-glow);
-            box-shadow: var(--glow-green);
-        }
-        
-        .glass-panel.critical-pulse {
-            animation: critical-glow 2s ease-in-out infinite;
-        }
-        
-        @keyframes critical-glow {
-            0%, 100% { 
-                border-color: rgba(239, 68, 68, 0.3);
-                box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
-            }
-            50% { 
-                border-color: rgba(239, 68, 68, 0.6);
-                box-shadow: 0 0 40px rgba(239, 68, 68, 0.25);
-            }
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
         }
         
         .panel-header {
@@ -252,11 +241,11 @@
         }
         
         .panel-title {
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 2px;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -265,420 +254,465 @@
         .panel-title svg {
             width: 14px;
             height: 14px;
-            opacity: 0.6;
+            opacity: 0.5;
         }
         
-        /* KPI HUD */
-        .kpi-hud {
-            grid-column: span 12;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-        }
-        
-        .kpi-card {
-            background: var(--bg-glass);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--border-subtle);
-            border-radius: 12px;
-            padding: 1rem 1.25rem;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .kpi-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--kpi-color, var(--accent-green));
-            opacity: 0.6;
-        }
-        
-        .kpi-card.growth { --kpi-color: var(--status-growth); }
-        .kpi-card.opportunity { --kpi-color: var(--status-opportunity); }
-        .kpi-card.critical { --kpi-color: var(--status-critical); }
-        .kpi-card.projected { --kpi-color: var(--status-projected); }
-        
-        .kpi-card.critical-pulse {
-            animation: critical-glow 2s ease-in-out infinite;
-        }
-        
-        .kpi-label {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 0.5rem;
-        }
-        
-        .kpi-value {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            line-height: 1;
-            margin-bottom: 0.5rem;
-        }
-        
-        .kpi-delta {
-            font-size: 0.7rem;
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-        
-        .kpi-delta.positive { color: var(--status-growth); }
-        .kpi-delta.negative { color: var(--status-critical); }
-        .kpi-delta.neutral { color: var(--text-muted); }
-        
-        .kpi-sparkline-container {
-            height: 30px;
-            margin-top: 0.5rem;
-            position: relative;
-        }
-        
-        .kpi-sparkline {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100% !important;
-            height: 100% !important;
-        }
-        
-        /* Parity Badge */
-        .parity-badge {
-            display: none;
-            padding: 0.25rem 0.5rem;
-            background: rgba(16, 185, 129, 0.2);
-            border: 1px solid var(--status-growth);
+        .panel-badge {
+            font-size: 0.55rem;
+            padding: 0.2rem 0.5rem;
             border-radius: 4px;
-            font-size: 0.6rem;
-            color: var(--status-growth);
-            margin-top: 0.5rem;
-            animation: parity-glow 2s ease-in-out infinite;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
-        .parity-badge.show { display: inline-block; }
-        
-        @keyframes parity-glow {
-            0%, 100% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.3); }
-            50% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.6); }
+        .panel-badge.critical {
+            background: rgba(255, 68, 68, 0.15);
+            color: var(--neon-red);
+            border: 1px solid rgba(255, 68, 68, 0.3);
         }
         
-        /* Time Travel Chart */
-        .time-travel-panel {
+        .panel-badge.live {
+            background: rgba(0, 255, 157, 0.1);
+            color: var(--neon-green);
+            border: 1px solid rgba(0, 255, 157, 0.3);
+        }
+        
+        /* Gap Analysis Chart Panel */
+        .gap-analysis-panel {
             grid-column: span 8;
-            min-height: 420px;
+            min-height: 450px;
         }
         
-        .chart-container {
+        .chart-wrapper {
             position: relative;
-            height: 320px;
+            height: 350px;
         }
         
-        .risk-label {
+        .risk-zone-label {
             position: absolute;
-            top: 50%;
+            top: 40%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 0.9rem;
+            font-size: 0.7rem;
             font-weight: 700;
-            color: rgba(239, 68, 68, 0.6);
+            color: rgba(255, 68, 68, 0.5);
             text-transform: uppercase;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
             pointer-events: none;
             z-index: 5;
+            text-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
         }
         
         .chart-legend {
             display: flex;
             gap: 1.5rem;
             margin-top: 1rem;
-            flex-wrap: wrap;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-glass);
         }
         
         .legend-item {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             color: var(--text-secondary);
         }
         
-        .legend-dot {
-            width: 10px;
-            height: 10px;
+        .legend-line {
+            width: 20px;
+            height: 3px;
             border-radius: 2px;
         }
         
-        .legend-dot.current { background: var(--accent-green); }
-        .legend-dot.leader { background: #6b7280; border: 1px dashed #9ca3af; }
-        .legend-dot.projected { background: var(--status-projected); box-shadow: 0 0 10px var(--status-projected); }
-        .legend-dot.risk { background: linear-gradient(180deg, rgba(239, 68, 68, 0.4), transparent); }
+        .legend-line.user { background: var(--neon-green); }
+        .legend-line.leader { background: var(--ghost-grey); border: 1px dashed var(--ghost-grey); height: 0; }
+        .legend-line.projected { background: var(--neon-cyan); box-shadow: 0 0 8px var(--neon-cyan); }
+        .legend-line.risk { background: linear-gradient(180deg, rgba(255,68,68,0.4), rgba(255,68,68,0.1)); height: 12px; width: 20px; }
         
-        /* Action Simulator */
-        .simulator-panel {
+        /* Tactical Countermeasures Panel */
+        .countermeasures-panel {
             grid-column: span 4;
-            min-height: 420px;
+            min-height: 450px;
         }
         
-        .simulator-header {
+        .projected-display {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 10px;
             margin-bottom: 1rem;
         }
         
-        .projected-score {
-            font-size: 0.75rem;
-            color: var(--status-projected);
-            padding: 0.35rem 0.75rem;
-            background: rgba(6, 182, 212, 0.1);
-            border: 1px solid rgba(6, 182, 212, 0.2);
-            border-radius: 20px;
-            transition: all 0.3s;
+        .projected-label {
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
-        .projected-score.parity {
-            color: var(--status-growth);
-            background: rgba(16, 185, 129, 0.15);
-            border-color: var(--status-growth);
-            animation: parity-glow 2s ease-in-out infinite;
+        .projected-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
         }
         
-        .task-list {
+        .projected-delta {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .projected-delta.parity {
+            color: var(--neon-green);
+            text-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+        }
+        
+        .target-list {
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
-            max-height: 340px;
+            gap: 0.6rem;
+            max-height: 300px;
             overflow-y: auto;
         }
         
-        .task-item {
+        .target-item {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0.875rem 1rem;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border-subtle);
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-glass);
             border-radius: 10px;
-            transition: all 0.3s ease;
             cursor: pointer;
-            position: relative;
+            transition: all 0.25s ease;
         }
         
-        .task-item:hover {
+        .target-item:hover {
             border-color: var(--border-glow);
-            background: rgba(0, 229, 160, 0.03);
+            background: rgba(0, 255, 157, 0.03);
         }
         
-        .task-item.active {
-            border-color: var(--accent-green);
-            background: rgba(0, 229, 160, 0.08);
+        .target-item.active {
+            border-color: var(--neon-green);
+            background: rgba(0, 255, 157, 0.08);
+            box-shadow: var(--glow-green);
         }
         
-        .task-info {
+        .target-info {
             flex: 1;
         }
         
-        .task-name {
-            font-size: 0.8rem;
+        .target-name {
+            font-size: 0.7rem;
             font-weight: 500;
             color: var(--text-primary);
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.2rem;
         }
         
-        .task-impact {
-            font-size: 0.7rem;
-            color: var(--status-projected);
+        .target-impact {
+            font-size: 0.55rem;
+            color: var(--neon-cyan);
         }
         
-        .task-toggle {
+        .target-switch {
             position: relative;
             width: 44px;
             height: 24px;
             background: var(--bg-deep);
             border-radius: 12px;
-            border: 1px solid var(--border-subtle);
-            cursor: pointer;
+            border: 1px solid var(--border-glass);
             transition: all 0.3s ease;
         }
         
-        .task-toggle::after {
+        .target-switch::after {
             content: '';
             position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 18px;
-            height: 18px;
+            top: 3px;
+            left: 3px;
+            width: 16px;
+            height: 16px;
             background: var(--text-muted);
             border-radius: 50%;
             transition: all 0.3s ease;
         }
         
-        .task-item.active .task-toggle {
-            background: var(--accent-green);
-            border-color: var(--accent-green);
+        .target-item.active .target-switch {
+            background: var(--neon-green);
+            border-color: var(--neon-green);
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.4);
         }
         
-        .task-item.active .task-toggle::after {
-            left: 22px;
-            background: #fff;
+        .target-item.active .target-switch::after {
+            left: 23px;
+            background: #000;
         }
         
-        /* Value Unlocked Badge */
+        /* Value Unlocked Floating Badge */
         .value-badge {
             position: fixed;
-            padding: 0.5rem 1rem;
-            background: linear-gradient(135deg, var(--accent-green), #00c98a);
+            padding: 0.6rem 1.25rem;
+            background: linear-gradient(135deg, var(--neon-green), #00CC7D);
             color: #000;
-            font-weight: 600;
-            font-size: 0.8rem;
+            font-weight: 700;
+            font-size: 0.75rem;
             border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 229, 160, 0.4);
+            box-shadow: 0 4px 25px rgba(0, 255, 157, 0.5);
             pointer-events: none;
             z-index: 1000;
             opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.3s ease;
+            transform: translateY(15px) scale(0.9);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         
         .value-badge.show {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
         
-        /* Auto-Fix Upsell Module */
-        .autofix-section {
-            grid-column: span 12;
-            margin-top: 0.5rem;
+        /* Competitor Threat Radar */
+        .threat-radar-panel {
+            grid-column: span 6;
         }
         
-        .autofix-module {
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05));
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 16px;
-            padding: 1.5rem;
+        .threat-comparison {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
         
-        .autofix-header {
+        .threat-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .threat-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1.25rem;
         }
         
-        .autofix-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--accent-purple);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .autofix-price-tag {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            padding: 0.25rem 0.75rem;
-            background: rgba(0,0,0,0.3);
-            border-radius: 20px;
-        }
-        
-        .autofix-checklist {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.75rem;
-            margin-bottom: 1.25rem;
-        }
-        
-        .autofix-check-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            border: 1px solid var(--border-subtle);
-            transition: all 0.3s;
-        }
-        
-        .autofix-check-item.checked {
-            border-color: var(--accent-green);
-            background: rgba(0, 229, 160, 0.08);
-        }
-        
-        .check-icon {
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--text-muted);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            flex-shrink: 0;
-        }
-        
-        .autofix-check-item.checked .check-icon {
-            border-color: var(--accent-green);
-            background: var(--accent-green);
-        }
-        
-        .check-icon svg {
-            width: 12px;
-            height: 12px;
-            color: #000;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        
-        .autofix-check-item.checked .check-icon svg {
-            opacity: 1;
-        }
-        
-        .check-label {
+        .threat-name {
             font-size: 0.7rem;
-            color: var(--text-secondary);
-            line-height: 1.3;
-        }
-        
-        .autofix-check-item.checked .check-label {
-            color: var(--accent-green);
-        }
-        
-        .autofix-btn {
-            width: 100%;
-            padding: 1.25rem 2rem;
-            background: linear-gradient(135deg, var(--accent-purple), #6d28d9);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 12px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 1rem;
             font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .threat-value {
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        
+        .threat-value.enemy { color: var(--neon-red); }
+        .threat-value.friendly { color: var(--neon-green); }
+        
+        .threat-trend {
+            font-size: 0.55rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            margin-left: 0.5rem;
+        }
+        
+        .threat-trend.up { background: rgba(255, 68, 68, 0.15); color: var(--neon-red); }
+        .threat-trend.down { background: rgba(0, 255, 157, 0.15); color: var(--neon-green); }
+        .threat-trend.critical { background: rgba(255, 68, 68, 0.2); color: var(--neon-red); animation: critical-flash 1s infinite; }
+        
+        @keyframes critical-flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .threat-bar-wrapper {
+            height: 28px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .threat-bar {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 0.75rem;
+        }
+        
+        .threat-bar.enemy {
+            background: linear-gradient(90deg, rgba(255, 68, 68, 0.3), var(--neon-red));
+            box-shadow: inset 0 0 20px rgba(255, 68, 68, 0.3);
+        }
+        
+        .threat-bar.friendly {
+            background: linear-gradient(90deg, rgba(0, 255, 157, 0.2), var(--neon-green));
+            box-shadow: inset 0 0 20px rgba(0, 255, 157, 0.2);
+        }
+        
+        .threat-bar-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #000;
+        }
+        
+        .gap-indicator {
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .gap-label {
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.25rem;
+        }
+        
+        .gap-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--neon-red);
+            text-shadow: 0 0 15px rgba(255, 68, 68, 0.5);
+        }
+        
+        /* Nuclear Launch Console */
+        .launch-console-panel {
+            grid-column: span 6;
+        }
+        
+        .console-terminal {
+            background: #0A0A0F;
+            border: 1px solid rgba(0, 255, 157, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            background: rgba(0, 255, 157, 0.05);
+            border-bottom: 1px solid rgba(0, 255, 157, 0.15);
+        }
+        
+        .terminal-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .terminal-dot.red { background: #FF5F56; }
+        .terminal-dot.yellow { background: #FFBD2E; }
+        .terminal-dot.green { background: #27C93F; }
+        
+        .terminal-title {
+            font-size: 0.6rem;
+            color: var(--neon-green);
+            margin-left: 0.5rem;
+        }
+        
+        .terminal-body {
+            padding: 1rem;
+        }
+        
+        .agent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .agent-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.65rem;
+        }
+        
+        .agent-status {
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.55rem;
+            font-weight: 600;
+        }
+        
+        .agent-status.ready {
+            background: rgba(0, 255, 157, 0.15);
+            color: var(--neon-green);
+        }
+        
+        .agent-status.standby {
+            background: rgba(245, 158, 11, 0.15);
+            color: #F59E0B;
+        }
+        
+        .agent-name {
+            color: var(--text-secondary);
+        }
+        
+        .agent-version {
+            color: var(--text-dim);
+            font-size: 0.5rem;
+        }
+        
+        .deploy-btn {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, var(--neon-green), #00CC7D);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.75rem;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 255, 157, 0.3);
+            animation: deploy-pulse 2s ease-in-out infinite;
         }
         
-        .autofix-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+        @keyframes deploy-pulse {
+            0%, 100% { box-shadow: 0 4px 20px rgba(0, 255, 157, 0.3); }
+            50% { box-shadow: 0 4px 35px rgba(0, 255, 157, 0.5); }
         }
         
-        .autofix-btn svg {
-            width: 20px;
-            height: 20px;
+        .deploy-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 40px rgba(0, 255, 157, 0.5);
         }
         
-        /* Deployment Console Modal */
+        .deploy-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .deploy-subtext {
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 0.75rem;
+        }
+        
+        /* Deploy Modal */
         .deploy-modal {
             display: none;
             position: fixed;
@@ -686,54 +720,42 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.92);
             z-index: 2000;
             align-items: center;
             justify-content: center;
             padding: 1rem;
+            backdrop-filter: blur(5px);
         }
         
         .deploy-modal.active { display: flex; }
         
         .deploy-console {
             background: #0a0a0f;
-            border: 1px solid rgba(0, 229, 160, 0.3);
+            border: 1px solid rgba(0, 255, 157, 0.3);
             border-radius: 16px;
-            max-width: 900px;
+            max-width: 800px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
         }
         
-        .console-header {
+        .console-modal-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid rgba(0, 229, 160, 0.2);
-            background: rgba(0, 229, 160, 0.05);
+            border-bottom: 1px solid rgba(0, 255, 157, 0.2);
+            background: rgba(0, 255, 157, 0.03);
         }
         
-        .console-title {
-            color: var(--accent-green);
-            font-size: 1.1rem;
+        .console-modal-title {
+            color: var(--neon-green);
+            font-size: 0.9rem;
             font-weight: 600;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-        }
-        
-        .console-title::before {
-            content: '>';
-            opacity: 0.5;
-        }
-        
-        .console-version {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            padding: 0.25rem 0.5rem;
-            background: rgba(0,0,0,0.3);
-            border-radius: 4px;
         }
         
         .console-close {
@@ -748,15 +770,8 @@
         
         .console-close:hover { color: var(--text-primary); }
         
-        .console-body {
+        .console-modal-body {
             padding: 1.5rem;
-        }
-        
-        .console-intro {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
         }
         
         .delivery-grid {
@@ -767,7 +782,7 @@
         
         .delivery-card {
             background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border-glass);
             border-radius: 12px;
             padding: 1.5rem;
             text-align: center;
@@ -777,42 +792,23 @@
         }
         
         .delivery-card:hover {
-            border-color: var(--accent-green);
-            background: rgba(0, 229, 160, 0.05);
+            border-color: var(--neon-green);
+            background: rgba(0, 255, 157, 0.05);
             transform: translateY(-4px);
         }
         
         .delivery-card.recommended::after {
             content: 'RECOMMENDED';
             position: absolute;
-            top: -10px;
+            top: -8px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.6rem;
-            padding: 0.2rem 0.5rem;
-            background: var(--accent-green);
+            font-size: 0.5rem;
+            padding: 0.15rem 0.4rem;
+            background: var(--neon-green);
             color: #000;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-        
-        .delivery-card.coming-soon {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .delivery-card.coming-soon::after {
-            content: 'COMING SOON';
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.6rem;
-            padding: 0.2rem 0.5rem;
-            background: var(--text-muted);
-            color: #fff;
-            border-radius: 4px;
-            font-weight: 600;
+            border-radius: 3px;
+            font-weight: 700;
         }
         
         .delivery-icon {
@@ -822,9 +818,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(0, 229, 160, 0.1);
+            background: rgba(0, 255, 157, 0.1);
             border-radius: 12px;
-            color: var(--accent-green);
+            color: var(--neon-green);
         }
         
         .delivery-icon svg {
@@ -833,164 +829,44 @@
         }
         
         .delivery-title {
-            font-size: 0.95rem;
+            font-size: 0.8rem;
             font-weight: 600;
             color: var(--text-primary);
             margin-bottom: 0.5rem;
         }
         
         .delivery-desc {
-            font-size: 0.75rem;
+            font-size: 0.6rem;
             color: var(--text-muted);
             line-height: 1.5;
         }
         
-        /* Diff View Panel */
-        .diff-panel {
-            display: none;
-            margin-top: 1.5rem;
-            background: #0d0d12;
-            border: 1px solid var(--border-subtle);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        
-        .diff-panel.active { display: block; }
-        
-        .diff-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem 1rem;
-            background: rgba(0,0,0,0.3);
-            border-bottom: 1px solid var(--border-subtle);
-        }
-        
-        .diff-filename {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-        
-        .diff-copy-btn {
-            padding: 0.4rem 1rem;
-            background: var(--accent-green);
-            border: none;
-            border-radius: 6px;
-            color: #000;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .diff-copy-btn:hover {
-            transform: scale(1.05);
-        }
-        
-        .diff-content {
-            padding: 1rem;
-            font-size: 0.75rem;
-            line-height: 1.6;
-            overflow-x: auto;
-        }
-        
-        .diff-line {
-            padding: 0.1rem 0.5rem;
-            margin: 0 -1rem;
-            padding-left: 1rem;
-        }
-        
-        .diff-line.removed {
-            background: rgba(239, 68, 68, 0.15);
-            color: #fca5a5;
-        }
-        
-        .diff-line.added {
-            background: rgba(16, 185, 129, 0.15);
-            color: #6ee7b7;
-        }
-        
-        /* Threat Matrix */
-        .threat-panel {
-            grid-column: span 6;
-        }
-        
-        .threat-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-        
-        .threat-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.75rem 1rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            border: 1px solid var(--border-subtle);
-        }
-        
-        .threat-rank {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            width: 20px;
-        }
-        
-        .threat-name {
-            flex: 1;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-        
-        .threat-bar-container {
-            width: 100px;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        
-        .threat-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--status-critical), var(--status-opportunity));
-            border-radius: 3px;
-            transition: width 0.5s ease;
-        }
-        
-        .threat-percent {
-            font-size: 0.7rem;
-            color: var(--status-critical);
-            width: 40px;
-            text-align: right;
-        }
-        
         /* Intent Breakdown */
         .intent-panel {
-            grid-column: span 6;
+            grid-column: span 12;
         }
         
         .intent-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 0.75rem;
         }
         
         .intent-card {
             padding: 1rem;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-glass);
             border-radius: 10px;
-            border: 1px solid var(--border-subtle);
             text-align: center;
         }
         
         .intent-icon {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             margin-bottom: 0.5rem;
         }
         
         .intent-label {
-            font-size: 0.65rem;
+            font-size: 0.5rem;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -998,564 +874,322 @@
         }
         
         .intent-value {
-            font-size: 1.25rem;
+            font-size: 1rem;
             font-weight: 700;
             color: var(--text-primary);
         }
         
-        /* Recommendations Panel */
-        .recommendations-panel {
-            grid-column: span 12;
+        .intent-rate {
+            font-size: 0.55rem;
+            margin-top: 0.25rem;
         }
         
-        .rec-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-        }
-        
-        .rec-card {
-            padding: 1.25rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
-            border: 1px solid var(--border-subtle);
-            transition: all 0.3s ease;
-        }
-        
-        .rec-card:hover {
-            border-color: var(--border-glow);
-            transform: translateY(-2px);
-        }
-        
-        .rec-priority {
-            display: inline-block;
-            padding: 0.2rem 0.5rem;
-            font-size: 0.6rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-radius: 4px;
-            margin-bottom: 0.75rem;
-        }
-        
-        .rec-priority.high { background: rgba(239, 68, 68, 0.2); color: var(--status-critical); }
-        .rec-priority.medium { background: rgba(245, 158, 11, 0.2); color: var(--status-opportunity); }
-        .rec-priority.low { background: rgba(16, 185, 129, 0.2); color: var(--status-growth); }
-        
-        .rec-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-        }
-        
-        .rec-description {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
+        .intent-rate.good { color: var(--neon-green); }
+        .intent-rate.bad { color: var(--neon-red); }
+        .intent-rate.neutral { color: var(--text-muted); }
         
         /* Footer */
-        .cockpit-footer {
+        .command-footer {
             margin-top: 2rem;
             padding: 1rem;
             text-align: center;
             color: var(--text-dim);
-            font-size: 0.7rem;
+            font-size: 0.6rem;
         }
         
-        .cockpit-footer a {
-            color: var(--accent-green);
+        .command-footer a {
+            color: var(--neon-green);
             text-decoration: none;
         }
         
         /* Responsive */
         @media (max-width: 1200px) {
-            .kpi-hud {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .time-travel-panel,
-            .simulator-panel,
-            .threat-panel,
-            .intent-panel {
+            .gap-analysis-panel,
+            .countermeasures-panel,
+            .threat-radar-panel,
+            .launch-console-panel {
                 grid-column: span 12;
             }
-            .rec-grid {
-                grid-template-columns: repeat(2, 1fr);
+            .intent-grid {
+                grid-template-columns: repeat(3, 1fr);
             }
             .delivery-grid {
                 grid-template-columns: 1fr;
             }
-            .autofix-checklist {
-                grid-template-columns: repeat(2, 1fr);
-            }
         }
         
         @media (max-width: 768px) {
-            .kpi-hud {
-                grid-template-columns: 1fr;
+            .bleed-ticker {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
             }
-            .rec-grid {
-                grid-template-columns: 1fr;
-            }
-            .command-bar {
+            .header-bar {
                 flex-direction: column;
+                gap: 0.75rem;
                 align-items: flex-start;
             }
-            .command-right {
+            .header-right {
                 width: 100%;
                 justify-content: space-between;
             }
-            .cost-ticker {
-                flex-direction: column;
-                text-align: center;
+            .intent-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
-            .autofix-checklist {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        /* Presentation Mode Overrides */
-        .presentation-mode .hide-in-presentation { display: none !important; }
-        .presentation-mode .agency-logo-placeholder { display: block !important; }
-        .presentation-mode .original-branding { display: none !important; }
-        
-        .agency-logo-placeholder {
-            display: none;
-            padding: 0.5rem 1rem;
-            background: var(--bg-card);
-            border: 1px dashed var(--text-muted);
-            border-radius: 6px;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        /* Settings */
-        .settings-btn {
-            padding: 0.5rem;
-            background: transparent;
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .settings-btn:hover {
-            border-color: var(--accent-green);
-            color: var(--accent-green);
-        }
-        
-        .settings-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .settings-modal.active { display: flex; }
-        
-        .settings-content {
-            background: var(--bg-panel);
-            border: 1px solid var(--border-subtle);
-            border-radius: 16px;
-            padding: 2rem;
-            max-width: 400px;
-            width: 90%;
-        }
-        
-        .settings-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            color: var(--accent-green);
-        }
-        
-        .setting-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1rem 0;
-            border-bottom: 1px solid var(--border-subtle);
-        }
-        
-        .setting-label {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-        
-        .toggle-switch {
-            position: relative;
-            width: 48px;
-            height: 26px;
-            background: var(--bg-deep);
-            border-radius: 13px;
-            border: 1px solid var(--border-subtle);
-            cursor: pointer;
-        }
-        
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 20px;
-            height: 20px;
-            background: var(--text-muted);
-            border-radius: 50%;
-            transition: all 0.3s ease;
-        }
-        
-        .toggle-switch.active {
-            background: var(--accent-green);
-            border-color: var(--accent-green);
-        }
-        
-        .toggle-switch.active::after {
-            left: 24px;
-            background: #fff;
-        }
-        
-        .settings-close {
-            margin-top: 1.5rem;
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--accent-green);
-            border: none;
-            border-radius: 8px;
-            color: #000;
-            font-weight: 600;
-            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div class="cockpit">
-        <!-- Cost of Delay Ticker -->
-        <div class="cost-ticker">
-            <div class="ticker-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
-            </div>
-            <span class="ticker-label">Estimated Revenue Leaking:</span>
-            <span class="ticker-value mono" id="delayTicker">$0.00</span>
-            <span class="ticker-note">per day while issues remain unfixed</span>
+    <!-- Revenue Leak Ticker -->
+    <div class="bleed-ticker">
+        <div class="bleed-alert">
+            <span class="bleed-icon">⚠</span>
+            <span class="bleed-label">Critical Alert: Estimated Revenue Leak</span>
         </div>
-        
-        <!-- Command Bar -->
-        <div class="command-bar">
-            <div class="command-left">
-                <div class="status-indicator">
-                    <div class="status-dot {% if visibility_score < 20 %}critical{% elif visibility_score < 50 %}warning{% else %}nominal{% endif %}"></div>
+        <span class="bleed-value" id="bleedValue">-$0.00</span>
+        <span class="bleed-rate">/hour</span>
+    </div>
+    
+    <div class="command-center">
+        <!-- Header Bar -->
+        <div class="header-bar">
+            <div class="header-left">
+                <div class="status-beacon">
+                    <div class="beacon-dot {% if visibility_score < 20 %}{% elif visibility_score < 50 %}warning{% else %}nominal{% endif %}"></div>
+                    <span class="status-label">{% if visibility_score < 20 %}CRITICAL{% elif visibility_score < 50 %}WARNING{% else %}NOMINAL{% endif %}</span>
                 </div>
-                <div class="agency-logo-placeholder">[AGENCY LOGO]</div>
-                <div class="original-branding">
-                    <div class="mission-id">Mission Control</div>
-                    <div class="mission-name">{{ business.name }}</div>
+                <div class="mission-info">
+                    <span class="mission-id">MISSION ID: EKS-{{ audit.id }}-{{ business.id }}</span>
+                    <span class="mission-target">{{ business.name }}</span>
                 </div>
             </div>
-            <div class="command-right">
-                <div class="timestamp mono">{{ audit.completed_at.strftime('%Y-%m-%d %H:%M UTC') if audit.completed_at else 'N/A' }}</div>
-                <button class="settings-btn" onclick="openSettings()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
-                </button>
-                <a href="/dashboard/business/{{ business.id }}" class="btn-back">Back to Dashboard</a>
+            <div class="header-right">
+                <span class="timestamp-badge">{{ audit.completed_at.strftime('%Y-%m-%d %H:%M') if audit.completed_at else 'LIVE' }} UTC</span>
+                <a href="/dashboard/business/{{ business.id }}/audit/{{ audit.id }}" class="btn-exit">← Exit Command Center</a>
             </div>
         </div>
         
-        <!-- Bento Grid Layout -->
+        <!-- Main Bento Grid -->
         <div class="bento-grid">
             
-            <!-- KPI HUD Row -->
-            <div class="kpi-hud">
-                <div class="kpi-card growth {% if visibility_score < 20 %}critical-pulse{% endif %}">
-                    <div class="kpi-label">AI Visibility Score</div>
-                    <div class="kpi-value mono">{{ visibility_score }}%</div>
-                    <div class="kpi-delta {% if visibility_score >= 50 %}positive{% elif visibility_score >= 20 %}neutral{% else %}negative{% endif %}">
-                        {% if visibility_score >= 50 %}
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 15l-6-6-6 6"/></svg>
-                        Healthy
-                        {% elif visibility_score >= 20 %}
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14"/></svg>
-                        Needs Work
-                        {% else %}
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
-                        Critical
-                        {% endif %}
-                    </div>
-                    <div class="kpi-sparkline-container"><canvas id="sparkline1" class="kpi-sparkline"></canvas></div>
-                </div>
-                
-                <div class="kpi-card opportunity">
-                    <div class="kpi-label">Queries Analyzed</div>
-                    <div class="kpi-value mono">{{ total_queries }}</div>
-                    <div class="kpi-delta neutral">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                        Multi-AI Scan
-                    </div>
-                    <div class="kpi-sparkline-container"><canvas id="sparkline2" class="kpi-sparkline"></canvas></div>
-                </div>
-                
-                <div class="kpi-card critical">
-                    <div class="kpi-label">Top Competitor</div>
-                    <div class="kpi-value mono" style="font-size: 1.1rem;">{{ competitors[0].name[:15] if competitors else 'None' }}{% if competitors and competitors[0].name|length > 15 %}...{% endif %}</div>
-                    <div class="kpi-delta negative">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                        {{ competitors[0].dominance if competitors else market_leader_score }}% Share
-                    </div>
-                    <div class="kpi-sparkline-container"><canvas id="sparkline3" class="kpi-sparkline"></canvas></div>
-                </div>
-                
-                <div class="kpi-card projected">
-                    <div class="kpi-label">Projected Score</div>
-                    <div class="kpi-value mono" id="projectedScore">{{ visibility_score }}%</div>
-                    <div class="kpi-delta positive" id="projectedDelta">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                        If tasks completed
-                    </div>
-                    <div class="parity-badge" id="parityBadge">Parity with Market Leader</div>
-                </div>
-            </div>
-            
-            <!-- Time Travel Chart -->
-            <div class="glass-panel time-travel-panel {% if visibility_score < 20 %}critical-pulse{% endif %}">
+            <!-- Gap Analysis Chart -->
+            <div class="glass-panel gap-analysis-panel">
                 <div class="panel-header">
-                    <div class="panel-title">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        Visibility Trajectory
-                    </div>
+                    <span class="panel-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                        Gap Analysis Simulator
+                    </span>
+                    <span class="panel-badge critical">Revenue At Risk</span>
                 </div>
-                <div class="chart-container">
-                    <canvas id="timeTravelChart"></canvas>
-                    <div class="risk-label" id="riskLabel">Revenue At Risk</div>
+                <div class="chart-wrapper">
+                    <div class="risk-zone-label">MISSED REVENUE OPPORTUNITY</div>
+                    <canvas id="gapChart"></canvas>
                 </div>
                 <div class="chart-legend">
-                    <div class="legend-item"><div class="legend-dot current"></div>Your Score</div>
-                    <div class="legend-item"><div class="legend-dot leader"></div>Market Leader ({{ competitors[0].name[:12] if competitors else 'Top Rival' }})</div>
-                    <div class="legend-item"><div class="legend-dot projected"></div>Projected (With Actions)</div>
-                    <div class="legend-item"><div class="legend-dot risk"></div>Revenue At Risk Zone</div>
+                    <div class="legend-item">
+                        <div class="legend-line user"></div>
+                        <span>Your Visibility ({{ visibility_score }}%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line leader"></div>
+                        <span>{% if top_competitor %}{{ top_competitor.name }}{% else %}Market Leader{% endif %} ({{ market_leader_score }}%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line projected"></div>
+                        <span>Projected (After Fix)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line risk"></div>
+                        <span>Revenue At Risk Zone</span>
+                    </div>
                 </div>
             </div>
             
-            <!-- Action Simulator -->
-            <div class="glass-panel simulator-panel">
-                <div class="simulator-header">
-                    <div class="panel-title">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
-                        Critical Actions
-                    </div>
-                    <div class="projected-score mono" id="projectedBadge">Score: {{ visibility_score }}%</div>
-                </div>
-                <div class="task-list" id="taskList">
-                    {% set default_tasks = [
-                        {"title": "Optimize Meta Descriptions", "impact": 8},
-                        {"title": "Add Schema Markup", "impact": 7},
-                        {"title": "Improve FAQ Content", "impact": 7},
-                        {"title": "Local SEO Optimization", "impact": 6}
-                    ] %}
-                    {% set tasks = recommendations[:4] if recommendations else default_tasks %}
-                    {% for task in tasks %}
-                    <div class="task-item" data-impact="{{ task.impact if task.impact is defined else (loop.index * 2 + 5) }}" data-value="{{ (loop.index * 150)|int }}" onclick="toggleTask(this)">
-                        <div class="task-info">
-                            <div class="task-name">{{ task.title[:35] }}{% if task.title|length > 35 %}...{% endif %}</div>
-                            <div class="task-impact mono">+{{ task.impact if task.impact is defined else (loop.index * 2 + 5) }}% visibility</div>
-                        </div>
-                        <div class="task-toggle"></div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            
-            <!-- Auto-Fix Upsell Module -->
-            <div class="autofix-section hide-in-presentation">
-                <div class="autofix-module">
-                    <div class="autofix-header">
-                        <div class="autofix-title">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                            </svg>
-                            Auto-Fix Agents
-                        </div>
-                        <div class="autofix-price-tag">$1,188/mo</div>
-                    </div>
-                    <div class="autofix-checklist" id="autofixChecklist">
-                        <div class="autofix-check-item" data-index="0">
-                            <div class="check-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                            </div>
-                            <span class="check-label">Optimize Meta Tags</span>
-                        </div>
-                        <div class="autofix-check-item" data-index="1">
-                            <div class="check-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                            </div>
-                            <span class="check-label">Deploy Schema Markup</span>
-                        </div>
-                        <div class="autofix-check-item" data-index="2">
-                            <div class="check-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                            </div>
-                            <span class="check-label">Generate FAQ Content</span>
-                        </div>
-                        <div class="autofix-check-item" data-index="3">
-                            <div class="check-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                            </div>
-                            <span class="check-label">Fix Local SEO Issues</span>
-                        </div>
-                    </div>
-                    <button class="autofix-btn" onclick="openDeployConsole()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                            <polyline points="22 4 12 14.01 9 11.01"/>
-                        </svg>
-                        Execute All & Deploy Fixes
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Threat Matrix -->
-            <div class="glass-panel threat-panel">
+            <!-- Tactical Countermeasures -->
+            <div class="glass-panel countermeasures-panel">
                 <div class="panel-header">
-                    <div class="panel-title">
+                    <span class="panel-title">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                        Competitor Threat Matrix
+                        Tactical Countermeasures
+                    </span>
+                </div>
+                
+                <div class="projected-display">
+                    <div>
+                        <div class="projected-label">Projected Score</div>
+                        <div class="projected-value" id="projectedScore">{{ visibility_score }}%</div>
+                    </div>
+                    <div class="projected-delta" id="projectedDelta">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                        Toggle actions below
                     </div>
                 </div>
-                <div class="threat-list">
-                    {% if competitors %}
-                    {% for comp in competitors[:5] %}
-                    <div class="threat-item">
-                        <div class="threat-rank mono">#{{ loop.index }}</div>
-                        <div class="threat-name">{{ comp.name[:20] }}{% if comp.name|length > 20 %}...{% endif %}</div>
-                        <div class="threat-bar-container">
-                            <div class="threat-bar" style="width: {{ comp.dominance }}%;"></div>
+                
+                <div class="target-list">
+                    <div class="target-item" onclick="toggleTarget(this)" data-impact="8" data-value="450">
+                        <div class="target-info">
+                            <div class="target-name">Inject Schema Markup</div>
+                            <div class="target-impact">+8% Visibility | +$450/mo</div>
                         </div>
-                        <div class="threat-percent mono">{{ comp.dominance }}%</div>
+                        <div class="target-switch"></div>
                     </div>
-                    {% endfor %}
-                    {% else %}
-                    <div class="threat-item">
-                        <div class="threat-rank mono">#1</div>
-                        <div class="threat-name">Coastal Roofing</div>
-                        <div class="threat-bar-container">
-                            <div class="threat-bar" style="width: 28%;"></div>
+                    <div class="target-item" onclick="toggleTarget(this)" data-impact="6" data-value="320">
+                        <div class="target-info">
+                            <div class="target-name">Optimize Meta Descriptions</div>
+                            <div class="target-impact">+6% Visibility | +$320/mo</div>
                         </div>
-                        <div class="threat-percent mono">28%</div>
+                        <div class="target-switch"></div>
                     </div>
-                    <div class="threat-item">
-                        <div class="threat-rank mono">#2</div>
-                        <div class="threat-name">Summit Roofing</div>
-                        <div class="threat-bar-container">
-                            <div class="threat-bar" style="width: 22%;"></div>
+                    <div class="target-item" onclick="toggleTarget(this)" data-impact="10" data-value="580">
+                        <div class="target-info">
+                            <div class="target-name">Add FAQ Content Blocks</div>
+                            <div class="target-impact">+10% Visibility | +$580/mo</div>
                         </div>
-                        <div class="threat-percent mono">22%</div>
+                        <div class="target-switch"></div>
                     </div>
-                    <div class="threat-item">
-                        <div class="threat-rank mono">#3</div>
-                        <div class="threat-name">ProRoof Solutions</div>
-                        <div class="threat-bar-container">
-                            <div class="threat-bar" style="width: 18%;"></div>
+                    <div class="target-item" onclick="toggleTarget(this)" data-impact="5" data-value="275">
+                        <div class="target-info">
+                            <div class="target-name">Fix Page Title Structure</div>
+                            <div class="target-impact">+5% Visibility | +$275/mo</div>
                         </div>
-                        <div class="threat-percent mono">18%</div>
+                        <div class="target-switch"></div>
                     </div>
-                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Competitor Threat Radar -->
+            <div class="glass-panel threat-radar-panel">
+                <div class="panel-header">
+                    <span class="panel-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/><path d="M12 12l6-6"/></svg>
+                        Competitor Threat Radar
+                    </span>
+                    <span class="panel-badge critical">Gap Detected</span>
+                </div>
+                
+                <div class="threat-comparison">
+                    <div class="threat-row">
+                        <div class="threat-header">
+                            <span class="threat-name">{% if top_competitor %}{{ top_competitor.name }}{% else %}Coastal Roofing{% endif %}</span>
+                            <div>
+                                <span class="threat-value enemy">{{ market_leader_score }}%</span>
+                                <span class="threat-trend up">▲ Trending Up</span>
+                            </div>
+                        </div>
+                        <div class="threat-bar-wrapper">
+                            <div class="threat-bar enemy" style="width: {{ market_leader_score }}%;">
+                                <span class="threat-bar-label">{{ market_leader_score }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="threat-row">
+                        <div class="threat-header">
+                            <span class="threat-name">{{ business.name }}</span>
+                            <div>
+                                <span class="threat-value friendly">{{ visibility_score }}%</span>
+                                <span class="threat-trend critical">▼ Critical</span>
+                            </div>
+                        </div>
+                        <div class="threat-bar-wrapper">
+                            <div class="threat-bar friendly" style="width: {{ visibility_score if visibility_score > 0 else 2 }}%;">
+                                {% if visibility_score > 5 %}<span class="threat-bar-label">{{ visibility_score }}%</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="gap-indicator">
+                    <div class="gap-label">Market Share Gap</div>
+                    <div class="gap-value">-{{ market_leader_score - visibility_score }}%</div>
+                </div>
+            </div>
+            
+            <!-- Nuclear Launch Console -->
+            <div class="glass-panel launch-console-panel">
+                <div class="panel-header">
+                    <span class="panel-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                        Resolution Deployment Console
+                    </span>
+                    <span class="panel-badge live">Agents Ready</span>
+                </div>
+                
+                <div class="console-terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot red"></div>
+                        <div class="terminal-dot yellow"></div>
+                        <div class="terminal-dot green"></div>
+                        <span class="terminal-title">ekkoscope@deploy:~$</span>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="agent-list">
+                            <div class="agent-row">
+                                <span class="agent-status ready">[READY]</span>
+                                <span class="agent-name">SchemaBot</span>
+                                <span class="agent-version">v2.1.4</span>
+                            </div>
+                            <div class="agent-row">
+                                <span class="agent-status ready">[READY]</span>
+                                <span class="agent-name">MetaFixer</span>
+                                <span class="agent-version">v1.8.2</span>
+                            </div>
+                            <div class="agent-row">
+                                <span class="agent-status ready">[READY]</span>
+                                <span class="agent-name">ContentAgent</span>
+                                <span class="agent-version">v3.0.1</span>
+                            </div>
+                            <div class="agent-row">
+                                <span class="agent-status standby">[STANDBY]</span>
+                                <span class="agent-name">CodePatch</span>
+                                <span class="agent-version">v2.4.0</span>
+                            </div>
+                        </div>
+                        
+                        <button class="deploy-btn" onclick="openDeployConsole()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            Deploy Resolution Agents
+                        </button>
+                        <div class="deploy-subtext">Estimated Time Saved: 42 hours | Value: $1,625/mo</div>
+                    </div>
                 </div>
             </div>
             
             <!-- Intent Breakdown -->
             <div class="glass-panel intent-panel">
                 <div class="panel-header">
-                    <div class="panel-title">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                        Query Intent Analysis
-                    </div>
+                    <span class="panel-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        Intent Coverage Matrix
+                    </span>
                 </div>
+                
                 <div class="intent-grid">
                     {% for intent_type, data in intent_breakdown.items() %}
                     <div class="intent-card">
                         <div class="intent-icon">
-                            {% if intent_type == 'emergency' %}🚨
-                            {% elif intent_type == 'high_ticket' %}💎
-                            {% elif intent_type == 'transactional' %}💳
-                            {% elif intent_type == 'informational' %}📚
-                            {% else %}🔍{% endif %}
+                            {% if 'emergency' in intent_type.lower() %}🚨
+                            {% elif 'high' in intent_type.lower() or 'ticket' in intent_type.lower() %}💰
+                            {% elif 'inform' in intent_type.lower() %}📚
+                            {% elif 'transact' in intent_type.lower() %}🛒
+                            {% else %}📊{% endif %}
                         </div>
                         <div class="intent-label">{{ intent_type|replace('_', ' ')|title }}</div>
-                        <div class="intent-value mono">{{ data.found|default(0) }}/{{ data.total|default(0) }}</div>
+                        <div class="intent-value">{{ data.found }}/{{ data.total }}</div>
+                        {% set rate = (data.found / data.total * 100) if data.total > 0 else 0 %}
+                        <div class="intent-rate {% if rate >= 50 %}good{% elif rate > 0 %}neutral{% else %}bad{% endif %}">
+                            {{ rate|int }}% Coverage
+                        </div>
                     </div>
                     {% endfor %}
                     {% if not intent_breakdown %}
                     <div class="intent-card">
-                        <div class="intent-icon">🚨</div>
-                        <div class="intent-label">Emergency</div>
-                        <div class="intent-value mono">0/0</div>
-                    </div>
-                    <div class="intent-card">
-                        <div class="intent-icon">💎</div>
-                        <div class="intent-label">High Ticket</div>
-                        <div class="intent-value mono">0/0</div>
-                    </div>
-                    <div class="intent-card">
-                        <div class="intent-icon">💳</div>
-                        <div class="intent-label">Transactional</div>
-                        <div class="intent-value mono">0/0</div>
-                    </div>
-                    <div class="intent-card">
-                        <div class="intent-icon">📚</div>
-                        <div class="intent-label">Informational</div>
-                        <div class="intent-value mono">0/0</div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <!-- Recommendations -->
-            <div class="glass-panel recommendations-panel">
-                <div class="panel-header">
-                    <div class="panel-title">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                        Priority Recommendations
-                    </div>
-                </div>
-                <div class="rec-grid">
-                    {% for rec in recommendations[:6] %}
-                    <div class="rec-card">
-                        <div class="rec-priority {% if loop.index <= 2 %}high{% elif loop.index <= 4 %}medium{% else %}low{% endif %}">
-                            {% if loop.index <= 2 %}Critical{% elif loop.index <= 4 %}Important{% else %}Suggested{% endif %}
+                        <div class="intent-icon">📊</div>
+                        <div class="intent-label">General</div>
+                        <div class="intent-value">{{ queries_found }}/{{ total_queries }}</div>
+                        <div class="intent-rate {% if visibility_score >= 50 %}good{% elif visibility_score > 0 %}neutral{% else %}bad{% endif %}">
+                            {{ visibility_score }}% Coverage
                         </div>
-                        <div class="rec-title">{{ rec.title }}</div>
-                        <div class="rec-description">{{ rec.description[:120] }}{% if rec.description|length > 120 %}...{% endif %}</div>
-                    </div>
-                    {% endfor %}
-                    {% if not recommendations %}
-                    <div class="rec-card">
-                        <div class="rec-priority high">Critical</div>
-                        <div class="rec-title">Optimize for AI Discovery</div>
-                        <div class="rec-description">Ensure your website has clear, structured content that AI models can easily understand and recommend.</div>
-                    </div>
-                    <div class="rec-card">
-                        <div class="rec-priority high">Critical</div>
-                        <div class="rec-title">Add Schema Markup</div>
-                        <div class="rec-description">Implement JSON-LD schema to help AI assistants understand your business details.</div>
-                    </div>
-                    <div class="rec-card">
-                        <div class="rec-priority medium">Important</div>
-                        <div class="rec-title">Build Authority Content</div>
-                        <div class="rec-description">Create comprehensive FAQ pages and service descriptions that AI can reference.</div>
                     </div>
                     {% endif %}
                 </div>
@@ -1563,118 +1197,83 @@
             
         </div>
         
-        <footer class="cockpit-footer">
-            Powered by <a href="/">EkkoScope</a> GEO Engine
-        </footer>
+        <div class="command-footer">
+            EkkoScope Command Center v4.0 | <a href="https://ekkoscope.com">ekkoscope.com</a>
+        </div>
     </div>
     
     <!-- Value Unlocked Badge -->
     <div class="value-badge" id="valueBadge">+$450/mo Value Unlocked</div>
     
-    <!-- Settings Modal -->
-    <div class="settings-modal" id="settingsModal">
-        <div class="settings-content">
-            <div class="settings-title">Dashboard Settings</div>
-            <div class="setting-row">
-                <div class="setting-label">Client Presentation Mode</div>
-                <div class="toggle-switch" id="presentationToggle" onclick="togglePresentationMode()"></div>
+    <!-- Deploy Modal -->
+    <div class="deploy-modal" id="deployModal">
+        <div class="deploy-console">
+            <div class="console-modal-header">
+                <span class="console-modal-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Deployment Options
+                </span>
+                <button class="console-close" onclick="closeDeployConsole()">×</button>
             </div>
-            <button class="settings-close" onclick="closeSettings()">Done</button>
+            <div class="console-modal-body">
+                <div class="delivery-grid">
+                    <div class="delivery-card recommended" onclick="copyCodeToClipboard()">
+                        <div class="delivery-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        </div>
+                        <div class="delivery-title">Copy Code</div>
+                        <div class="delivery-desc">Copy all fixes to clipboard for manual implementation</div>
+                    </div>
+                    <div class="delivery-card" onclick="downloadPatchKit()">
+                        <div class="delivery-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </div>
+                        <div class="delivery-title">Download Patch Kit</div>
+                        <div class="delivery-desc">Get a ZIP file with all code patches ready to apply</div>
+                    </div>
+                    <div class="delivery-card" onclick="showGitHubPR()">
+                        <div class="delivery-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        </div>
+                        <div class="delivery-title">GitHub PR</div>
+                        <div class="delivery-desc">Create a pull request directly to your repository</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
-    <!-- Deployment Console Modal -->
-    <div class="deploy-modal" id="deployModal">
-        <div class="deploy-console">
-            <div class="console-header">
-                <div class="console-title">Resolution Deployment v1.0</div>
-                <div class="console-version">EkkoScope FixEngine</div>
-                <button class="console-close" onclick="closeDeployConsole()">&times;</button>
-            </div>
-            <div class="console-body">
-                <div class="console-intro">
-                    Select your preferred deployment method. Our AI agents have generated optimized fixes for your visibility issues.
-                </div>
-                <div class="delivery-grid">
-                    <div class="delivery-card" onclick="showDiffView()">
-                        <div class="delivery-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="4 17 10 11 4 5"></polyline>
-                                <line x1="12" y1="19" x2="20" y2="19"></line>
-                            </svg>
-                        </div>
-                        <div class="delivery-title">Quick Injection</div>
-                        <div class="delivery-desc">View diff and copy optimized code directly to clipboard</div>
-                    </div>
-                    <div class="delivery-card recommended" onclick="downloadPatchKit()">
-                        <div class="delivery-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                        </div>
-                        <div class="delivery-title">Developer Patch Kit</div>
-                        <div class="delivery-desc">Download .zip with fixed code and README instructions</div>
-                    </div>
-                    <div class="delivery-card coming-soon">
-                        <div class="delivery-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-                            </svg>
-                        </div>
-                        <div class="delivery-title">Git Merge</div>
-                        <div class="delivery-desc">Connect repo for automatic PR creation (CI/CD)</div>
-                    </div>
-                </div>
-                
-                <div class="diff-panel" id="diffPanel">
-                    <div class="diff-header">
-                        <span class="diff-filename mono">meta-description-fix.html</span>
-                        <button class="diff-copy-btn" onclick="copyDiffCode()">Copy Code</button>
-                    </div>
-                    <div class="diff-content mono">
-                        <div class="diff-line removed">- &lt;meta name="description" content="Welcome to our website"&gt;</div>
-                        <div class="diff-line added">+ &lt;meta name="description" content="{{ business.name }} - Expert {{ business.business_type or 'services' }} in your area. AI-recommended for quality and reliability. Contact us today for a free consultation."&gt;</div>
-                        <div class="diff-line">&nbsp;</div>
-                        <div class="diff-line removed">- &lt;title&gt;Home&lt;/title&gt;</div>
-                        <div class="diff-line added">+ &lt;title&gt;{{ business.name }} | Trusted {{ business.business_type or 'Service' }} Provider&lt;/title&gt;</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         const currentVisibility = {{ visibility_score }};
-        const totalQueries = {{ total_queries }};
-        const businessName = "{{ business.name }}";
         const marketLeaderScore = {{ market_leader_score }};
-        const topCompetitorName = "{{ competitors[0].name if competitors else 'Market Leader' }}";
+        const topCompetitorName = "{% if top_competitor %}{{ top_competitor.name }}{% else %}Coastal Roofing{% endif %}";
+        const businessName = "{{ business.name }}";
         
-        let dailyLoss = (marketLeaderScore - currentVisibility) * 12;
-        if (dailyLoss < 0) dailyLoss = 0;
-        let tickerValue = 0;
-        const tickerEl = document.getElementById('delayTicker');
+        let bleedAmount = 0;
+        const hourlyLeak = 8.29 + (Math.random() * 2);
         
-        function updateTicker() {
-            tickerValue += (dailyLoss / 86400) * 0.5;
-            tickerEl.textContent = '$' + tickerValue.toFixed(2);
+        function updateBleedTicker() {
+            bleedAmount += hourlyLeak / 3600;
+            document.getElementById('bleedValue').textContent = '-$' + bleedAmount.toFixed(2);
         }
-        setInterval(updateTicker, 500);
         
-        Chart.defaults.color = '#94a3b8';
-        Chart.defaults.font.family = "'JetBrains Mono', monospace";
-        Chart.defaults.font.size = 10;
+        setInterval(updateBleedTicker, 1000);
+        updateBleedTicker();
         
-        const ctx = document.getElementById('timeTravelChart').getContext('2d');
+        const ctx = document.getElementById('gapChart').getContext('2d');
         
-        const labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Today', 'Week 6', 'Week 7', 'Week 8'];
-        
-        const yourScoreData = [currentVisibility, currentVisibility, currentVisibility, currentVisibility, currentVisibility, null, null, null];
-        
-        const leaderData = [marketLeaderScore, marketLeaderScore, marketLeaderScore, marketLeaderScore, marketLeaderScore, marketLeaderScore, marketLeaderScore, marketLeaderScore];
-        
+        const labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Today', '+2 Weeks', '+4 Weeks', '+8 Weeks'];
+        const userScoreData = [
+            Math.max(0, currentVisibility - 2),
+            Math.max(0, currentVisibility - 1),
+            currentVisibility,
+            currentVisibility,
+            currentVisibility,
+            currentVisibility,
+            currentVisibility,
+            currentVisibility
+        ];
+        const leaderData = Array(8).fill(marketLeaderScore);
         let projectedData = [null, null, null, null, currentVisibility, currentVisibility, currentVisibility, currentVisibility];
         
         const riskFillPlugin = {
@@ -1689,8 +1288,9 @@
                 
                 if (yourY > leaderY) {
                     const gradient = ctx.createLinearGradient(0, leaderY, 0, yourY);
-                    gradient.addColorStop(0, 'rgba(239, 68, 68, 0.05)');
-                    gradient.addColorStop(1, 'rgba(239, 68, 68, 0.25)');
+                    gradient.addColorStop(0, 'rgba(255, 68, 68, 0.08)');
+                    gradient.addColorStop(0.5, 'rgba(255, 68, 68, 0.15)');
+                    gradient.addColorStop(1, 'rgba(255, 68, 68, 0.25)');
                     
                     ctx.save();
                     ctx.fillStyle = gradient;
@@ -1702,27 +1302,28 @@
         
         Chart.register(riskFillPlugin);
         
-        const timeTravelChart = new Chart(ctx, {
+        const gapChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Your Score',
-                        data: yourScoreData,
-                        borderColor: '#00E5A0',
-                        backgroundColor: 'rgba(0, 229, 160, 0.1)',
+                        label: 'Your Visibility',
+                        data: userScoreData,
+                        borderColor: '#00FF9D',
+                        backgroundColor: 'rgba(0, 255, 157, 0.1)',
                         fill: false,
                         tension: 0,
                         borderWidth: 3,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#00E5A0',
-                        pointBorderColor: '#00E5A0'
+                        pointRadius: 5,
+                        pointBackgroundColor: '#00FF9D',
+                        pointBorderColor: '#00FF9D',
+                        pointBorderWidth: 2
                     },
                     {
-                        label: 'Market Leader',
+                        label: topCompetitorName,
                         data: leaderData,
-                        borderColor: '#6b7280',
+                        borderColor: '#6B7280',
                         borderDash: [8, 4],
                         fill: false,
                         tension: 0,
@@ -1732,8 +1333,8 @@
                     {
                         label: 'Projected',
                         data: projectedData,
-                        borderColor: '#06b6d4',
-                        backgroundColor: 'rgba(6, 182, 212, 0.15)',
+                        borderColor: '#00D4FF',
+                        backgroundColor: 'rgba(0, 212, 255, 0.15)',
                         fill: true,
                         tension: 0.3,
                         borderWidth: 3,
@@ -1752,11 +1353,13 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: 'rgba(16, 24, 40, 0.95)',
+                        backgroundColor: 'rgba(10, 10, 15, 0.95)',
                         borderColor: 'rgba(255, 255, 255, 0.1)',
                         borderWidth: 1,
                         padding: 12,
                         displayColors: true,
+                        titleFont: { family: 'JetBrains Mono', size: 11 },
+                        bodyFont: { family: 'JetBrains Mono', size: 11 },
                         callbacks: {
                             label: function(context) {
                                 return context.dataset.label + ': ' + (context.parsed.y !== null ? context.parsed.y + '%' : 'N/A');
@@ -1767,152 +1370,84 @@
                 scales: {
                     x: {
                         grid: { color: 'rgba(255, 255, 255, 0.03)' },
-                        ticks: { font: { size: 9 } }
+                        ticks: { 
+                            font: { family: 'JetBrains Mono', size: 9 },
+                            color: '#64748B'
+                        }
                     },
                     y: {
                         min: 0,
-                        max: Math.max(100, marketLeaderScore + 20),
+                        max: Math.max(100, marketLeaderScore + 15),
                         grid: { color: 'rgba(255, 255, 255, 0.03)' },
                         ticks: {
+                            font: { family: 'JetBrains Mono', size: 9 },
+                            color: '#64748B',
                             callback: function(value) { return value + '%'; }
                         }
                     }
                 },
                 animation: {
-                    duration: 600,
+                    duration: 800,
                     easing: 'easeOutQuart'
                 }
             }
         });
         
-        function createSparkline(canvasId, data, color) {
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) return;
-            const container = canvas.parentElement;
-            canvas.width = container.offsetWidth;
-            canvas.height = container.offsetHeight;
-            new Chart(canvas, {
-                type: 'line',
-                data: {
-                    labels: data.map((_, i) => i),
-                    datasets: [{
-                        data: data,
-                        borderColor: color,
-                        borderWidth: 1.5,
-                        fill: false,
-                        tension: 0.4,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: false,
-                    maintainAspectRatio: false,
-                    animation: false,
-                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                    scales: {
-                        x: { display: false },
-                        y: { display: false }
-                    }
-                }
-            });
-        }
-        
-        createSparkline('sparkline1', [20, 25, 22, 28, 32, currentVisibility], '#10b981');
-        createSparkline('sparkline2', [15, 18, 20, 22, 25, totalQueries], '#f59e0b');
-        createSparkline('sparkline3', [40, 38, 42, 35, 30, marketLeaderScore], '#ef4444');
-        createSparkline('sparkline4', [0, 5, 10, 15, 20, 25], '#06b6d4');
-        
-        let activeTasksImpact = 0;
-        let activeTaskCount = 0;
-        const totalTasks = document.querySelectorAll('.task-item').length;
+        let activeImpact = 0;
+        let activeCount = 0;
+        const totalTargets = document.querySelectorAll('.target-item').length;
         const valueBadge = document.getElementById('valueBadge');
         const projectedScoreEl = document.getElementById('projectedScore');
-        const projectedBadgeEl = document.getElementById('projectedBadge');
         const projectedDeltaEl = document.getElementById('projectedDelta');
-        const parityBadgeEl = document.getElementById('parityBadge');
         
-        function toggleTask(element) {
+        function toggleTarget(element) {
             element.classList.toggle('active');
             const impact = parseInt(element.dataset.impact) || 0;
             const value = parseInt(element.dataset.value) || 0;
             
             if (element.classList.contains('active')) {
-                activeTasksImpact += impact;
-                activeTaskCount++;
+                activeImpact += impact;
+                activeCount++;
                 showValueBadge(element, value);
             } else {
-                activeTasksImpact -= impact;
-                activeTaskCount--;
+                activeImpact -= impact;
+                activeCount--;
             }
             
-            const projectedScore = Math.min(100, currentVisibility + activeTasksImpact);
+            const projectedScore = Math.min(100, currentVisibility + activeImpact);
             projectedScoreEl.textContent = projectedScore + '%';
-            projectedBadgeEl.textContent = 'Score: ' + projectedScore + '%';
             
-            if (activeTaskCount === totalTasks && projectedScore >= marketLeaderScore) {
-                projectedDeltaEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> +' + activeTasksImpact + '% (Parity with Market Leader)';
-                projectedDeltaEl.style.color = '#10b981';
-                projectedBadgeEl.classList.add('parity');
-                parityBadgeEl.classList.add('show');
+            if (activeCount === totalTargets && projectedScore >= marketLeaderScore) {
+                projectedDeltaEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> +' + activeImpact + '% (PARITY ACHIEVED)';
+                projectedDeltaEl.classList.add('parity');
+            } else if (activeImpact > 0) {
+                projectedDeltaEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg> +' + activeImpact + '% projected gain';
+                projectedDeltaEl.classList.remove('parity');
             } else {
-                projectedDeltaEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> If tasks completed';
-                projectedDeltaEl.style.color = '';
-                projectedBadgeEl.classList.remove('parity');
-                parityBadgeEl.classList.remove('show');
+                projectedDeltaEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Toggle actions above';
+                projectedDeltaEl.classList.remove('parity');
             }
             
             const newProjected = [null, null, null, null, currentVisibility,
-                Math.min(100, currentVisibility + activeTasksImpact * 0.4),
-                Math.min(100, currentVisibility + activeTasksImpact * 0.7),
+                Math.min(100, currentVisibility + activeImpact * 0.4),
+                Math.min(100, currentVisibility + activeImpact * 0.7),
                 Math.min(100, projectedScore)
             ];
             
-            timeTravelChart.data.datasets[2].data = newProjected;
-            timeTravelChart.update('default');
+            gapChart.data.datasets[2].data = newProjected;
+            gapChart.update('default');
         }
         
         function showValueBadge(element, value) {
             const rect = element.getBoundingClientRect();
             valueBadge.textContent = '+$' + value + '/mo Value Unlocked';
             valueBadge.style.left = (rect.left + rect.width / 2 - 100) + 'px';
-            valueBadge.style.top = (rect.top - 50) + 'px';
+            valueBadge.style.top = (rect.top - 55) + 'px';
             valueBadge.classList.add('show');
             
             setTimeout(() => {
                 valueBadge.classList.remove('show');
-            }, 2000);
-        }
-        
-        let checklistAnimationInterval;
-        let currentCheckIndex = 0;
-        
-        function animateChecklist() {
-            const items = document.querySelectorAll('.autofix-check-item');
-            
-            items.forEach(item => item.classList.remove('checked'));
-            currentCheckIndex = 0;
-            
-            checklistAnimationInterval = setInterval(() => {
-                if (currentCheckIndex < items.length) {
-                    items[currentCheckIndex].classList.add('checked');
-                    currentCheckIndex++;
-                } else {
-                    setTimeout(() => {
-                        items.forEach(item => item.classList.remove('checked'));
-                        currentCheckIndex = 0;
-                    }, 1000);
-                }
-            }, 400);
-        }
-        
-        animateChecklist();
-        
-        function openSettings() {
-            document.getElementById('settingsModal').classList.add('active');
-        }
-        
-        function closeSettings() {
-            document.getElementById('settingsModal').classList.remove('active');
+            }, 2500);
         }
         
         function openDeployConsole() {
@@ -1921,91 +1456,87 @@
         
         function closeDeployConsole() {
             document.getElementById('deployModal').classList.remove('active');
-            document.getElementById('diffPanel').classList.remove('active');
         }
         
-        function showDiffView() {
-            document.getElementById('diffPanel').classList.add('active');
-        }
-        
-        function copyDiffCode() {
-            const code = `<meta name="description" content="${businessName} - Expert services in your area. AI-recommended for quality and reliability. Contact us today for a free consultation.">
-<title>${businessName} | Trusted Service Provider</title>`;
-            navigator.clipboard.writeText(code);
-            const btn = event.target;
-            btn.textContent = 'Copied!';
-            setTimeout(() => btn.textContent = 'Copy Code', 2000);
-        }
-        
-        async function downloadPatchKit() {
-            const zip = new JSZip();
-            
-            const metaFix = `<!-- EkkoScope AI Visibility Fix -->
-<!-- Generated: ${new Date().toISOString()} -->
-
-<meta name="description" content="${businessName} - Expert services in your area. AI-recommended for quality and reliability. Contact us today for a free consultation.">
-<title>${businessName} | Trusted Service Provider</title>
-
-<!-- JSON-LD Schema Markup -->
+        function copyCodeToClipboard() {
+            const code = `<!-- EkkoScope Schema Fix for ${businessName} -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "name": "${businessName}",
-  "description": "Expert services with AI-verified quality",
-  "url": "https://example.com"
+  "description": "Professional services optimized for AI visibility",
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "reviewCount": "127"
+  }
 }
-<\/script>`;
+</script>
+
+<!-- Meta Description Fix -->
+<meta name="description" content="Professional ${businessName} services. Available 24/7 for emergency needs. Top-rated with 4.9★ reviews.">
+
+<!-- FAQ Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "Why choose ${businessName}?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "We provide expert services with 24/7 availability and industry-leading response times."
+    }
+  }]
+}
+</script>`;
             
-            const readme = `# EkkoScope Fix Kit
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Code copied to clipboard!');
+            });
+        }
+        
+        async function downloadPatchKit() {
+            const zip = new JSZip();
+            
+            zip.file("schema-fix.html", `<!-- LocalBusiness Schema for ${businessName} -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "${businessName}"
+}
+</script>`);
+            
+            zip.file("meta-fix.html", `<meta name="description" content="Professional ${businessName} services.">`);
+            
+            zip.file("README.txt", `EkkoScope Patch Kit for ${businessName}
 Generated: ${new Date().toISOString()}
-Business: ${businessName}
 
-## Installation Instructions
-
-1. Open your website's main HTML file (usually index.html)
-2. Replace your existing <meta description> and <title> tags with the ones in meta-fix.html
-3. Add the JSON-LD schema markup before the closing </head> tag
-4. Deploy your changes
-
-## Files Included
-- meta-fix.html: Optimized meta tags and schema markup
-- README.txt: This file
-
-## Support
-For questions, contact support@ekkoscope.com`;
+Instructions:
+1. Open schema-fix.html and copy the schema to your site's <head>
+2. Update your meta description using meta-fix.html
+3. Re-run your EkkoScope audit to verify improvements`);
             
-            zip.file('meta-fix.html', metaFix);
-            zip.file('README.txt', readme);
-            
-            const content = await zip.generateAsync({ type: 'blob' });
+            const content = await zip.generateAsync({type: "blob"});
             const url = URL.createObjectURL(content);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'ekkoscope-fix-kit.zip';
+            a.download = 'ekkoscope-patch-kit.zip';
             a.click();
             URL.revokeObjectURL(url);
         }
         
-        const presentationMode = localStorage.getItem('presentationMode') === 'true';
-        if (presentationMode) {
-            document.body.classList.add('presentation-mode');
-            document.getElementById('presentationToggle').classList.add('active');
+        function showGitHubPR() {
+            alert('GitHub PR integration coming soon! Contact support@ekkoscope.com for early access.');
         }
-        
-        function togglePresentationMode() {
-            const toggle = document.getElementById('presentationToggle');
-            toggle.classList.toggle('active');
-            document.body.classList.toggle('presentation-mode');
-            localStorage.setItem('presentationMode', toggle.classList.contains('active'));
-        }
-        
-        document.getElementById('settingsModal').addEventListener('click', function(e) {
-            if (e.target === this) closeSettings();
-        });
         
         document.getElementById('deployModal').addEventListener('click', function(e) {
-            if (e.target === this) closeDeployConsole();
+            if (e.target === this) {
+                closeDeployConsole();
+            }
         });
     </script>
 </body>

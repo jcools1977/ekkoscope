@@ -1,0 +1,101 @@
+🚀 The "Ekkoscope Command Center" Re-Architect Prompt
+Role: You are a Senior Frontend Architect and UI/UX Designer specializing in high-frequency trading terminals and military-grade dashboards.
+
+Objective: Completely rebuild the Mission Control dashboard. The current version looks like a static PDF report. The new version must feel like a Live Tactical Command Center. The user should feel anxiety about their current status and adrenaline when they click "Fix."
+
+1. The Design Language: "Tactical Stealth"
+Theme: "Midnight Protocol" (Deepest Navy/Black: #0B0C15 to #1A1D2D).
+
+Texture: Use Glassmorphism heavily. Panels should look like floating glass panes with subtle white borders (border-white/10) and background blur.
+
+Typography: Use a strict Monospace font (e.g., JetBrains Mono or Roboto Mono) for ALL numbers and data points. It must look calculated.
+
+Color Logic:
+
+Red (Critical): Use neon red (#FF4444) for threats, leaks, and competitor dominance. Add a "slow pulse" animation to these elements.
+
+Green (Growth): Use cyber green (#00FF9D) only for projected gains and the "Deploy" button.
+
+Grey (The Ghost): Use dotted grey lines for "Market Leader" benchmarks.
+
+2. Component Specifications (The "Bento Grid" Layout)
+A. Top Bar: The "Bleed" Ticker
+
+Create a slim, full-width status bar at the very top.
+
+Content: A scrolling ticker or static alert: ⚠ CRITICAL ALERT: ESTIMATED REVENUE LEAK: -$8.29 / HOUR.
+
+Animation: The dollar amount should tick up incrementally every few seconds. This creates immediate psychological urgency.
+
+B. Main Graph: The "Gap Analysis" Simulator (Center/Left)
+
+Current Issue: The graph is a flat line at 0%. This is boring.
+
+New Requirement: Implement a Recharts Area Chart with Two Lines:
+
+The "Market Leader" Line (Top): A dotted grey line hovering at 80-90% visibility. Label: "Competitor Benchmark (Coastal Roofing)".
+
+The "User" Line (Bottom): The user's current 0% line.
+
+The Kill Shot: Shade the area between these two lines in a gradient Red. Label this zone: "MISSED REVENUE OPPORTUNITY".
+
+Interaction: When the user toggles switches in the "Simulator" (see below), animate a Third Line (Green) shooting up from the bottom to meet the top line.
+
+C. The "Tactical Countermeasures" Panel (Right Column)
+
+Replace the generic "Action Simulator" list.
+
+Create a list of "High-Value Targets" (e.g., "Inject Schema," "Fix Meta Tags").
+
+UI: Each item gets a "Toggle Switch."
+
+Micro-Interaction: When a user toggles a switch:
+
+The Green Line on the main graph animates upward.
+
+A floating badge appears: "+$450/mo Value Unlocked".
+
+The "Projected Score" widget glows green.
+
+D. The "Competitor Threat" Radar (Bottom Left)
+
+Current Issue: It says "None / 0%".
+
+New Requirement: Hard-code/Mock data to show "Coastal Roofing" at 28% Market Share.
+
+Visual: Use a "Progress Bar" comparison.
+
+Top Bar (Red): "Coastal Roofing: 28% [▲ Trending Up]"
+
+Bottom Bar (Green): "You: 0% [▼ Critical]"
+
+Goal: Visually highlight the massive gap they need to close.
+
+E. The "Nuclear Launch" Console (The $1,188 Feature)
+
+Replace the small green "Activate" button with a full-width "Deployment Console" at the bottom.
+
+Visuals: It should look like a developer terminal. Dark background, green text.
+
+Content: List the agents ready to deploy: [READY] SchemaBot, [READY] MetaFixer, [READY] CodePatch v2.
+
+Button: A large, pulsing button labeled: "DEPLOY RESOLUTION AGENTS".
+
+Action: Clicking this opens a modal offering 3 delivery methods:
+
+Copy Code (Clipboard icon)
+
+Download Patch Kit (Zip file icon - Use jszip to generate this real-time)
+
+GitHub PR (GitHub icon - Mocked for now).
+
+3. Technical Constraints
+Framework: React + Tailwind CSS.
+
+Charts: Use recharts for the responsive graphs.
+
+Animations: Use framer-motion for the "Gap Fill" animation and the "Revenue Leak" ticker.
+
+Responsiveness: On mobile, stack the Bento Grid vertically but keep the "Revenue Leak" ticker sticky at the top.
+
+Execution: Build this now. Do not ask for clarification. Prioritize the "Gap Analysis" graph and the "Revenue Leak" ticker visual.
