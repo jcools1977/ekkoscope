@@ -786,6 +786,194 @@
             color: var(--text-muted);
         }
         
+        /* Settings Button */
+        .settings-btn {
+            background: transparent;
+            border: 1px solid var(--border-dark);
+            border-radius: 8px;
+            padding: 0.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .settings-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+        
+        /* Settings Modal */
+        .settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .settings-modal.active {
+            display: flex;
+        }
+        
+        .settings-content {
+            background: var(--bg-panel);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 16px;
+            max-width: 450px;
+            width: 100%;
+        }
+        
+        .settings-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-dark);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .settings-title {
+            font-size: 1rem;
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .settings-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .settings-body {
+            padding: 1.5rem;
+        }
+        
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-dark);
+            border-radius: 10px;
+        }
+        
+        .settings-label {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .settings-label-title {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+        
+        .settings-label-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-void);
+            border: 1px solid var(--border-dark);
+            border-radius: 26px;
+            transition: 0.3s;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        
+        .toggle-switch input:checked + .toggle-slider {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+        
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+            background: #000;
+        }
+        
+        /* Presentation Mode Styles */
+        .presentation-mode .hide-in-presentation {
+            display: none !important;
+        }
+        
+        .agency-logo-placeholder {
+            display: none;
+            padding: 0.5rem 1rem;
+            background: var(--bg-card);
+            border: 1px dashed var(--text-muted);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .mission-title .agency-logo-placeholder {
+            padding: 0;
+            background: none;
+            border: none;
+            font-size: inherit;
+            color: var(--accent-green);
+        }
+        
+        .presentation-mode .agency-logo-placeholder {
+            display: block !important;
+        }
+        
+        .presentation-mode .original-branding {
+            display: none !important;
+        }
+        
+        .presentation-mode .preview-blurred {
+            filter: none !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            user-select: text !important;
+        }
+        
         /* Traffic Lights Panel */
         .traffic-lights-panel {
             background: var(--bg-panel);
@@ -1461,8 +1649,12 @@
                 <div class="status-beacon">
                     <div class="beacon-dot {% if visibility_score < 20 %}beacon-critical{% elif visibility_score < 50 %}beacon-warning{% else %}beacon-nominal{% endif %}"></div>
                 </div>
+                <div class="agency-logo-placeholder">[AGENCY LOGO HERE]</div>
                 <div>
-                    <div class="mission-title">Mission Control</div>
+                    <div class="mission-title">
+                        <span class="original-branding">Mission Control</span>
+                        <span class="agency-logo-placeholder" style="display: none;">Dashboard</span>
+                    </div>
                     <div class="mission-subtitle">{{ business.name }} | AI Visibility Operations</div>
                 </div>
             </div>
@@ -1483,6 +1675,12 @@
                     Download PDF
                 </a>
                 {% endif %}
+                <button class="settings-btn" onclick="openSettings()" title="Settings">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                </button>
             </div>
         </div>
         
@@ -1801,7 +1999,7 @@
                 </div>
             </div>
             
-            <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0, 229, 160, 0.1); border: 1px solid var(--accent-green); border-radius: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0, 229, 160, 0.1); border: 1px solid var(--accent-green); border-radius: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;" class="hide-in-presentation">
                 <div>
                     <div style="font-size: 0.75rem; color: var(--accent-green); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">Auto-Complete Mission</div>
                     <div style="font-size: 0.85rem; color: var(--text-secondary);">Let our AI agents handle all tasks automatically</div>
@@ -1841,7 +2039,7 @@
         {% endif %}
         
         <!-- Footer -->
-        <div class="mission-footer">
+        <div class="mission-footer original-branding">
             <p style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
                 <span>Powered by</span>
                 <a href="/" style="display: inline-flex; align-items: center; gap: 0.5rem;">
@@ -1850,6 +2048,34 @@
                 </a>
                 <span>EkkoScope GEO Engine</span>
             </p>
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <div class="settings-header">
+                <div class="settings-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    Settings
+                </div>
+                <button class="settings-close" onclick="closeSettings()">&times;</button>
+            </div>
+            <div class="settings-body">
+                <div class="settings-row">
+                    <div class="settings-label">
+                        <div class="settings-label-title">Client Presentation Mode</div>
+                        <div class="settings-label-desc">White-label view for client demos</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="presentationModeToggle" onchange="togglePresentationMode()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -1971,7 +2197,7 @@
                     </div>
                     
                     <!-- Paywall Overlay -->
-                    <div class="paywall-overlay">
+                    <div class="paywall-overlay hide-in-presentation">
                         <div class="paywall-icon">
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2">
                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -2326,12 +2552,37 @@
                 setTimeout(() => {
                     loadingStage.style.display = 'none';
                     previewStage.classList.add('active');
+                    
+                    // In presentation mode, show full content without paywall
+                    if (presentationMode) {
+                        const blurredContent = previewStage.querySelector('.preview-blurred');
+                        const paywallOverlay = previewStage.querySelector('.paywall-overlay');
+                        if (blurredContent) {
+                            blurredContent.style.filter = 'none';
+                            blurredContent.style.opacity = '1';
+                        }
+                        if (paywallOverlay) {
+                            paywallOverlay.style.display = 'none';
+                        }
+                    }
                 }, 300);
             }, 4000);
         }
         
         function closeFixPreview() {
             document.getElementById('fixPreviewModal').classList.remove('active');
+            
+            // Reset to default state (blurred with paywall) for next open
+            const previewStage = document.getElementById('fixPreviewStage');
+            const blurredContent = previewStage.querySelector('.preview-blurred');
+            const paywallOverlay = previewStage.querySelector('.paywall-overlay');
+            if (blurredContent) {
+                blurredContent.style.filter = '';
+                blurredContent.style.opacity = '';
+            }
+            if (paywallOverlay) {
+                paywallOverlay.style.display = '';
+            }
         }
         
         // Close modals on outside click
@@ -2392,6 +2643,48 @@
         
         // Initialize on page load
         loadMissionProgress();
+        
+        // Settings Modal Functions
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+        }
+        
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+        
+        document.getElementById('settingsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSettings();
+            }
+        });
+        
+        // Presentation Mode Functions
+        let presentationMode = localStorage.getItem('presentationMode') === 'true';
+        
+        function togglePresentationMode() {
+            presentationMode = document.getElementById('presentationModeToggle').checked;
+            localStorage.setItem('presentationMode', presentationMode);
+            applyPresentationMode();
+        }
+        
+        function applyPresentationMode() {
+            const body = document.body;
+            if (presentationMode) {
+                body.classList.add('presentation-mode');
+            } else {
+                body.classList.remove('presentation-mode');
+            }
+        }
+        
+        // Load presentation mode state on page load
+        function loadPresentationMode() {
+            const toggle = document.getElementById('presentationModeToggle');
+            toggle.checked = presentationMode;
+            applyPresentationMode();
+        }
+        
+        loadPresentationMode();
     </script>
 </body>
 </html>
