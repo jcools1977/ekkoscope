@@ -539,6 +539,135 @@ async def dashboard_audit_analytics(request: Request, business_id: int, audit_id
         db.close()
 
 
+@app.get("/dashboard/business/{business_id}/audit/{audit_id}/mission", response_class=HTMLResponse)
+async def dashboard_mission_control(request: Request, business_id: int, audit_id: int):
+    """Mission Control - Living dashboard for AI visibility operations."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        if user.is_admin:
+            business = db.query(Business).filter(Business.id == business_id).first()
+        else:
+            business = db.query(Business).filter(
+                Business.id == business_id,
+                Business.owner_user_id == user.id
+            ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        audit = db.query(Audit).filter(Audit.id == audit_id, Audit.business_id == business_id).first()
+        if not audit:
+            return RedirectResponse(url=f"/dashboard/business/{business_id}", status_code=302)
+        
+        if audit.status != "completed":
+            return RedirectResponse(url=f"/dashboard/business/{business_id}/audit/{audit_id}", status_code=302)
+        
+        visibility_summary = audit.get_visibility_summary() or {}
+        
+        total_queries = visibility_summary.get("total_queries", 0)
+        queries_found = visibility_summary.get("overall_target_found", 0)
+        visibility_score = visibility_summary.get("overall_target_percent", 0)
+        
+        provider_stats = visibility_summary.get("provider_stats", {})
+        
+        raw_competitors = visibility_summary.get("top_competitors", []) or []
+        competitors = []
+        total_competitor_mentions = sum(c.get("count", 0) for c in raw_competitors) if raw_competitors else 0
+        for comp in raw_competitors[:10]:
+            if total_competitor_mentions > 0:
+                dominance = int((comp.get("count", 0) / total_competitor_mentions) * 100)
+                dominance = min(max(dominance, 5), 95)
+            else:
+                dominance = 0
+            competitors.append({
+                "name": comp.get("name", "Unknown Competitor"),
+                "mentions": comp.get("count", 0),
+                "dominance": dominance
+            })
+        
+        top_threat_dominance = competitors[0]["dominance"] if competitors else 0
+        
+        intent_breakdown = visibility_summary.get("intent_breakdown", {}) or {}
+        formatted_intent = {}
+        for intent_type, data in intent_breakdown.items():
+            if not intent_type or intent_type.strip() == "":
+                continue
+            if isinstance(data, dict):
+                formatted_intent[intent_type] = {
+                    "total": data.get("total", 0),
+                    "found": data.get("found", 0)
+                }
+            else:
+                formatted_intent[intent_type] = {"total": int(data) if data else 0, "found": 0}
+        
+        if not formatted_intent:
+            formatted_intent = {"general": {"total": total_queries, "found": queries_found}}
+        
+        missing_queries = []
+        for aq in audit.audit_queries:
+            found_in_any = False
+            for vr in aq.visibility_results:
+                if vr.brand_name and business.name.lower() in vr.brand_name.lower():
+                    found_in_any = True
+                    break
+            if not found_in_any:
+                missing_queries.append({
+                    "text": aq.query_text,
+                    "intent": aq.intent or "general"
+                })
+        
+        recommendations = []
+        try:
+            analysis_data = get_audit_analysis_data(audit)
+            if analysis_data and isinstance(analysis_data, dict):
+                suggestions = analysis_data.get("suggestions")
+                if suggestions:
+                    sug_list = []
+                    if hasattr(suggestions, "suggestions"):
+                        sug_list = suggestions.suggestions or []
+                    elif isinstance(suggestions, list):
+                        sug_list = suggestions
+                    
+                    for i, sug in enumerate(sug_list[:6]):
+                        priority = "Critical" if i < 2 else ("High" if i < 4 else "Normal")
+                        title = getattr(sug, "title", None) or (sug.get("title") if isinstance(sug, dict) else str(sug))
+                        description = getattr(sug, "details", None) or (sug.get("details", "") if isinstance(sug, dict) else "")
+                        recommendations.append({
+                            "title": title,
+                            "description": description,
+                            "priority": priority,
+                            "effort": "Medium",
+                            "impact": "High" if i < 3 else "Medium"
+                        })
+        except Exception:
+            pass
+        
+        return templates.TemplateResponse(
+            "dashboard/mission_control.html",
+            {
+                "request": request,
+                "user": user,
+                "business": business,
+                "audit": audit,
+                "visibility_score": int(visibility_score),
+                "total_queries": total_queries,
+                "queries_found": queries_found,
+                "provider_stats": provider_stats,
+                "competitors": competitors,
+                "top_threat_dominance": top_threat_dominance,
+                "intent_breakdown": formatted_intent,
+                "missing_queries": missing_queries,
+                "recommendations": recommendations
+            }
+        )
+    finally:
+        db.close()
+
+
 @app.get("/dashboard/business/{business_id}/edit", response_class=HTMLResponse)
 async def dashboard_business_edit_page(request: Request, business_id: int):
     """Show edit form for a business."""

@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Control | {{ business.name }} | EkkoScope</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-void: #030308;
+            --bg-panel: #0a0a12;
+            --bg-card: #0f0f1a;
+            --border-dark: rgba(0, 229, 160, 0.1);
+            --border-glow: rgba(0, 229, 160, 0.3);
+            --accent-green: #00E5A0;
+            --accent-cyan: #00e5ff;
+            --accent-purple: #7c3aed;
+            --accent-pink: #f0abfc;
+            --danger-red: #ff3333;
+            --warning-yellow: #ffcc00;
+            --success-green: #00ff88;
+            --text-primary: #ffffff;
+            --text-secondary: #8b9dc3;
+            --text-muted: #4a5568;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-void);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .mission-control {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        
+        /* Command Bar */
+        .command-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, var(--bg-panel), var(--bg-card));
+            border: 1px solid var(--border-dark);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .command-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .status-beacon {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .beacon-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse-beacon 2s infinite;
+        }
+        
+        .beacon-critical { background: var(--danger-red); box-shadow: 0 0 20px var(--danger-red); }
+        .beacon-warning { background: var(--warning-yellow); box-shadow: 0 0 20px var(--warning-yellow); }
+        .beacon-nominal { background: var(--success-green); box-shadow: 0 0 20px var(--success-green); }
+        
+        @keyframes pulse-beacon {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        .mission-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent-green);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .mission-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        .command-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .audit-timestamp {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            border: 1px solid var(--border-dark);
+        }
+        
+        .action-btn {
+            padding: 0.6rem 1.2rem;
+            background: linear-gradient(135deg, var(--accent-green), #00c98a);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 229, 160, 0.4);
+        }
+        
+        .action-btn-secondary {
+            background: transparent;
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+        }
+        
+        /* Hero Section - The Panic Gauge */
+        .hero-section {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        @media (max-width: 1200px) {
+            .hero-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .hero-gauge-container {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-dark);
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-gauge-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, var(--gauge-glow, rgba(255, 51, 51, 0.1)) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .gauge-wrapper {
+            position: relative;
+            width: 220px;
+            height: 220px;
+        }
+        
+        .gauge-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        
+        .gauge-percent {
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        .gauge-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 0.5rem;
+        }
+        
+        .gauge-status {
+            margin-top: 1.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .status-critical {
+            background: rgba(255, 51, 51, 0.2);
+            color: var(--danger-red);
+            border: 1px solid var(--danger-red);
+        }
+        
+        .status-warning {
+            background: rgba(255, 204, 0, 0.2);
+            color: var(--warning-yellow);
+            border: 1px solid var(--warning-yellow);
+        }
+        
+        .status-nominal {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--success-green);
+            border: 1px solid var(--success-green);
+        }
+        
+        /* Traffic Lights Panel */
+        .traffic-lights-panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-dark);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        
+        .panel-title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .traffic-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .traffic-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            background: var(--bg-card);
+            border-radius: 10px;
+            border: 1px solid var(--border-dark);
+            transition: all 0.3s ease;
+        }
+        
+        .traffic-item:hover {
+            border-color: var(--border-glow);
+            transform: translateX(4px);
+        }
+        
+        .traffic-provider {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .provider-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+        
+        .provider-openai { background: linear-gradient(135deg, #10a37f, #0d8a6a); }
+        .provider-perplexity { background: linear-gradient(135deg, #20b2aa, #1a9090); }
+        .provider-gemini { background: linear-gradient(135deg, #4285f4, #3367d6); }
+        
+        .provider-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .provider-detail {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        
+        .traffic-status {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .traffic-light {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            position: relative;
+        }
+        
+        .light-red {
+            background: var(--danger-red);
+            box-shadow: 0 0 15px var(--danger-red), 0 0 30px rgba(255, 51, 51, 0.5);
+        }
+        
+        .light-yellow {
+            background: var(--warning-yellow);
+            box-shadow: 0 0 15px var(--warning-yellow), 0 0 30px rgba(255, 204, 0, 0.5);
+        }
+        
+        .light-green {
+            background: var(--success-green);
+            box-shadow: 0 0 15px var(--success-green), 0 0 30px rgba(0, 255, 136, 0.5);
+        }
+        
+        .traffic-score {
+            font-size: 0.85rem;
+            font-weight: 600;
+            min-width: 45px;
+            text-align: right;
+        }
+        
+        /* Quick Stats Panel */
+        .quick-stats-panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-dark);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        
+        .stats-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card);
+            border-radius: 8px;
+            border: 1px solid var(--border-dark);
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+        
+        .stat-value.danger { color: var(--danger-red); }
+        .stat-value.warning { color: var(--warning-yellow); }
+        
+        /* Threat Cards Section */
+        .threat-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding: 0 0.5rem;
+        }
+        
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .threat-badge {
+            background: var(--danger-red);
+            color: white;
+            font-size: 0.65rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+        
+        .threat-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        
+        .threat-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-dark);
+            border-radius: 12px;
+            padding: 1.25rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .threat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--danger-red), var(--warning-yellow));
+        }
+        
+        .threat-card:hover {
+            border-color: var(--danger-red);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(255, 51, 51, 0.2);
+        }
+        
+        .threat-card.threat-high::before {
+            background: var(--danger-red);
+        }
+        
+        .threat-card.threat-medium::before {
+            background: var(--warning-yellow);
+        }
+        
+        .threat-card.threat-low::before {
+            background: var(--success-green);
+        }
+        
+        .threat-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        
+        .threat-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            max-width: 180px;
+        }
+        
+        .threat-level {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.7rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        .threat-level.high {
+            background: rgba(255, 51, 51, 0.2);
+            color: var(--danger-red);
+        }
+        
+        .threat-level.medium {
+            background: rgba(255, 204, 0, 0.2);
+            color: var(--warning-yellow);
+        }
+        
+        .threat-level.low {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--success-green);
+        }
+        
+        .threat-dominance {
+            margin-bottom: 1rem;
+        }
+        
+        .dominance-bar {
+            height: 8px;
+            background: var(--bg-card);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        
+        .dominance-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--danger-red), var(--warning-yellow));
+            transition: width 1s ease;
+        }
+        
+        .dominance-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+        }
+        
+        .dominance-percent {
+            font-weight: 700;
+            color: var(--danger-red);
+        }
+        
+        .dominance-label {
+            color: var(--text-muted);
+        }
+        
+        .threat-action {
+            width: 100%;
+            padding: 0.6rem;
+            background: transparent;
+            border: 1px solid var(--danger-red);
+            border-radius: 6px;
+            color: var(--danger-red);
+            font-family: inherit;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .threat-action:hover {
+            background: var(--danger-red);
+            color: white;
+        }
+        
+        /* Void Map Section */
+        .void-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        @media (max-width: 1000px) {
+            .void-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .void-map-container {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-dark);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        
+        .void-map-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        
+        .void-legend {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.7rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .legend-owned { background: var(--success-green); }
+        .legend-partial { background: var(--warning-yellow); }
+        .legend-void { background: var(--text-muted); border: 2px dashed var(--text-secondary); }
+        
+        .void-chart-wrapper {
+            height: 300px;
+            position: relative;
+        }
+        
+        /* Missing Queries Panel */
+        .missing-queries-panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-dark);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        
+        .missing-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 340px;
+            overflow-y: auto;
+        }
+        
+        .missing-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card);
+            border-radius: 8px;
+            border: 1px solid var(--border-dark);
+            border-left: 3px solid var(--danger-red);
+            transition: all 0.3s ease;
+        }
+        
+        .missing-item:hover {
+            border-color: var(--accent-green);
+            background: rgba(0, 229, 160, 0.05);
+        }
+        
+        .missing-query {
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            flex: 1;
+        }
+        
+        .missing-intent {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            background: var(--bg-void);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-right: 0.75rem;
+        }
+        
+        .fix-btn {
+            padding: 0.4rem 0.8rem;
+            background: linear-gradient(135deg, var(--accent-green), #00c98a);
+            border: none;
+            border-radius: 6px;
+            color: #000;
+            font-family: inherit;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .fix-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 229, 160, 0.4);
+        }
+        
+        /* Recommendations Section */
+        .recommendations-section {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-dark);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1rem;
+        }
+        
+        .recommendation-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dark);
+            border-radius: 10px;
+            padding: 1.25rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .recommendation-card:hover {
+            border-color: var(--accent-green);
+            transform: translateY(-2px);
+        }
+        
+        .rec-priority {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.65rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .priority-critical {
+            background: var(--danger-red);
+            color: white;
+        }
+        
+        .priority-high {
+            background: var(--warning-yellow);
+            color: #000;
+        }
+        
+        .priority-normal {
+            background: var(--accent-green);
+            color: #000;
+        }
+        
+        .rec-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            padding-right: 60px;
+        }
+        
+        .rec-description {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+        
+        .rec-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        
+        .rec-effort, .rec-impact {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        
+        /* Footer */
+        .mission-footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+        
+        .mission-footer a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-void);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-glow);
+            border-radius: 3px;
+        }
+        
+        /* Back Button */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+            transition: color 0.3s ease;
+        }
+        
+        .back-link:hover {
+            color: var(--accent-green);
+        }
+        
+        /* Spy Glass Modal */
+        .spy-glass-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .spy-glass-modal.active {
+            display: flex;
+        }
+        
+        .spy-glass-content {
+            background: var(--bg-panel);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .spy-glass-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-dark);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .spy-glass-title {
+            font-size: 1rem;
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .spy-glass-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .spy-glass-body {
+            padding: 1.5rem;
+        }
+        
+        .spy-chat {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .spy-message {
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        
+        .spy-message.user {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dark);
+            margin-left: 2rem;
+        }
+        
+        .spy-message.ai {
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.1), rgba(124, 58, 237, 0.1));
+            border: 1px solid var(--accent-cyan);
+            margin-right: 2rem;
+        }
+        
+        .spy-action-hint {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(0, 229, 160, 0.1);
+            border: 1px solid var(--accent-green);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--accent-green);
+        }
+    </style>
+</head>
+<body>
+    <div class="mission-control">
+        <a href="/dashboard/business/{{ business.id }}" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back to Business
+        </a>
+        
+        <!-- Command Bar -->
+        <div class="command-bar">
+            <div class="command-bar-left">
+                <div class="status-beacon">
+                    <div class="beacon-dot {% if visibility_score < 20 %}beacon-critical{% elif visibility_score < 50 %}beacon-warning{% else %}beacon-nominal{% endif %}"></div>
+                </div>
+                <div>
+                    <div class="mission-title">Mission Control</div>
+                    <div class="mission-subtitle">{{ business.name }} | AI Visibility Operations</div>
+                </div>
+            </div>
+            <div class="command-bar-right">
+                <div class="audit-timestamp">
+                    Last Scan: {{ audit.completed_at.strftime('%b %d, %Y %H:%M') if audit.completed_at else 'N/A' }}
+                </div>
+                <a href="/dashboard/business/{{ business.id }}/audit/{{ audit.id }}" class="action-btn action-btn-secondary">
+                    View Full Report
+                </a>
+                {% if audit.pdf_path %}
+                <a href="/admin/audit/{{ audit.id }}/download" class="action-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7,10 12,15 17,10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Download PDF
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <!-- Traffic Lights Panel -->
+            <div class="traffic-lights-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                        Platform Status
+                    </div>
+                </div>
+                <div class="traffic-grid">
+                    {% for provider, stats in provider_stats.items() %}
+                    <div class="traffic-item">
+                        <div class="traffic-provider">
+                            <div class="provider-icon provider-{{ provider.split('_')[0] }}">
+                                {% if 'openai' in provider %}GPT{% elif 'perplexity' in provider %}PPX{% else %}GEM{% endif %}
+                            </div>
+                            <div>
+                                <div class="provider-name">
+                                    {% if 'openai' in provider %}ChatGPT{% elif 'perplexity' in provider %}Perplexity{% else %}Gemini{% endif %}
+                                </div>
+                                <div class="provider-detail">{{ stats.found }}/{{ stats.total }} queries</div>
+                            </div>
+                        </div>
+                        <div class="traffic-status">
+                            {% set percent = (stats.found / stats.total * 100) if stats.total > 0 else 0 %}
+                            <div class="traffic-light {% if percent == 0 %}light-red{% elif percent < 50 %}light-yellow{% else %}light-green{% endif %}"></div>
+                            <span class="traffic-score" style="color: {% if percent == 0 %}var(--danger-red){% elif percent < 50 %}var(--warning-yellow){% else %}var(--success-green){% endif %}">{{ percent|int }}%</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Hero Gauge -->
+            <div class="hero-gauge-container" style="--gauge-glow: {% if visibility_score < 20 %}rgba(255, 51, 51, 0.15){% elif visibility_score < 50 %}rgba(255, 204, 0, 0.15){% else %}rgba(0, 255, 136, 0.15){% endif %};">
+                <div class="gauge-wrapper">
+                    <canvas id="heroGauge"></canvas>
+                    <div class="gauge-value">
+                        <div class="gauge-percent" style="color: {% if visibility_score < 20 %}var(--danger-red){% elif visibility_score < 50 %}var(--warning-yellow){% else %}var(--success-green){% endif %}">{{ visibility_score }}%</div>
+                        <div class="gauge-label">AI Share of Voice</div>
+                    </div>
+                </div>
+                <div class="gauge-status {% if visibility_score < 20 %}status-critical{% elif visibility_score < 50 %}status-warning{% else %}status-nominal{% endif %}">
+                    {% if visibility_score < 20 %}
+                    Critical: Invisible to AI
+                    {% elif visibility_score < 50 %}
+                    Warning: Low Visibility
+                    {% else %}
+                    Nominal: Good Visibility
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="quick-stats-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 20V10"/>
+                            <path d="M12 20V4"/>
+                            <path d="M6 20v-6"/>
+                        </svg>
+                        Quick Intel
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-row">
+                        <span class="stat-label">Total Queries Analyzed</span>
+                        <span class="stat-value">{{ total_queries }}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Queries Found In</span>
+                        <span class="stat-value">{{ queries_found }}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Queries Missing</span>
+                        <span class="stat-value danger">{{ total_queries - queries_found }}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Active Competitors</span>
+                        <span class="stat-value warning">{{ competitors|length }}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Top Threat Dominance</span>
+                        <span class="stat-value danger">{{ top_threat_dominance }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Threat Cards Section -->
+        <div class="threat-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger-red)" stroke-width="2">
+                        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    Competitor Threats
+                    <span class="threat-badge">{{ competitors|length }} ACTIVE</span>
+                </div>
+            </div>
+            <div class="threat-cards">
+                {% for competitor in competitors[:6] %}
+                <div class="threat-card {% if competitor.dominance > 60 %}threat-high{% elif competitor.dominance > 30 %}threat-medium{% else %}threat-low{% endif %}">
+                    <div class="threat-header">
+                        <div class="threat-name">{{ competitor.name }}</div>
+                        <div class="threat-level {% if competitor.dominance > 60 %}high{% elif competitor.dominance > 30 %}medium{% else %}low{% endif %}">
+                            {% if competitor.dominance > 60 %}HIGH{% elif competitor.dominance > 30 %}MED{% else %}LOW{% endif %}
+                        </div>
+                    </div>
+                    <div class="threat-dominance">
+                        <div class="dominance-bar">
+                            <div class="dominance-fill" style="width: {{ competitor.dominance }}%"></div>
+                        </div>
+                        <div class="dominance-stats">
+                            <span class="dominance-percent">{{ competitor.dominance }}% Dominance</span>
+                            <span class="dominance-label">{{ competitor.mentions }} mentions</span>
+                        </div>
+                    </div>
+                    <button class="threat-action" onclick="openSpyGlass('{{ competitor.name }}', {{ competitor.dominance }})">
+                        Spy Glass
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Void Map Section -->
+        <div class="void-section">
+            <div class="void-map-container">
+                <div class="void-map-header">
+                    <div class="panel-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88"/>
+                        </svg>
+                        Territory Map
+                    </div>
+                    <div class="void-legend">
+                        <div class="legend-item">
+                            <div class="legend-dot legend-owned"></div>
+                            <span>Owned</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot legend-partial"></div>
+                            <span>Partial</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot legend-void"></div>
+                            <span>Void Zone</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="void-chart-wrapper">
+                    <canvas id="voidMap"></canvas>
+                </div>
+            </div>
+            
+            <!-- Missing Queries Panel -->
+            <div class="missing-queries-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger-red)" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="15" y1="9" x2="9" y2="15"/>
+                            <line x1="9" y1="9" x2="15" y2="15"/>
+                        </svg>
+                        Void Zones (Missing Queries)
+                    </div>
+                    <span class="threat-badge">{{ missing_queries|length }} GAPS</span>
+                </div>
+                <div class="missing-list">
+                    {% for query in missing_queries[:10] %}
+                    <div class="missing-item">
+                        <span class="missing-query">{{ query.text }}</span>
+                        <span class="missing-intent">{{ query.intent }}</span>
+                        <button class="fix-btn" onclick="generateFix('{{ query.text }}')">
+                            Generate Fix
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recommendations Section -->
+        {% if recommendations %}
+        <div class="recommendations-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22,4 12,14.01 9,11.01"/>
+                    </svg>
+                    Tactical Recommendations
+                </div>
+            </div>
+            <div class="recommendations-grid">
+                {% for rec in recommendations[:6] %}
+                <div class="recommendation-card">
+                    <span class="rec-priority priority-{{ rec.priority|lower }}">{{ rec.priority }}</span>
+                    <div class="rec-title">{{ rec.title }}</div>
+                    <div class="rec-description">{{ rec.description }}</div>
+                    <div class="rec-meta">
+                        <span class="rec-effort">Effort: {{ rec.effort }}</span>
+                        <span class="rec-impact">Impact: {{ rec.impact }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Footer -->
+        <div class="mission-footer">
+            <p style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                <span>Powered by</span>
+                <a href="/" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <img src="/static/img/an2b-bee.svg" alt="AN2B" width="18" height="18" style="filter: drop-shadow(0 0 4px rgba(0, 229, 255, 0.6));">
+                    <span style="font-weight: bold;"><span style="color: #00e5ff;">AN</span><span style="color: #f0abfc;">2B</span></span>
+                </a>
+                <span>EkkoScope GEO Engine</span>
+            </p>
+        </div>
+    </div>
+    
+    <!-- Spy Glass Modal -->
+    <div class="spy-glass-modal" id="spyGlassModal">
+        <div class="spy-glass-content">
+            <div class="spy-glass-header">
+                <div class="spy-glass-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                    Spy Glass: <span id="spyCompetitorName"></span>
+                </div>
+                <button class="spy-glass-close" onclick="closeSpyGlass()">&times;</button>
+            </div>
+            <div class="spy-glass-body">
+                <div class="spy-chat">
+                    <div class="spy-message user">
+                        "Why is <span id="spyCompetitorName2"></span> ranking higher than {{ business.name }}?"
+                    </div>
+                    <div class="spy-message ai" id="spyResponse">
+                        Loading competitive intelligence...
+                    </div>
+                </div>
+                <div class="spy-action-hint" id="spyActionHint">
+                    Loading recommended action...
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Hero Gauge Chart
+        const heroGaugeCtx = document.getElementById('heroGauge').getContext('2d');
+        const visibilityScore = {{ visibility_score }};
+        
+        const gaugeColor = visibilityScore < 20 ? '#ff3333' : (visibilityScore < 50 ? '#ffcc00' : '#00ff88');
+        
+        new Chart(heroGaugeCtx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [visibilityScore, 100 - visibilityScore],
+                    backgroundColor: [gaugeColor, 'rgba(255,255,255,0.05)'],
+                    borderWidth: 0,
+                    circumference: 270,
+                    rotation: 225
+                }]
+            },
+            options: {
+                cutout: '80%',
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false }
+                },
+                animation: {
+                    animateRotate: true,
+                    duration: 2000
+                }
+            }
+        });
+        
+        // Void Map (Radar Chart)
+        const voidMapCtx = document.getElementById('voidMap').getContext('2d');
+        
+        const intentData = {{ intent_breakdown | tojson | safe }};
+        const intentLabels = Object.keys(intentData);
+        
+        // Handle empty data case
+        const hasIntentData = intentLabels.length > 0;
+        const ownedData = hasIntentData ? intentLabels.map(k => intentData[k].found || 0) : [0];
+        const totalData = hasIntentData ? intentLabels.map(k => intentData[k].total || 0) : [0];
+        const displayLabels = hasIntentData ? intentLabels.map(l => l.charAt(0).toUpperCase() + l.slice(1)) : ['No Data'];
+        
+        new Chart(voidMapCtx, {
+            type: 'radar',
+            data: {
+                labels: displayLabels,
+                datasets: [
+                    {
+                        label: 'Territory Owned',
+                        data: ownedData,
+                        backgroundColor: 'rgba(0, 255, 136, 0.2)',
+                        borderColor: '#00ff88',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#00ff88',
+                        pointBorderColor: '#00ff88',
+                        pointRadius: 4
+                    },
+                    {
+                        label: 'Total Territory',
+                        data: totalData,
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        borderWidth: 1,
+                        pointBackgroundColor: 'rgba(255, 255, 255, 0.3)',
+                        pointBorderColor: 'rgba(255, 255, 255, 0.3)',
+                        pointRadius: 3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        angleLines: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        pointLabels: {
+                            color: '#8b9dc3',
+                            font: {
+                                family: 'JetBrains Mono',
+                                size: 11
+                            }
+                        },
+                        ticks: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+        
+        // Spy Glass Functions
+        function openSpyGlass(competitorName, dominance) {
+            document.getElementById('spyGlassModal').classList.add('active');
+            document.getElementById('spyCompetitorName').textContent = competitorName;
+            document.getElementById('spyCompetitorName2').textContent = competitorName;
+            
+            // Simulated AI response
+            const responses = [
+                `${competitorName} appears in ${dominance}% of AI recommendations because they have comprehensive service pages with detailed FAQs, strong local citations, and optimized schema markup.`,
+                `AI assistants favor ${competitorName} due to their well-structured content that directly answers common customer questions. Their website includes specific service areas and pricing information.`,
+                `${competitorName} ranks higher because they have built topical authority through blog content, customer testimonials, and clear service descriptions that AI can easily parse.`
+            ];
+            
+            const actions = [
+                `Create a comprehensive FAQ page addressing the top 10 customer questions. Add LocalBusiness schema markup to your homepage.`,
+                `Build out individual service pages with detailed descriptions, pricing ranges, and service area coverage. Add customer testimonials with structured data.`,
+                `Develop a content strategy targeting the same keywords where ${competitorName} appears. Focus on answering specific user intents.`
+            ];
+            
+            const randomIndex = Math.floor(Math.random() * responses.length);
+            document.getElementById('spyResponse').textContent = responses[randomIndex];
+            document.getElementById('spyActionHint').innerHTML = `<strong>Recommended Action:</strong> ${actions[randomIndex]}`;
+        }
+        
+        function closeSpyGlass() {
+            document.getElementById('spyGlassModal').classList.remove('active');
+        }
+        
+        // Generate Fix Function (placeholder for future AI content generation)
+        function generateFix(query) {
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:2000;padding:2rem;';
+            modal.innerHTML = `
+                <div style="background:var(--bg-panel);border:1px solid var(--accent-green);border-radius:16px;max-width:500px;width:100%;padding:2rem;">
+                    <h3 style="color:var(--accent-green);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                        One-Click Fix
+                    </h3>
+                    <p style="color:var(--text-secondary);margin-bottom:1rem;font-size:0.85rem;">
+                        Query: <strong style="color:var(--text-primary);">"${query}"</strong>
+                    </p>
+                    <p style="color:var(--text-secondary);margin-bottom:1.5rem;font-size:0.85rem;line-height:1.6;">
+                        This feature generates AI-optimized content specifically designed to help you rank for this query. 
+                        Our AI will create the exact paragraph, FAQ answer, or schema markup needed.
+                    </p>
+                    <div style="background:rgba(255,204,0,0.1);border:1px solid var(--warning-yellow);border-radius:8px;padding:1rem;margin-bottom:1.5rem;">
+                        <p style="color:var(--warning-yellow);font-size:0.8rem;">
+                            This feature is available with the $1,188/month Auto-Fix plan.
+                        </p>
+                    </div>
+                    <div style="display:flex;gap:1rem;">
+                        <button onclick="this.closest('div').parentElement.parentElement.remove()" style="flex:1;padding:0.75rem;background:transparent;border:1px solid var(--text-muted);border-radius:8px;color:var(--text-secondary);cursor:pointer;font-family:inherit;">Close</button>
+                        <a href="/pricing" style="flex:1;padding:0.75rem;background:var(--accent-green);border:none;border-radius:8px;color:#000;text-align:center;text-decoration:none;font-weight:600;font-family:inherit;">Upgrade Now</a>
+                    </div>
+                </div>
+            `;
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            document.body.appendChild(modal);
+        }
+        
+        // Close modal on outside click
+        document.getElementById('spyGlassModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSpyGlass();
+            }
+        });
+    </script>
+</body>
+</html>
