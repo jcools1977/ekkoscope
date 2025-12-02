@@ -2646,23 +2646,6 @@ Instructions:
         loadMissions();
     </script>
     
-    <!-- Rescan Modal -->
-    <div class="rescan-modal" id="rescanModal">
-        <div class="rescan-terminal">
-            <div class="terminal-header">
-                <div class="terminal-dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                <span class="terminal-title">SHERLOCK INTELLIGENCE RESCAN</span>
-            </div>
-            <div class="terminal-body" id="terminalBody">
-                <!-- Terminal output will be appended here -->
-            </div>
-        </div>
-    </div>
-    
     <script>
         // Settings dropdown toggle
         function toggleSettings(event) {
@@ -2863,6 +2846,23 @@ Instructions:
                     <polygon points="22 2 15 22 11 13 2 9 22 2"/>
                 </svg>
             </button>
+        </div>
+    </div>
+    
+    <!-- Rescan Modal - Must be at body level for proper z-index -->
+    <div class="rescan-modal" id="rescanModal">
+        <div class="rescan-terminal">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <span class="terminal-title">SHERLOCK INTELLIGENCE RESCAN</span>
+            </div>
+            <div class="terminal-body" id="terminalBody">
+                <!-- Terminal output will be appended here -->
+            </div>
         </div>
     </div>
 </body>
