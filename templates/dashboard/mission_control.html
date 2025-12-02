@@ -301,22 +301,18 @@
             margin-top: 0.2rem;
         }
         
-        /* Rescan Modal - Use isolation to create new stacking context */
+        /* Rescan Modal - Removed backdrop-filter to avoid stacking context issues */
         .rescan-modal {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            background: rgba(0,0,0,0.95) !important;
-            backdrop-filter: blur(10px);
+            background: rgba(5,5,10,0.98) !important;
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 2147483647 !important;
-            isolation: isolate;
         }
         
         .rescan-modal.active {
