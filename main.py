@@ -3224,7 +3224,7 @@ async def ongoing_checkout(request: Request, business_id: int):
 
 @app.get("/ongoing/success", response_class=HTMLResponse)
 async def ongoing_success(request: Request, session_id: Optional[str] = None):
-    """Show success page after subscription payment."""
+    """Show success page after subscription payment. Bi-weekly subscribers go straight to Command Control."""
     db = get_db_session()
     try:
         business = None
@@ -3240,6 +3240,23 @@ async def ongoing_success(request: Request, session_id: Optional[str] = None):
                 if business_id:
                     business = db.query(Business).filter(Business.id == int(business_id)).first()
                     if business:
+                        if business.subscription_tier == "biweekly":
+                            latest_audit = (
+                                db.query(Audit)
+                                .filter(Audit.business_id == business.id)
+                                .order_by(Audit.created_at.desc())
+                                .first()
+                            )
+                            if latest_audit and latest_audit.status == "completed":
+                                return RedirectResponse(
+                                    url=f"/dashboard/business/{business.id}/audit/{latest_audit.id}/mission",
+                                    status_code=302
+                                )
+                            return templates.TemplateResponse(
+                                "dashboard/biweekly_welcome.html",
+                                {"request": request, "business": business}
+                            )
+                        
                         audit = (
                             db.query(Audit)
                             .filter(Audit.business_id == business.id)
@@ -3490,6 +3507,7 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
                         business.subscription_active = True
                         business.autofix_enabled = True
                         business.plan = "autofix"
+                        business.subscription_tier = "autofix"  # Premium tier with auto-remediation
                         if subscription_id:
                             business.stripe_autofix_subscription_id = subscription_id
                         db.commit()
@@ -3520,6 +3538,18 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
                 finally:
                     db.close()
             
+            if product_type == "geo_report_490" and business_id:
+                db = get_db_session()
+                try:
+                    business = db.query(Business).filter(Business.id == int(business_id)).first()
+                    if business:
+                        business.subscription_tier = "one_time"  # One-time report purchase
+                        business.plan = "report"
+                        db.commit()
+                        print(f"Set one-time report tier for business {business.id}")
+                finally:
+                    db.close()
+            
             valid_products = (
                 "echoscope_snapshot", "echoscope_ongoing", "ekkoscope_snapshot", "ekkoscope_ongoing",
                 "ekkoscope_standard", "ekkoscope_ekkobrain_addon", "continuous_290"
@@ -3537,6 +3567,7 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
                         if plan in ("standard", "standard_ekkobrain", "ongoing") or product_type == "continuous_290":
                             business.subscription_active = True
                             business.plan = "standard"
+                            business.subscription_tier = "biweekly"  # Bi-weekly monitoring tier
                             if subscription_id:
                                 business.stripe_subscription_id = subscription_id
                             
@@ -3546,7 +3577,7 @@ async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
                             db.commit()
                             
                             schedule_first_audit(business.id)
-                            print(f"Activated standard subscription for business {business.id} (EkkoBrain: {business.ekkobrain_access})")
+                            print(f"Activated bi-weekly subscription for business {business.id} (EkkoBrain: {business.ekkobrain_access})")
                         
                         elif plan == "ekkobrain_addon":
                             business.ekkobrain_access = True

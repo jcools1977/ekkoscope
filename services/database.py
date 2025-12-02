@@ -102,10 +102,12 @@ class Business(Base):
     stripe_autofix_subscription_id = Column(String(255), nullable=True)  # For $1188 plan
     stripe_ekkobrain_subscription_id = Column(String(255), nullable=True)
     plan = Column(String(20), default="free")
+    subscription_tier = Column(String(20), default="none")  # none, one_time, biweekly, autofix
     ekkobrain_access = Column(Boolean, default=False)
     subscription_start_at = Column(DateTime, nullable=True)
     next_audit_at = Column(DateTime, nullable=True)
     last_audit_at = Column(DateTime, nullable=True)
+    first_report_generated = Column(Boolean, default=False)  # True when first report completes for biweekly
     created_at = Column(DateTime, default=datetime.utcnow)
     
     owner = relationship("User", back_populates="businesses")
@@ -515,6 +517,16 @@ def migrate_db():
             conn.execute(text("ALTER TABLE businesses ADD COLUMN owner_user_id INTEGER REFERENCES users(id)"))
             conn.commit()
             print("Migration: Added 'owner_user_id' column to businesses table")
+        
+        if "subscription_tier" not in columns:
+            conn.execute(text("ALTER TABLE businesses ADD COLUMN subscription_tier VARCHAR(20) DEFAULT 'none'"))
+            conn.commit()
+            print("Migration: Added 'subscription_tier' column to businesses table")
+        
+        if "first_report_generated" not in columns:
+            conn.execute(text("ALTER TABLE businesses ADD COLUMN first_report_generated BOOLEAN DEFAULT 0"))
+            conn.commit()
+            print("Migration: Added 'first_report_generated' column to businesses table")
 
 
 def init_db():

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to EkkoScope - Your First Report is Generating</title>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .welcome-container {
+            max-width: 700px;
+            margin: 4rem auto;
+            padding: 0 1rem;
+            text-align: center;
+        }
+        
+        .welcome-card {
+            background: var(--bg-card);
+            border: 2px solid var(--brand-teal);
+            border-radius: 16px;
+            padding: 3rem;
+        }
+        
+        .radar-pulse {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, rgba(46, 230, 168, 0.2), rgba(59, 130, 246, 0.2));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            position: relative;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .radar-pulse::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid var(--brand-teal);
+            animation: ripple 2s ease-out infinite;
+        }
+        
+        .radar-pulse svg {
+            width: 60px;
+            height: 60px;
+            color: var(--brand-teal);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        
+        .welcome-card h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--brand-teal);
+        }
+        
+        .welcome-card .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .status-box {
+            background: var(--bg-dark);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        
+        .status-icon.done {
+            background: rgba(46, 230, 168, 0.2);
+            color: #2EE6A8;
+        }
+        
+        .status-icon.running {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--brand-blue);
+            animation: spin 1.5s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .status-text {
+            flex: 1;
+            text-align: left;
+            color: var(--text-primary);
+        }
+        
+        .status-text .label {
+            font-weight: 500;
+        }
+        
+        .status-text .desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .subscription-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, rgba(46, 230, 168, 0.15), rgba(59, 130, 246, 0.15));
+            border: 1px solid var(--brand-teal);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            color: var(--brand-teal);
+            font-weight: 500;
+            margin-bottom: 2rem;
+        }
+        
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+        
+        .info-box p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+        
+        .info-box strong {
+            color: var(--brand-teal);
+        }
+        
+        .cta-btn {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-blue));
+            color: var(--bg-dark);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 230, 168, 0.25);
+        }
+        
+        .refresh-note {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+    </style>
+    <meta http-equiv="refresh" content="30">
+</head>
+<body>
+    <header class="hero-card">
+        <a href="/dashboard" class="logo-link">
+            <img src="/static/img/ekkoscope-logo.svg" alt="EkkoScope" style="height: 40px; width: auto;">
+        </a>
+        <p class="hero-subtitle">GEO Engine for AI Visibility</p>
+    </header>
+
+    <main class="welcome-container">
+        <div class="welcome-card">
+            <div class="radar-pulse">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="6"/>
+                    <circle cx="12" cy="12" r="2"/>
+                    <path d="M12 2v4"/>
+                </svg>
+            </div>
+            
+            <div class="subscription-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                Bi-Weekly Monitoring Active
+            </div>
+            
+            <h1>Welcome to EkkoScope!</h1>
+            <p class="subtitle">{{ business.name if business else 'Your business' }}</p>
+            
+            <div class="status-box">
+                <div class="status-item">
+                    <div class="status-icon done">&#10003;</div>
+                    <div class="status-text">
+                        <div class="label">Subscription Activated</div>
+                        <div class="desc">Bi-weekly AI visibility monitoring is now active</div>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-icon running">&#8635;</div>
+                    <div class="status-text">
+                        <div class="label">First Report Generating</div>
+                        <div class="desc">Scanning AI assistants for your business visibility</div>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-icon" style="background: rgba(255,255,255,0.1); color: var(--text-secondary);">3</div>
+                    <div class="status-text">
+                        <div class="label">Command Control</div>
+                        <div class="desc">Your dashboard will be ready shortly</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <p>Your first AI visibility report is being generated now. Once complete, you'll be automatically redirected to <strong>Command Control</strong> where you can view detailed analysis, competitor insights, and actionable recommendations. Future reports will be generated automatically every 2 weeks.</p>
+            </div>
+            
+            <a href="/dashboard/business/{{ business.id if business else '' }}" class="cta-btn">View Dashboard</a>
+            
+            <p class="refresh-note">This page will automatically refresh. Please wait...</p>
+        </div>
+    </main>
+</body>
+</html>
