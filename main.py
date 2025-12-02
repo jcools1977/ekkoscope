@@ -130,10 +130,8 @@ async def index(request: Request):
     user = get_current_user(request)
     if user:
         return RedirectResponse(url="/dashboard", status_code=302)
-    return templates.TemplateResponse(
-        "public/landing.html",
-        {"request": request}
-    )
+    # Redirect to signup - marketing landing page is on ekkoscope.com
+    return RedirectResponse(url="/auth/signup", status_code=302)
 
 
 @app.get("/auth/login", response_class=HTMLResponse)
