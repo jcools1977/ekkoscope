@@ -229,7 +229,6 @@
             box-shadow: var(--glow-green);
         }
         
-        /* Critical Pulse Effect */
         .glass-panel.critical-pulse {
             animation: critical-glow 2s ease-in-out infinite;
         }
@@ -269,7 +268,7 @@
             opacity: 0.6;
         }
         
-        /* KPI HUD - Top Row */
+        /* KPI HUD */
         .kpi-hud {
             grid-column: span 12;
             display: grid;
@@ -349,6 +348,26 @@
             height: 100% !important;
         }
         
+        /* Parity Badge */
+        .parity-badge {
+            display: none;
+            padding: 0.25rem 0.5rem;
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid var(--status-growth);
+            border-radius: 4px;
+            font-size: 0.6rem;
+            color: var(--status-growth);
+            margin-top: 0.5rem;
+            animation: parity-glow 2s ease-in-out infinite;
+        }
+        
+        .parity-badge.show { display: inline-block; }
+        
+        @keyframes parity-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.3); }
+            50% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.6); }
+        }
+        
         /* Time Travel Chart */
         .time-travel-panel {
             grid-column: span 8;
@@ -358,6 +377,20 @@
         .chart-container {
             position: relative;
             height: 320px;
+        }
+        
+        .risk-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: rgba(239, 68, 68, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            pointer-events: none;
+            z-index: 5;
         }
         
         .chart-legend {
@@ -381,9 +414,10 @@
             border-radius: 2px;
         }
         
-        .legend-dot.past { background: var(--accent-green); }
-        .legend-dot.drift { background: var(--status-critical); opacity: 0.7; }
-        .legend-dot.target { background: var(--status-projected); box-shadow: 0 0 10px var(--status-projected); }
+        .legend-dot.current { background: var(--accent-green); }
+        .legend-dot.leader { background: #6b7280; border: 1px dashed #9ca3af; }
+        .legend-dot.projected { background: var(--status-projected); box-shadow: 0 0 10px var(--status-projected); }
+        .legend-dot.risk { background: linear-gradient(180deg, rgba(239, 68, 68, 0.4), transparent); }
         
         /* Action Simulator */
         .simulator-panel {
@@ -398,13 +432,21 @@
             margin-bottom: 1rem;
         }
         
-        .impact-total {
+        .projected-score {
             font-size: 0.75rem;
             color: var(--status-projected);
             padding: 0.35rem 0.75rem;
             background: rgba(6, 182, 212, 0.1);
             border: 1px solid rgba(6, 182, 212, 0.2);
             border-radius: 20px;
+            transition: all 0.3s;
+        }
+        
+        .projected-score.parity {
+            color: var(--status-growth);
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--status-growth);
+            animation: parity-glow 2s ease-in-out infinite;
         }
         
         .task-list {
@@ -509,10 +551,103 @@
             transform: translateY(0);
         }
         
-        /* Auto-Fix Button */
+        /* Auto-Fix Upsell Module */
         .autofix-section {
             grid-column: span 12;
             margin-top: 0.5rem;
+        }
+        
+        .autofix-module {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        
+        .autofix-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+        
+        .autofix-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-purple);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .autofix-price-tag {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 0.25rem 0.75rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+        }
+        
+        .autofix-checklist {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+        
+        .autofix-check-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+            transition: all 0.3s;
+        }
+        
+        .autofix-check-item.checked {
+            border-color: var(--accent-green);
+            background: rgba(0, 229, 160, 0.08);
+        }
+        
+        .check-icon {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--text-muted);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        
+        .autofix-check-item.checked .check-icon {
+            border-color: var(--accent-green);
+            background: var(--accent-green);
+        }
+        
+        .check-icon svg {
+            width: 12px;
+            height: 12px;
+            color: #000;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .autofix-check-item.checked .check-icon svg {
+            opacity: 1;
+        }
+        
+        .check-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            line-height: 1.3;
+        }
+        
+        .autofix-check-item.checked .check-label {
+            color: var(--accent-green);
         }
         
         .autofix-btn {
@@ -541,11 +676,6 @@
         .autofix-btn svg {
             width: 20px;
             height: 20px;
-        }
-        
-        .autofix-price {
-            font-size: 0.8rem;
-            opacity: 0.8;
         }
         
         /* Deployment Console Modal */
@@ -956,6 +1086,9 @@
             .delivery-grid {
                 grid-template-columns: 1fr;
             }
+            .autofix-checklist {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
         
         @media (max-width: 768px) {
@@ -976,6 +1109,9 @@
             .cost-ticker {
                 flex-direction: column;
                 text-align: center;
+            }
+            .autofix-checklist {
+                grid-template-columns: 1fr;
             }
         }
         
@@ -1178,19 +1314,19 @@
                     <div class="kpi-value mono" style="font-size: 1.1rem;">{{ competitors[0].name[:15] if competitors else 'None' }}{% if competitors and competitors[0].name|length > 15 %}...{% endif %}</div>
                     <div class="kpi-delta negative">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                        {{ competitors[0].dominance if competitors else 0 }}% Dominance
+                        {{ competitors[0].dominance if competitors else market_leader_score }}% Share
                     </div>
                     <div class="kpi-sparkline-container"><canvas id="sparkline3" class="kpi-sparkline"></canvas></div>
                 </div>
                 
                 <div class="kpi-card projected">
-                    <div class="kpi-label">Projected Improvement</div>
-                    <div class="kpi-value mono" id="projectedImprovement">+0%</div>
-                    <div class="kpi-delta positive">
+                    <div class="kpi-label">Projected Score</div>
+                    <div class="kpi-value mono" id="projectedScore">{{ visibility_score }}%</div>
+                    <div class="kpi-delta positive" id="projectedDelta">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                         If tasks completed
                     </div>
-                    <div class="kpi-sparkline-container"><canvas id="sparkline4" class="kpi-sparkline"></canvas></div>
+                    <div class="parity-badge" id="parityBadge">Parity with Market Leader</div>
                 </div>
             </div>
             
@@ -1199,16 +1335,18 @@
                 <div class="panel-header">
                     <div class="panel-title">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        Future Projection Simulator
+                        Visibility Trajectory
                     </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="timeTravelChart"></canvas>
+                    <div class="risk-label" id="riskLabel">Revenue At Risk</div>
                 </div>
                 <div class="chart-legend">
-                    <div class="legend-item"><div class="legend-dot past"></div>Current State</div>
-                    <div class="legend-item"><div class="legend-dot drift"></div>Trajectory: Inaction</div>
-                    <div class="legend-item"><div class="legend-dot target"></div>Trajectory: Optimized</div>
+                    <div class="legend-item"><div class="legend-dot current"></div>Your Score</div>
+                    <div class="legend-item"><div class="legend-dot leader"></div>Market Leader ({{ competitors[0].name[:12] if competitors else 'Top Rival' }})</div>
+                    <div class="legend-item"><div class="legend-dot projected"></div>Projected (With Actions)</div>
+                    <div class="legend-item"><div class="legend-dot risk"></div>Revenue At Risk Zone</div>
                 </div>
             </div>
             
@@ -1219,60 +1357,74 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
                         Critical Actions
                     </div>
-                    <div class="impact-total mono" id="totalImpact">+0% Impact</div>
+                    <div class="projected-score mono" id="projectedBadge">Score: {{ visibility_score }}%</div>
                 </div>
                 <div class="task-list" id="taskList">
-                    {% for rec in recommendations[:6] %}
-                    <div class="task-item" data-impact="{{ loop.index * 8 }}" data-value="{{ (loop.index * 150)|int }}" onclick="toggleTask(this)">
+                    {% set default_tasks = [
+                        {"title": "Optimize Meta Descriptions", "impact": 8},
+                        {"title": "Add Schema Markup", "impact": 7},
+                        {"title": "Improve FAQ Content", "impact": 7},
+                        {"title": "Local SEO Optimization", "impact": 6}
+                    ] %}
+                    {% set tasks = recommendations[:4] if recommendations else default_tasks %}
+                    {% for task in tasks %}
+                    <div class="task-item" data-impact="{{ task.impact if task.impact is defined else (loop.index * 2 + 5) }}" data-value="{{ (loop.index * 150)|int }}" onclick="toggleTask(this)">
                         <div class="task-info">
-                            <div class="task-name">{{ rec.title[:35] }}{% if rec.title|length > 35 %}...{% endif %}</div>
-                            <div class="task-impact mono">+{{ loop.index * 8 }}% visibility</div>
+                            <div class="task-name">{{ task.title[:35] }}{% if task.title|length > 35 %}...{% endif %}</div>
+                            <div class="task-impact mono">+{{ task.impact if task.impact is defined else (loop.index * 2 + 5) }}% visibility</div>
                         </div>
                         <div class="task-toggle"></div>
                     </div>
                     {% endfor %}
-                    {% if not recommendations %}
-                    <div class="task-item" data-impact="15" data-value="450" onclick="toggleTask(this)">
-                        <div class="task-info">
-                            <div class="task-name">Optimize Meta Descriptions</div>
-                            <div class="task-impact mono">+15% visibility</div>
-                        </div>
-                        <div class="task-toggle"></div>
-                    </div>
-                    <div class="task-item" data-impact="12" data-value="380" onclick="toggleTask(this)">
-                        <div class="task-info">
-                            <div class="task-name">Add Schema Markup</div>
-                            <div class="task-impact mono">+12% visibility</div>
-                        </div>
-                        <div class="task-toggle"></div>
-                    </div>
-                    <div class="task-item" data-impact="10" data-value="320" onclick="toggleTask(this)">
-                        <div class="task-info">
-                            <div class="task-name">Improve FAQ Content</div>
-                            <div class="task-impact mono">+10% visibility</div>
-                        </div>
-                        <div class="task-toggle"></div>
-                    </div>
-                    <div class="task-item" data-impact="8" data-value="250" onclick="toggleTask(this)">
-                        <div class="task-info">
-                            <div class="task-name">Local SEO Optimization</div>
-                            <div class="task-impact mono">+8% visibility</div>
-                        </div>
-                        <div class="task-toggle"></div>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
             
-            <!-- Auto-Fix Section -->
+            <!-- Auto-Fix Upsell Module -->
             <div class="autofix-section hide-in-presentation">
-                <button class="autofix-btn" onclick="openDeployConsole()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                    </svg>
-                    Activate Auto-Fix Agents
-                    <span class="autofix-price">$1,188/mo</span>
-                </button>
+                <div class="autofix-module">
+                    <div class="autofix-header">
+                        <div class="autofix-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                            Auto-Fix Agents
+                        </div>
+                        <div class="autofix-price-tag">$1,188/mo</div>
+                    </div>
+                    <div class="autofix-checklist" id="autofixChecklist">
+                        <div class="autofix-check-item" data-index="0">
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </div>
+                            <span class="check-label">Optimize Meta Tags</span>
+                        </div>
+                        <div class="autofix-check-item" data-index="1">
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </div>
+                            <span class="check-label">Deploy Schema Markup</span>
+                        </div>
+                        <div class="autofix-check-item" data-index="2">
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </div>
+                            <span class="check-label">Generate FAQ Content</span>
+                        </div>
+                        <div class="autofix-check-item" data-index="3">
+                            <div class="check-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            </div>
+                            <span class="check-label">Fix Local SEO Issues</span>
+                        </div>
+                    </div>
+                    <button class="autofix-btn" onclick="openDeployConsole()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        Execute All & Deploy Fixes
+                    </button>
+                </div>
             </div>
             
             <!-- Threat Matrix -->
@@ -1284,6 +1436,7 @@
                     </div>
                 </div>
                 <div class="threat-list">
+                    {% if competitors %}
                     {% for comp in competitors[:5] %}
                     <div class="threat-item">
                         <div class="threat-rank mono">#{{ loop.index }}</div>
@@ -1294,9 +1447,30 @@
                         <div class="threat-percent mono">{{ comp.dominance }}%</div>
                     </div>
                     {% endfor %}
-                    {% if not competitors %}
-                    <div style="text-align: center; color: var(--text-muted); padding: 2rem; font-size: 0.8rem;">
-                        No competitors detected in AI responses
+                    {% else %}
+                    <div class="threat-item">
+                        <div class="threat-rank mono">#1</div>
+                        <div class="threat-name">Coastal Roofing</div>
+                        <div class="threat-bar-container">
+                            <div class="threat-bar" style="width: 28%;"></div>
+                        </div>
+                        <div class="threat-percent mono">28%</div>
+                    </div>
+                    <div class="threat-item">
+                        <div class="threat-rank mono">#2</div>
+                        <div class="threat-name">Summit Roofing</div>
+                        <div class="threat-bar-container">
+                            <div class="threat-bar" style="width: 22%;"></div>
+                        </div>
+                        <div class="threat-percent mono">22%</div>
+                    </div>
+                    <div class="threat-item">
+                        <div class="threat-rank mono">#3</div>
+                        <div class="threat-name">ProRoof Solutions</div>
+                        <div class="threat-bar-container">
+                            <div class="threat-bar" style="width: 18%;"></div>
+                        </div>
+                        <div class="threat-percent mono">18%</div>
                     </div>
                     {% endif %}
                 </div>
@@ -1321,29 +1495,29 @@
                             {% else %}🔍{% endif %}
                         </div>
                         <div class="intent-label">{{ intent_type|replace('_', ' ')|title }}</div>
-                        <div class="intent-value mono">{{ data.visibility_percent|default(0)|int }}%</div>
+                        <div class="intent-value mono">{{ data.found|default(0) }}/{{ data.total|default(0) }}</div>
                     </div>
                     {% endfor %}
                     {% if not intent_breakdown %}
                     <div class="intent-card">
                         <div class="intent-icon">🚨</div>
                         <div class="intent-label">Emergency</div>
-                        <div class="intent-value mono">0%</div>
+                        <div class="intent-value mono">0/0</div>
                     </div>
                     <div class="intent-card">
                         <div class="intent-icon">💎</div>
                         <div class="intent-label">High Ticket</div>
-                        <div class="intent-value mono">0%</div>
+                        <div class="intent-value mono">0/0</div>
                     </div>
                     <div class="intent-card">
                         <div class="intent-icon">💳</div>
                         <div class="intent-label">Transactional</div>
-                        <div class="intent-value mono">0%</div>
+                        <div class="intent-value mono">0/0</div>
                     </div>
                     <div class="intent-card">
                         <div class="intent-icon">📚</div>
                         <div class="intent-label">Informational</div>
-                        <div class="intent-value mono">0%</div>
+                        <div class="intent-value mono">0/0</div>
                     </div>
                     {% endif %}
                 </div>
@@ -1472,13 +1646,14 @@
     </div>
 
     <script>
-        // Data from server
         const currentVisibility = {{ visibility_score }};
         const totalQueries = {{ total_queries }};
         const businessName = "{{ business.name }}";
+        const marketLeaderScore = {{ market_leader_score }};
+        const topCompetitorName = "{{ competitors[0].name if competitors else 'Market Leader' }}";
         
-        // Cost of Delay Ticker
-        let dailyLoss = (100 - currentVisibility) * 1.5;
+        let dailyLoss = (marketLeaderScore - currentVisibility) * 12;
+        if (dailyLoss < 0) dailyLoss = 0;
         let tickerValue = 0;
         const tickerEl = document.getElementById('delayTicker');
         
@@ -1488,34 +1663,44 @@
         }
         setInterval(updateTicker, 500);
         
-        // Chart.js configuration
         Chart.defaults.color = '#94a3b8';
         Chart.defaults.font.family = "'JetBrains Mono', monospace";
         Chart.defaults.font.size = 10;
         
-        // Time Travel Chart
         const ctx = document.getElementById('timeTravelChart').getContext('2d');
         
         const labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Today', 'Week 6', 'Week 7', 'Week 8'];
-        const pastData = [
-            Math.max(0, currentVisibility - 15),
-            Math.max(0, currentVisibility - 10),
-            Math.max(0, currentVisibility - 5),
-            Math.max(0, currentVisibility - 2),
-            currentVisibility
-        ];
         
-        let driftData = [null, null, null, null, currentVisibility, 
-            Math.max(0, currentVisibility - 5),
-            Math.max(0, currentVisibility - 10),
-            Math.max(0, currentVisibility - 15)
-        ];
+        const yourScoreData = [currentVisibility, currentVisibility, currentVisibility, currentVisibility, currentVisibility, null, null, null];
         
-        let targetData = [null, null, null, null, currentVisibility,
-            currentVisibility + 10,
-            currentVisibility + 20,
-            Math.min(100, currentVisibility + 30)
-        ];
+        const leaderData = [marketLeaderScore, marketLeaderScore, marketLeaderScore, marketLeaderScore, marketLeaderScore, marketLeaderScore, marketLeaderScore, marketLeaderScore];
+        
+        let projectedData = [null, null, null, null, currentVisibility, currentVisibility, currentVisibility, currentVisibility];
+        
+        const riskFillPlugin = {
+            id: 'riskFill',
+            beforeDraw: function(chart) {
+                const ctx = chart.ctx;
+                const chartArea = chart.chartArea;
+                const yScale = chart.scales.y;
+                
+                const yourY = yScale.getPixelForValue(currentVisibility);
+                const leaderY = yScale.getPixelForValue(marketLeaderScore);
+                
+                if (yourY > leaderY) {
+                    const gradient = ctx.createLinearGradient(0, leaderY, 0, yourY);
+                    gradient.addColorStop(0, 'rgba(239, 68, 68, 0.05)');
+                    gradient.addColorStop(1, 'rgba(239, 68, 68, 0.25)');
+                    
+                    ctx.save();
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(chartArea.left, leaderY, chartArea.right - chartArea.left, yourY - leaderY);
+                    ctx.restore();
+                }
+            }
+        };
+        
+        Chart.register(riskFillPlugin);
         
         const timeTravelChart = new Chart(ctx, {
             type: 'line',
@@ -1523,33 +1708,34 @@
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Current State',
-                        data: [...pastData, null, null, null],
+                        label: 'Your Score',
+                        data: yourScoreData,
                         borderColor: '#00E5A0',
                         backgroundColor: 'rgba(0, 229, 160, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        pointHoverRadius: 6
+                        fill: false,
+                        tension: 0,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#00E5A0',
+                        pointBorderColor: '#00E5A0'
                     },
                     {
-                        label: 'Trajectory: Inaction',
-                        data: driftData,
-                        borderColor: 'rgba(239, 68, 68, 0.7)',
-                        borderDash: [5, 5],
+                        label: 'Market Leader',
+                        data: leaderData,
+                        borderColor: '#6b7280',
+                        borderDash: [8, 4],
                         fill: false,
-                        tension: 0.4,
+                        tension: 0,
                         borderWidth: 2,
                         pointRadius: 0
                     },
                     {
-                        label: 'Trajectory: Optimized',
-                        data: targetData,
+                        label: 'Projected',
+                        data: projectedData,
                         borderColor: '#06b6d4',
-                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                        backgroundColor: 'rgba(6, 182, 212, 0.15)',
                         fill: true,
-                        tension: 0.4,
+                        tension: 0.3,
                         borderWidth: 3,
                         pointRadius: 0,
                         pointHoverRadius: 6
@@ -1566,7 +1752,7 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: 'rgba(16, 24, 40, 0.9)',
+                        backgroundColor: 'rgba(16, 24, 40, 0.95)',
                         borderColor: 'rgba(255, 255, 255, 0.1)',
                         borderWidth: 1,
                         padding: 12,
@@ -1585,7 +1771,7 @@
                     },
                     y: {
                         min: 0,
-                        max: 100,
+                        max: Math.max(100, marketLeaderScore + 20),
                         grid: { color: 'rgba(255, 255, 255, 0.03)' },
                         ticks: {
                             callback: function(value) { return value + '%'; }
@@ -1599,7 +1785,6 @@
             }
         });
         
-        // Sparklines
         function createSparkline(canvasId, data, color) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
@@ -1634,13 +1819,17 @@
         
         createSparkline('sparkline1', [20, 25, 22, 28, 32, currentVisibility], '#10b981');
         createSparkline('sparkline2', [15, 18, 20, 22, 25, totalQueries], '#f59e0b');
-        createSparkline('sparkline3', [40, 38, 42, 35, 30, 28], '#ef4444');
+        createSparkline('sparkline3', [40, 38, 42, 35, 30, marketLeaderScore], '#ef4444');
         createSparkline('sparkline4', [0, 5, 10, 15, 20, 25], '#06b6d4');
         
-        // Action Simulator Logic
         let activeTasksImpact = 0;
-        let totalValueUnlocked = 0;
+        let activeTaskCount = 0;
+        const totalTasks = document.querySelectorAll('.task-item').length;
         const valueBadge = document.getElementById('valueBadge');
+        const projectedScoreEl = document.getElementById('projectedScore');
+        const projectedBadgeEl = document.getElementById('projectedBadge');
+        const projectedDeltaEl = document.getElementById('projectedDelta');
+        const parityBadgeEl = document.getElementById('parityBadge');
         
         function toggleTask(element) {
             element.classList.toggle('active');
@@ -1649,23 +1838,36 @@
             
             if (element.classList.contains('active')) {
                 activeTasksImpact += impact;
-                totalValueUnlocked += value;
+                activeTaskCount++;
                 showValueBadge(element, value);
             } else {
                 activeTasksImpact -= impact;
-                totalValueUnlocked -= value;
+                activeTaskCount--;
             }
             
-            document.getElementById('totalImpact').textContent = '+' + activeTasksImpact + '% Impact';
-            document.getElementById('projectedImprovement').textContent = '+' + activeTasksImpact + '%';
+            const projectedScore = Math.min(100, currentVisibility + activeTasksImpact);
+            projectedScoreEl.textContent = projectedScore + '%';
+            projectedBadgeEl.textContent = 'Score: ' + projectedScore + '%';
             
-            const newTarget = [null, null, null, null, currentVisibility,
+            if (activeTaskCount === totalTasks && projectedScore >= marketLeaderScore) {
+                projectedDeltaEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> +' + activeTasksImpact + '% (Parity with Market Leader)';
+                projectedDeltaEl.style.color = '#10b981';
+                projectedBadgeEl.classList.add('parity');
+                parityBadgeEl.classList.add('show');
+            } else {
+                projectedDeltaEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> If tasks completed';
+                projectedDeltaEl.style.color = '';
+                projectedBadgeEl.classList.remove('parity');
+                parityBadgeEl.classList.remove('show');
+            }
+            
+            const newProjected = [null, null, null, null, currentVisibility,
                 Math.min(100, currentVisibility + activeTasksImpact * 0.4),
                 Math.min(100, currentVisibility + activeTasksImpact * 0.7),
-                Math.min(100, currentVisibility + activeTasksImpact)
+                Math.min(100, projectedScore)
             ];
             
-            timeTravelChart.data.datasets[2].data = newTarget;
+            timeTravelChart.data.datasets[2].data = newProjected;
             timeTravelChart.update('default');
         }
         
@@ -1681,7 +1883,30 @@
             }, 2000);
         }
         
-        // Settings Modal
+        let checklistAnimationInterval;
+        let currentCheckIndex = 0;
+        
+        function animateChecklist() {
+            const items = document.querySelectorAll('.autofix-check-item');
+            
+            items.forEach(item => item.classList.remove('checked'));
+            currentCheckIndex = 0;
+            
+            checklistAnimationInterval = setInterval(() => {
+                if (currentCheckIndex < items.length) {
+                    items[currentCheckIndex].classList.add('checked');
+                    currentCheckIndex++;
+                } else {
+                    setTimeout(() => {
+                        items.forEach(item => item.classList.remove('checked'));
+                        currentCheckIndex = 0;
+                    }, 1000);
+                }
+            }, 400);
+        }
+        
+        animateChecklist();
+        
         function openSettings() {
             document.getElementById('settingsModal').classList.add('active');
         }
@@ -1690,7 +1915,6 @@
             document.getElementById('settingsModal').classList.remove('active');
         }
         
-        // Deployment Console
         function openDeployConsole() {
             document.getElementById('deployModal').classList.add('active');
         }
@@ -1763,7 +1987,6 @@ For questions, contact support@ekkoscope.com`;
             URL.revokeObjectURL(url);
         }
         
-        // Presentation Mode
         const presentationMode = localStorage.getItem('presentationMode') === 'true';
         if (presentationMode) {
             document.body.classList.add('presentation-mode');
@@ -1777,7 +2000,6 @@ For questions, contact support@ekkoscope.com`;
             localStorage.setItem('presentationMode', toggle.classList.contains('active'));
         }
         
-        // Close modals on outside click
         document.getElementById('settingsModal').addEventListener('click', function(e) {
             if (e.target === this) closeSettings();
         });

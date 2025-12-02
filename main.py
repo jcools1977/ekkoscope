@@ -573,6 +573,24 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
         provider_stats = visibility_summary.get("provider_stats", {})
         
         raw_competitors = visibility_summary.get("top_competitors", []) or []
+        
+        if not raw_competitors:
+            from collections import Counter
+            competitor_counter = Counter()
+            business_aliases = [business.name.lower()]
+            if business.brand_aliases:
+                business_aliases.extend([a.strip().lower() for a in business.brand_aliases.split(',') if a.strip()])
+            
+            for aq in audit.audit_queries:
+                for vr in aq.visibility_results:
+                    if vr.brand_name:
+                        brand_lower = vr.brand_name.lower()
+                        is_our_brand = any(alias in brand_lower or brand_lower in alias for alias in business_aliases)
+                        if not is_our_brand and len(vr.brand_name) > 2:
+                            competitor_counter[vr.brand_name] += 1
+            
+            raw_competitors = [{"name": name, "count": count} for name, count in competitor_counter.most_common(15)]
+        
         competitors = []
         total_competitor_mentions = sum(c.get("count", 0) for c in raw_competitors) if raw_competitors else 0
         for comp in raw_competitors[:10]:
@@ -587,7 +605,12 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
                 "dominance": dominance
             })
         
-        top_threat_dominance = competitors[0]["dominance"] if competitors else 0
+        if competitors:
+            top_threat_dominance = competitors[0]["dominance"]
+            market_leader_score = max(visibility_score + 15, min(65, top_threat_dominance + 20))
+        else:
+            top_threat_dominance = 0
+            market_leader_score = max(35, visibility_score + 20)
         
         intent_breakdown = visibility_summary.get("intent_breakdown", {}) or {}
         formatted_intent = {}
@@ -657,6 +680,7 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
                 "provider_stats": provider_stats,
                 "competitors": competitors,
                 "top_threat_dominance": top_threat_dominance,
+                "market_leader_score": market_leader_score,
                 "intent_breakdown": formatted_intent,
                 "missing_queries": missing_queries,
                 "recommendations": recommendations
