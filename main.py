@@ -488,7 +488,7 @@ async def dashboard_audit_analytics(request: Request, business_id: int, audit_id
         if not audit:
             return RedirectResponse(url=f"/dashboard/business/{business_id}", status_code=302)
         
-        if audit.status != "completed":
+        if audit.status not in ("completed", "done"):
             return RedirectResponse(url=f"/dashboard/business/{business_id}/audit/{audit_id}", status_code=302)
         
         visibility_summary = audit.get_visibility_summary() or {}
@@ -561,7 +561,7 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
         if not audit:
             return RedirectResponse(url=f"/dashboard/business/{business_id}", status_code=302)
         
-        if audit.status != "completed":
+        if audit.status not in ("completed", "done"):
             return RedirectResponse(url=f"/dashboard/business/{business_id}/audit/{audit_id}", status_code=302)
         
         visibility_summary = audit.get_visibility_summary() or {}
