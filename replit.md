@@ -2,139 +2,7 @@
 
 ## Overview
 
-EkkoScope is a premium SaaS web application designed to analyze and improve "AI visibility" for businesses. It assesses how frequently businesses are recommended by AI assistants like ChatGPT by running comprehensive queries against AI APIs. The system determines prominence compared to competitors and provides actionable content recommendations. The project aims to empower businesses to understand and optimize their presence in AI-driven search and recommendation landscapes. Key capabilities include AI visibility audits, premium PDF report generation, integrated content recommendations, and now **autonomous auto-remediation** via 4 specialized AI agents.
-
-## Recent Changes (December 2025)
-
-### EkkoScope v4 - Auto-Fix Agents (December 1, 2025)
-- **FixEngine Core**: Full auto-remediation system that parses GEO reports and generates fixes automatically
-- **PDF Parser**: PyPDF2-based extraction of visibility issues, scores, competitors, and recommendations
-- **AI Fix Planner**: GPT-4o powered analysis that generates comprehensive remediation plans
-- **4 Autonomous Agents**:
-  - **Content Agent**: Generates optimized meta descriptions, FAQ sections, page content
-  - **SEO Agent**: Creates JSON-LD schema markup (LocalBusiness, FAQPage, Service)
-  - **Deploy Agent**: Generates WordPress PHP, raw HTML, and API payloads
-  - **Verification Agent**: Calculates before/after metrics and improvement projections
-- **Fixed Report PDF**: Before/after comparison showing visibility improvement (e.g., 0% -> 90%)
-- **$1188 Bundle**: Sentinel OS + EkkoScope Fix combo checkout
-
-### New v4 Files
-- `services/pdf_parser.py` - PyPDF2 report extraction with issue/competitor/query parsing
-- `services/fix_planner.py` - GPT-4o powered fix plan generation
-- `services/remediation_agents.py` - 4 agent orchestration system
-- `services/fixed_report.py` - Before/after PDF generation with neon green theme
-- `templates/dashboard/remediate.html` - Agent launch UI with $1188 bundle upsell
-
-### Database Updates
-- `remediation_result` - JSON storage for complete agent outputs
-- `fixed_report_path` - Path to generated fixed report PDF
-
-### Sentinel OS Integration
-- Real-time logging of AI queries to Sentinel OS dashboard
-- Report generation events tracked
-- Connected via `services/ekkoscope_sentinel.py`
-
-## Recent Changes (November 2025)
-
-### Activation Code System (December 1, 2025)
-- **LinkedIn Campaign Support**: Generate one-time-use activation codes for prospects
-- **Admin Panel**: `/admin/activation-codes` - generate single or batch codes (up to 100)
-- **User Flow**: `/activate?code=XXXXXXXX` - users redeem codes for free report
-- **Tracking**: Each code tracks who redeemed it, which business, and when
-- **Database**: `ActivationCode` model with code, label, uses_remaining, expiration
-
-### Final Pricing Model (December 1, 2025)
-- **$490 Full GEO Report**: One-time 19-page AI visibility report (12 slots/month)
-- **$290/month Continuous**: Bi-weekly reports only + visibility delta tracking
-- **$1,188/month Auto-Fix**: Bi-weekly reports + Auto-Fix Agents run automatically after each report
-  - Includes all 4 agents: Content, SEO, Deploy, Verification
-  - Fixed Report PDF generated automatically with before/after comparison
-  - No manual intervention required - agents execute on schedule
-  - `autofix_enabled` flag controls agent execution in scheduler
-
-### Unified Black-Ops Design System (November 30, 2025)
-- **Color Scheme**: Pure black (#0a0a0f), cyan accents (#00f0ff), blood-red alerts (#ff0000)
-- **Typography**: JetBrains Mono throughout all pages
-- **CSS Variables**: `--accent-cyan`, `--accent-blue`, `--bg-primary`, `--bg-card`, etc.
-- **Logo Placement**: EkkoScope logo on every page header
-- **Footer**: "Powered by EkkoScope GEO Engine" on all pages
-
-### Key Design Files
-- `static/styles.css` - Unified global CSS with JetBrains Mono and black/cyan theme
-- `templates/public/landing.html` - Homepage with new design
-- `templates/public/pricing.html` - Pricing page with $490 + $290/mo cards
-- `templates/auth/login.html` - Login page with unified design
-- `templates/auth/signup.html` - Signup page with unified design
-- `templates/dashboard/index.html` - Dashboard with new aesthetic
-- `templates/dashboard/upgrade.html` - Business upgrade page
-- `services/reporting.py` - PDF with black-ops design
-
-### Stripe Products
-- `STRIPE_PRICE_REPORT_490` - $490 Full GEO Report (one-time)
-- `STRIPE_PRICE_CONTINUOUS_290` - $290/month Continuous Monitoring (recurring)
-
-### Free First Report Feature (v1.4)
-- **One-Time Free Audit**: Every new user gets one free AI visibility report upon signup
-- **User Model Update**: Added `free_audit_used` boolean field to track free report usage
-- **Dashboard Integration**: "Run FREE Report" button shows for users who haven't used their free audit
-- **Same Full Pipeline**: Free reports use identical analysis and PDF generation as paid reports
-- **Seamless UX**: After free report, users see upgrade options to subscribe
-
-### EkkoBrain Memory System (v1.3)
-- **Persistent Pattern Learning**: EkkoBrain stores anonymized patterns from completed audits to enhance future recommendations
-- **Two-Layer Architecture**: Structured DB storage (audit artifacts) + Pinecone vector search (semantic pattern retrieval)
-- **Privacy-Safe Design**: Only controlled vocabulary terms pushed to Pinecone - no client names, domains, or raw text
-- **Graceful Degradation**: Works with or without PINECONE_API_KEY - system functions normally if Pinecone unavailable
-- **Integration Points**: Patterns fetched before Genius Mode, artifacts logged after audit completion
-
-### New EkkoBrain Files
-- `services/ekkobrain_pinecone.py` - Pinecone client with init, embed, upsert, search functions
-- `services/ekkobrain_writer.py` - Log audit artifacts to DB and push anonymized patterns to Pinecone
-- `services/ekkobrain_reader.py` - Fetch relevant patterns before Genius Mode runs
-
-### New Database Models for Audit Artifacts
-- `AuditQuery` - Stores queries with intent classification per audit
-- `QueryVisibilityResult` - Multi-LLM visibility results per query
-- `PageBlueprint` - Page blueprints generated by Genius Mode
-- `RoadmapTask` - 30-day roadmap tasks with impact/effort metadata
-
-### Multi-LLM Visibility System (v1.1)
-- **Three AI Provider Support**: Visibility analysis now runs across OpenAI, Perplexity, and Google Gemini
-- **Unified Visibility Models**: New Pydantic models for consistent data across all providers
-- **Multi-Source Visibility Matrix**: PDF reports show side-by-side comparison of visibility across all AI assistants
-- **Enhanced Genius Mode**: Now receives cross-platform visibility data for more comprehensive insights
-- **Graceful Degradation**: System continues working if any provider is unavailable or fails
-
-### New Multi-LLM Files
-- `services/visibility_models.py` - Pydantic models for unified visibility data (BrandHit, ProviderVisibility, QueryVisibilityAggregate)
-- `services/visibility_hub.py` - Orchestrates all visibility providers and computes summary stats
-- `services/openai_visibility.py` - OpenAI simulated ChatGPT recommendations
-- `services/gemini_client.py` - Google Gemini API client
-- `services/gemini_visibility.py` - Gemini simulated AI assistant recommendations
-
-### Premium PDF Report Enhancement (v1.2)
-- **No Text Truncation**: All content displays fully - queries, AI responses, competitor names, and recommendations wrap naturally with no character limits
-- **List-Based Layouts**: Redesigned multi-LLM visibility, competitor landscape, and comparison sections to use list format with proper text wrapping
-- **Smaller Professional Logo**: Cover page logo reduced from 70mm to 24mm for cleaner professional appearance
-- **Professional Margins**: Improved margins (15mm left/right, 18mm top) and spacing throughout
-- **Complete Content Sections**:
-  - Executive Dashboard with key metrics and score distribution
-  - Query Analysis with full AI response display and intent classification
-  - Competitor Landscape with numbered list and threat indicators
-  - AI Provider Visibility Analysis (OpenAI, Perplexity, Gemini) with full query text
-  - Genius Insights with complete patterns and opportunities
-  - Detailed Page Blueprints section (3-7 pages with full SEO specs)
-  - 30-Day Implementation Roadmap with complete task descriptions
-  - Strategic Recommendations with full details
-- **Industry-Specific Content**: Reports use business categories and specific products/services
-
-### Key Files Updated
-- `services/query_generator.py` (NEW) - Comprehensive query generation with intent classification
-- `services/reporting.py` - Complete PDF report redesign with multi-LLM visibility matrix
-- `services/analysis.py` - Added intent metadata and multi-LLM visibility to query results
-- `services/genius.py` - Enhanced with multi-LLM visibility context
-- `services/database.py` - Enhanced tenant config with categories and business_type
-- `services/config.py` - Added Gemini configuration and provider flags
+EkkoScope is a premium SaaS web application designed to analyze and improve "AI visibility" for businesses. It assesses how frequently businesses are recommended by AI assistants like ChatGPT by running comprehensive queries against AI APIs, determining prominence compared to competitors, and providing actionable content recommendations. The project aims to empower businesses to understand and optimize their presence in AI-driven search and recommendation landscapes, offering features like AI visibility audits, premium PDF report generation, integrated content recommendations, and autonomous auto-remediation via specialized AI agents. The business vision is to provide a critical tool for businesses navigating the evolving AI-driven search and recommendation landscape, offering a competitive edge and significant market potential.
 
 ## User Preferences
 
@@ -142,54 +10,58 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend
+### UI/UX Decisions
 
-EkkoScope utilizes Jinja2 for server-side rendering, delivering a single-page application experience primarily through form submissions. The design incorporates a full dark theme with a sci-fi aesthetic, featuring neon teal and electric blue accents, a custom radar logo, and animated radar buttons for audit actions. PDF reports are print-friendly, using brand colors as accents. The UI is built with pure HTML/CSS, avoiding JavaScript frameworks for simplicity and statelessness.
+EkkoScope utilizes Jinja2 for server-side rendering, delivering a single-page application experience. The design features a full dark theme with a sci-fi aesthetic, neon teal and electric blue accents, a custom radar logo, and animated radar buttons. PDF reports are print-friendly, using brand colors as accents. The UI is built with pure HTML/CSS, avoiding JavaScript frameworks for simplicity. A new client presentation mode allows for agency white-labeling, hiding paywalls, and full content access. The unified Black-Ops design system employs a color scheme of pure black (`#0a0a0f`), cyan accents (`#00f0ff`), and blood-red alerts (`#ff0000`), with JetBrains Mono typography throughout.
 
-### Backend
+### Technical Implementations
 
-The backend is built with FastAPI and Uvicorn, running on Python 3.11+. It handles AI visibility analysis, premium PDF report generation (`fpdf2`), website content fetching (`site_inspector.py`), and sophisticated insights generation through "Genius Mode." The application orchestrates the audit pipeline, interacting with AI models to score business mentions (0-2 scale) and generate content recommendations. Configuration for businesses and queries is managed through a SQLite database.
+The backend is built with FastAPI and Uvicorn on Python 3.11+. It handles AI visibility analysis, premium PDF report generation (`fpdf2`), website content fetching (`site_inspector.py`), and sophisticated insights generation through "Genius Mode." The application orchestrates the audit pipeline, interacting with AI models to score business mentions (0-2 scale) and generate content recommendations. Configuration for businesses and queries is managed through a SQLite database.
 
-### AI Integration
+### Feature Specifications
 
-The system integrates with multiple AI APIs for comprehensive visibility analysis:
-- **OpenAI API**: Core engine for query analysis, simulated ChatGPT recommendations, and Genius Mode insights
-- **Perplexity API**: Web-grounded real-time search visibility using Sonar Pro model
-- **Google Gemini API**: Additional AI assistant simulation for cross-platform visibility comparison
-
-The multi-LLM visibility hub orchestrates queries across all available providers and aggregates results into unified visibility data. Genius Mode receives cross-platform visibility snapshots to generate more comprehensive patterns, opportunities, and recommendations. Each query is classified by intent type for prioritized insights.
+- **AI Visibility Audits**: Comprehensive reports on how businesses are recommended by AI assistants.
+- **Premium PDF Report Generation**: Detailed, multi-page reports with executive dashboards, competitor analysis, page blueprints, and 30-day action plans. Reports feature full content display with no truncation, list-based layouts, and industry-specific content.
+- **Content Recommendations**: Actionable suggestions for improving AI visibility.
+- **Autonomous Auto-Remediation (EkkoScope v4)**: A system called FixEngine Core that parses GEO reports and generates fixes automatically using a PDF Parser, AI Fix Planner (GPT-4o), and 4 specialized AI agents:
+    - **Content Agent**: Generates optimized meta descriptions, FAQs, and page content.
+    - **SEO Agent**: Creates JSON-LD schema markup.
+    - **Deploy Agent**: Generates WordPress PHP, raw HTML, and API payloads.
+    - **Verification Agent**: Calculates before/after metrics.
+- **Multi-LLM Visibility System**: Analysis runs across OpenAI, Perplexity, and Google Gemini, providing a unified visibility matrix in reports.
+- **EkkoBrain Memory System**: A two-layer architecture (DB + Pinecone vector search) for persistent pattern learning from completed audits, enhancing future recommendations while ensuring privacy.
+- **Activation Code System**: Supports one-time-use activation codes for prospects.
+- **Free First Report Feature**: New users receive one free AI visibility report upon signup.
+- **Sentinel OS Integration**: Real-time logging of AI queries and report generation events to the Sentinel OS dashboard.
 
 ### System Design Choices
 
-- **Persistence**: SQLite database for storing business information, audit results, and user data.
-- **Query Generation**: Advanced industry-specific query generator with 20-30 queries per audit, classified by intent (emergency, high_ticket, replenishment, informational, transactional).
-- **Reporting**: Premium PDF reports (10-15 pages) with executive dashboard, competitor analysis, page blueprints, and 30-day action plans.
-- **Genius Mode**: Provides structured, site-aware insights (patterns, opportunities, quick wins) based on AI analysis.
+- **Persistence**: SQLite database for storing business information, audit results, user data, and remediation results.
+- **Query Generation**: Advanced industry-specific query generator classifying intent (emergency, high_ticket, replenishment, informational, transactional).
+- **Genius Mode**: Provides structured, site-aware insights based on AI analysis.
 - **Scoring Logic**: Businesses are scored 0-2 based on mention and prominence in AI responses.
-- **Intent Classification**: Queries are classified by business intent for prioritized recommendations.
-- **Error Handling**: Robust error management, including custom exceptions for API key validation and graceful UI error display.
-- **Security**: Utilizes Replit Secrets for API key storage, session-based business ID protection for checkout, and webhook signature verification for payment processing.
+- **Error Handling**: Robust error management with graceful degradation for unavailable AI providers.
+- **Security**: Utilizes Replit Secrets for API keys, session-based business ID protection, and webhook signature verification.
 
 ## External Dependencies
 
 ### Third-Party Services
 
-- **OpenAI API**: Core AI engine for visibility analysis and content recommendations. Requires `OPENAI_API_KEY`.
-- **Perplexity API**: (Optional) Provides web-grounded, real-time search capabilities to augment AI visibility analysis. Requires `PERPLEXITY_API_KEY`.
-- **Google Gemini API**: (Optional) Additional AI assistant simulation for cross-platform visibility comparison. Requires `GOOGLE_GEMINI_API_KEY`.
-- **Stripe**: Payment gateway for one-time snapshot audits and ongoing subscriptions. Integrates Stripe Checkout for payment processing and webhooks for transaction handling. Requires `STRIPE_PRICE_SNAPSHOT`, `STRIPE_PRICE_ONGOING_SETUP`, `STRIPE_PRICE_ONGOING_MONTHLY`, and `STRIPE_WEBHOOK_SECRET`.
-- **Pinecone**: (Optional) Vector database for EkkoBrain pattern memory. Stores anonymized audit patterns for semantic retrieval. Requires `PINECONE_API_KEY`. Falls back gracefully if unavailable.
+-   **OpenAI API**: Core AI engine for visibility analysis, simulated ChatGPT recommendations, and Genius Mode insights.
+-   **Perplexity API**: (Optional) Provides web-grounded, real-time search capabilities.
+-   **Google Gemini API**: (Optional) Additional AI assistant simulation for cross-platform visibility comparison.
+-   **Stripe**: Payment gateway for one-time audits and subscriptions, handling checkout and webhooks.
+-   **Pinecone**: (Optional) Vector database for EkkoBrain pattern memory.
 
 ### Python Packages
 
-- **Web Framework**: `fastapi`, `uvicorn[standard]`, `jinja2`
-- **AI/API Clients**: `openai`, `httpx` (for Replit connector API), `pinecone` (for EkkoBrain vector search)
-- **Database**: `SQLAlchemy`
-- **PDF Generation**: `fpdf2`
-- **Utilities**: `python-dotenv`, `python-multipart`
+-   **Web Framework**: `fastapi`, `uvicorn[standard]`, `jinja2`
+-   **AI/API Clients**: `openai`, `httpx`, `pinecone`
+-   **Database**: `SQLAlchemy`
+-   **PDF Generation**: `fpdf2`, `PyPDF2`
+-   **Utilities**: `python-dotenv`, `python-multipart`
 
 ### Data Storage
 
-- **SQLite Database**: `echoscope.db` for all persistent application data (businesses, audits).
-- **File-based**: `data/tenants.json` for initial tenant configurations, `reports/` for generated PDF outputs.
-```
+-   **SQLite Database**: `echoscope.db` for all persistent application data.
+-   **File-based**: `data/tenants.json` for initial tenant configurations, `reports/` for generated PDF outputs.
