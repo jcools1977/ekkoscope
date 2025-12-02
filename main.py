@@ -3069,7 +3069,8 @@ async def admin_onboarding_create(
     tech_stack: str = Form(""),
     competitors: str = Form(""),
     keywords: str = Form(""),
-    run_initial_scan: bool = Form(False)
+    run_initial_scan: bool = Form(False),
+    update_if_exists: bool = Form(False)
 ):
     """
     Create a new business from the onboarding form and optionally run initial intelligence scan.
@@ -3092,32 +3093,45 @@ async def admin_onboarding_create(
             Business.primary_domain.contains(clean_domain)
         ).first()
         
-        if existing:
+        if existing and not update_if_exists:
             return JSONResponse({
                 "success": False,
                 "error": f"Business already exists: {existing.name}",
-                "business_id": existing.id
+                "business_id": existing.id,
+                "can_update": True
             }, status_code=400)
         
-        business = Business(
-            name=business_name,
-            primary_domain=clean_domain,
-            owner_user_id=user.id,
-            is_demo=False,
-            has_free_report=True,
-            industry=industry,
-            competitors=competitors
-        )
+        if existing and update_if_exists:
+            existing.name = business_name
+            existing.industry = industry
+            existing.competitors = competitors
+            db.commit()
+            db.refresh(existing)
+            business = existing
+            is_update = True
+        else:
+            business = Business(
+                name=business_name,
+                primary_domain=clean_domain,
+                owner_user_id=user.id,
+                is_demo=False,
+                has_free_report=True,
+                industry=industry,
+                competitors=competitors
+            )
+            is_update = False
+            db.add(business)
         
-        db.add(business)
         db.commit()
         db.refresh(business)
         
+        action_word = "updated" if is_update else "created"
         result = {
             "success": True,
             "business_id": business.id,
             "business_name": business.name,
-            "message": f"Business '{business_name}' created successfully"
+            "is_update": is_update,
+            "message": f"Business '{business_name}' {action_word} successfully"
         }
         
         if run_initial_scan and is_sherlock_enabled():

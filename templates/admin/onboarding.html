@@ -817,6 +817,32 @@
                 document.getElementById('competitorsList').innerHTML = '<div class="empty-state" style="padding: 30px;"><p style="color: var(--text-muted);">Run Auto-Detect to discover competitors</p></div>';
                 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (data.can_update) {
+                const confirmUpdate = confirm(
+                    `${data.error}\n\nDo you want to UPDATE this business with the new discovered data instead?`
+                );
+                
+                if (confirmUpdate) {
+                    formData.append('update_if_exists', 'true');
+                    const updateResponse = await fetch('/admin/onboarding/create', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const updateData = await updateResponse.json();
+                    
+                    if (updateData.success) {
+                        document.getElementById('successText').textContent = updateData.message;
+                        document.getElementById('viewBusinessLink').href = '/admin/business/' + updateData.business_id;
+                        document.getElementById('successMessage').classList.add('show');
+                        form.reset();
+                        discoveredData = null;
+                        document.getElementById('businessSection').classList.remove('active');
+                        document.getElementById('competitorSection').classList.remove('active');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                        alert('Error updating: ' + (updateData.error || 'Failed to update business'));
+                    }
+                }
             } else {
                 alert('Error: ' + (data.error || 'Failed to create business'));
             }
