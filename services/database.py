@@ -91,8 +91,10 @@ class Business(Base):
     primary_domain = Column(String(255), nullable=False)
     extra_domains = Column(Text, default="[]")
     business_type = Column(String(50), default="local_service")
+    industry = Column(String(100), nullable=True)  # Industry classification for Sherlock
     regions = Column(Text, default="[]")
     categories = Column(Text, default="[]")
+    competitors = Column(Text, default="[]")  # JSON list of competitor domains/info
     contact_name = Column(String(255), nullable=True)
     contact_email = Column(String(255), nullable=True)
     source = Column(String(20), default="public")
@@ -140,6 +142,17 @@ class Business(Base):
     
     def set_categories(self, categories: List[str]):
         self.categories = json.dumps(categories)
+    
+    def get_competitors(self) -> List[dict]:
+        """Get competitor data as list of dicts."""
+        try:
+            return json.loads(self.competitors or "[]")
+        except:
+            return []
+    
+    def set_competitors(self, competitors: List[dict]):
+        """Set competitor data from list of dicts."""
+        self.competitors = json.dumps(competitors)
     
     def get_all_domains(self) -> List[str]:
         domains = [self.primary_domain]

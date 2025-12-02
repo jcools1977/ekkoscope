@@ -2689,9 +2689,13 @@ Instructions:
             // Hide settings dropdown
             document.getElementById('settingsDropdown').classList.remove('show');
             
-            // Show modal
+            // Show modal - ensure it's at body level (portal pattern)
             const modal = document.getElementById('rescanModal');
+            if (modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
             modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
             
             // Clear and start terminal output
             clearTerminal();
@@ -2782,15 +2786,24 @@ Instructions:
         
         function closeRescanAndReload() {
             document.getElementById('rescanModal').classList.remove('active');
+            document.body.style.overflow = '';
             window.location.reload();
         }
         
+        function closeRescanModal() {
+            document.getElementById('rescanModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
         // Close modal on outside click
-        document.getElementById('rescanModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.remove('active');
-            }
-        });
+        const rescanModalEl = document.getElementById('rescanModal');
+        if (rescanModalEl) {
+            rescanModalEl.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeRescanModal();
+                }
+            });
+        }
     </script>
     
     <!-- Strategist FAB Button -->
