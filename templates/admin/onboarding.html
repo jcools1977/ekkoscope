@@ -1,0 +1,842 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Business Onboarding - EkkoScope Admin{% endblock %}
+
+{% block content %}
+<style>
+    .onboarding-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .discovery-section {
+        background: linear-gradient(135deg, rgba(46, 230, 168, 0.1) 0%, rgba(24, 163, 255, 0.05) 100%);
+        border: 1px solid rgba(46, 230, 168, 0.3);
+        border-radius: 16px;
+        padding: 30px;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .discovery-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--brand-teal), var(--brand-blue), var(--brand-teal));
+        background-size: 200% 100%;
+        animation: shimmer 3s linear infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    
+    .discovery-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .discovery-header svg {
+        width: 40px;
+        height: 40px;
+        color: var(--brand-teal);
+    }
+    
+    .discovery-header h2 {
+        font-size: 22px;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    
+    .discovery-header p {
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin: 5px 0 0;
+    }
+    
+    .url-input-group {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .url-input-group input {
+        flex: 1;
+        padding: 16px 20px;
+        background: var(--bg-dark);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        color: var(--text-primary);
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+    
+    .url-input-group input:focus {
+        outline: none;
+        border-color: var(--brand-teal);
+        box-shadow: 0 0 20px rgba(46, 230, 168, 0.2);
+    }
+    
+    .url-input-group input::placeholder {
+        color: var(--text-muted);
+    }
+    
+    .auto-detect-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 16px 28px;
+        background: linear-gradient(135deg, var(--brand-teal) 0%, #20b88c 100%);
+        border: none;
+        border-radius: 12px;
+        color: var(--bg-dark);
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        white-space: nowrap;
+    }
+    
+    .auto-detect-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(46, 230, 168, 0.4);
+    }
+    
+    .auto-detect-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .auto-detect-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .auto-detect-btn.scanning svg {
+        animation: rotate 1s linear infinite;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .scanning-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 11, 17, 0.95);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .scanning-overlay.active {
+        display: flex;
+    }
+    
+    .scanning-terminal {
+        background: var(--bg-card);
+        border: 1px solid var(--brand-teal);
+        border-radius: 16px;
+        width: 90%;
+        max-width: 600px;
+        overflow: hidden;
+        box-shadow: 0 0 60px rgba(46, 230, 168, 0.3);
+    }
+    
+    .scanning-header {
+        background: linear-gradient(135deg, rgba(46, 230, 168, 0.2) 0%, rgba(24, 163, 255, 0.1) 100%);
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .scanning-header .dots {
+        display: flex;
+        gap: 6px;
+    }
+    
+    .scanning-header .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    
+    .scanning-header .dot:nth-child(1) { background: #ff5f57; }
+    .scanning-header .dot:nth-child(2) { background: #febc2e; }
+    .scanning-header .dot:nth-child(3) { background: var(--brand-teal); }
+    
+    .scanning-header span {
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-family: monospace;
+    }
+    
+    .scanning-body {
+        padding: 25px;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 13px;
+        line-height: 1.8;
+        min-height: 300px;
+    }
+    
+    .scan-line {
+        color: var(--text-secondary);
+        opacity: 0;
+        animation: fadeIn 0.3s forwards;
+    }
+    
+    .scan-line.success { color: var(--brand-teal); }
+    .scan-line.info { color: var(--brand-blue); }
+    .scan-line.data { color: #f59e0b; }
+    .scan-line .prompt { color: var(--brand-teal); }
+    
+    @keyframes fadeIn {
+        to { opacity: 1; }
+    }
+    
+    .form-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 30px;
+        margin-bottom: 30px;
+        opacity: 0.6;
+        pointer-events: none;
+        transition: all 0.4s;
+    }
+    
+    .form-section.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    
+    .form-section h3 {
+        font-size: 18px;
+        color: var(--text-primary);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .form-section h3 svg {
+        width: 20px;
+        height: 20px;
+        color: var(--brand-teal);
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    
+    .form-grid.full {
+        grid-template-columns: 1fr;
+    }
+    
+    .field-discovered {
+        position: relative;
+    }
+    
+    .field-discovered input,
+    .field-discovered textarea {
+        border-color: var(--brand-teal) !important;
+        animation: fieldGlow 2s ease-out;
+    }
+    
+    @keyframes fieldGlow {
+        0% { box-shadow: 0 0 20px rgba(46, 230, 168, 0.5); }
+        100% { box-shadow: none; }
+    }
+    
+    .field-discovered::after {
+        content: 'AUTO-DETECTED';
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        font-size: 9px;
+        padding: 2px 6px;
+        background: var(--brand-teal);
+        color: var(--bg-dark);
+        border-radius: 4px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    
+    .competitor-item {
+        background: rgba(46, 230, 168, 0.1);
+        border: 1px solid rgba(46, 230, 168, 0.3);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .competitor-rank {
+        width: 28px;
+        height: 28px;
+        background: var(--brand-teal);
+        color: var(--bg-dark);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    
+    .competitor-info {
+        flex: 1;
+    }
+    
+    .competitor-info .domain {
+        color: var(--brand-blue);
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+    
+    .competitor-info .title {
+        color: var(--text-primary);
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+    
+    .competitor-info .snippet {
+        color: var(--text-muted);
+        font-size: 12px;
+        line-height: 1.4;
+    }
+    
+    .competitor-remove {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 5px;
+        transition: color 0.2s;
+    }
+    
+    .competitor-remove:hover {
+        color: #ef4444;
+    }
+    
+    .tech-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: rgba(24, 163, 255, 0.15);
+        border: 1px solid var(--brand-blue);
+        border-radius: 8px;
+        color: var(--brand-blue);
+        font-weight: 500;
+    }
+    
+    .tech-badge svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .submit-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .checkbox-group input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--brand-teal);
+    }
+    
+    .checkbox-group label {
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+    
+    .create-btn {
+        padding: 16px 40px;
+        background: linear-gradient(135deg, var(--brand-teal) 0%, var(--brand-blue) 100%);
+        border: none;
+        border-radius: 12px;
+        color: var(--bg-dark);
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .create-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(46, 230, 168, 0.4);
+    }
+    
+    .create-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .success-message {
+        display: none;
+        background: rgba(46, 230, 168, 0.15);
+        border: 1px solid var(--brand-teal);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .success-message.show {
+        display: block;
+        animation: slideIn 0.4s ease-out;
+    }
+    
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .success-message h3 {
+        color: var(--brand-teal);
+        margin-bottom: 10px;
+    }
+    
+    .success-message p {
+        color: var(--text-secondary);
+        margin-bottom: 15px;
+    }
+    
+    .success-message a {
+        color: var(--brand-blue);
+        text-decoration: none;
+    }
+    
+    .success-message a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="page-header">
+    <h1>Business Onboarding</h1>
+    <p>Auto-discover business intelligence and onboard new clients in seconds</p>
+</div>
+
+<div id="successMessage" class="success-message">
+    <h3>Business Created Successfully</h3>
+    <p id="successText"></p>
+    <a href="#" id="viewBusinessLink">View Business Dashboard</a>
+</div>
+
+<div class="onboarding-container">
+    <div class="discovery-section">
+        <div class="discovery-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2v10l4.5 4.5"/>
+                <circle cx="12" cy="12" r="3" fill="currentColor"/>
+            </svg>
+            <div>
+                <h2>Auto-Discovery Intelligence</h2>
+                <p>Enter a website URL and let the system extract everything automatically</p>
+            </div>
+        </div>
+        
+        <div class="url-input-group">
+            <input type="text" id="discoveryUrl" placeholder="Enter website URL (e.g., admetalroofing.com)" autocomplete="off">
+            <button type="button" id="autoDetectBtn" class="auto-detect-btn" onclick="runAutoDiscovery()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 2v10l4.5 4.5"/>
+                </svg>
+                <span>Auto-Detect</span>
+            </button>
+        </div>
+        
+        <div id="techStackDisplay" style="display: none; margin-top: 15px;">
+            <span class="tech-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="4" y="4" width="16" height="16" rx="2"/>
+                    <path d="M9 9l6 6M15 9l-6 6"/>
+                </svg>
+                <span id="techStackText">WordPress</span>
+            </span>
+        </div>
+    </div>
+    
+    <form id="onboardingForm" onsubmit="return submitOnboarding(event)">
+        <div class="form-section" id="businessSection">
+            <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 21h18M5 21V7l7-4 7 4v14"/>
+                    <path d="M9 21v-4h6v4M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/>
+                </svg>
+                Business Information
+            </h3>
+            
+            <div class="form-grid">
+                <div class="form-group" id="nameField">
+                    <label for="businessName">Business Name</label>
+                    <input type="text" id="businessName" name="business_name" required placeholder="e.g., AD Metal Roofing">
+                </div>
+                
+                <div class="form-group" id="locationField">
+                    <label for="location">Location</label>
+                    <input type="text" id="location" name="location" placeholder="e.g., Morehead City, NC">
+                </div>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group" id="industryField">
+                    <label for="industry">Industry</label>
+                    <input type="text" id="industry" name="industry" placeholder="e.g., Roofing">
+                </div>
+                
+                <div class="form-group" id="websiteField">
+                    <label for="websiteUrl">Website URL</label>
+                    <input type="text" id="websiteUrl" name="website_url" required placeholder="e.g., https://admetalroofing.com">
+                </div>
+            </div>
+            
+            <div class="form-group" id="keywordsField">
+                <label for="keywords">Keywords / Services</label>
+                <input type="text" id="keywords" name="keywords" placeholder="e.g., metal roofing, roof installation, storm damage repair">
+                <small>Comma-separated list of main services or products</small>
+            </div>
+            
+            <input type="hidden" id="techStack" name="tech_stack" value="">
+        </div>
+        
+        <div class="form-section" id="competitorSection">
+            <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Discovered Competitors
+            </h3>
+            
+            <div id="competitorsList">
+                <div class="empty-state" style="padding: 30px;">
+                    <p style="color: var(--text-muted);">Run Auto-Detect to discover competitors</p>
+                </div>
+            </div>
+            
+            <textarea id="competitorsText" name="competitors" style="display: none;"></textarea>
+        </div>
+        
+        <div class="form-section active" id="submitSection">
+            <div class="submit-section">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="runInitialScan" name="run_initial_scan" checked>
+                    <label for="runInitialScan">Run initial intelligence scan after creation</label>
+                </div>
+                
+                <button type="submit" class="create-btn" id="createBtn" disabled>
+                    Create Business
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="scanning-overlay" id="scanningOverlay">
+    <div class="scanning-terminal">
+        <div class="scanning-header">
+            <div class="dots">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </div>
+            <span id="scanningUrl">Scanning target...</span>
+        </div>
+        <div class="scanning-body" id="scanningOutput">
+        </div>
+    </div>
+</div>
+
+<script>
+    let discoveredData = null;
+    
+    async function runAutoDiscovery() {
+        const urlInput = document.getElementById('discoveryUrl');
+        const url = urlInput.value.trim();
+        
+        if (!url) {
+            urlInput.focus();
+            urlInput.style.borderColor = '#ef4444';
+            setTimeout(() => urlInput.style.borderColor = '', 2000);
+            return;
+        }
+        
+        const btn = document.getElementById('autoDetectBtn');
+        btn.disabled = true;
+        btn.classList.add('scanning');
+        btn.querySelector('span').textContent = 'Scanning...';
+        
+        const overlay = document.getElementById('scanningOverlay');
+        const output = document.getElementById('scanningOutput');
+        document.getElementById('scanningUrl').textContent = url;
+        output.innerHTML = '';
+        overlay.classList.add('active');
+        
+        const lines = [
+            { text: '<span class="prompt">$</span> Initiating reconnaissance on ' + url, delay: 0, class: '' },
+            { text: 'Fetching HTML content...', delay: 500, class: 'info' },
+            { text: 'Analyzing page structure...', delay: 1000, class: '' },
+            { text: 'Detecting technology stack...', delay: 1500, class: 'info' },
+        ];
+        
+        for (const line of lines) {
+            await new Promise(r => setTimeout(r, line.delay || 300));
+            const div = document.createElement('div');
+            div.className = 'scan-line ' + line.class;
+            div.innerHTML = line.text;
+            output.appendChild(div);
+        }
+        
+        try {
+            const response = await fetch('/api/intel/auto-discover', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                discoveredData = data;
+                
+                const resultLines = [
+                    { text: 'Platform detected: <span class="data">' + data.tech_stack + '</span>', delay: 300, class: 'success' },
+                    { text: 'Business identified: <span class="data">' + (data.business_name || 'Analyzing...') + '</span>', delay: 500, class: 'success' },
+                    { text: 'Location found: <span class="data">' + (data.location || 'Unknown') + '</span>', delay: 700, class: 'success' },
+                    { text: 'Industry: <span class="data">' + (data.industry || 'General') + '</span>', delay: 900, class: 'success' },
+                    { text: 'Hunting for competitors...', delay: 1100, class: 'info' },
+                ];
+                
+                for (const line of resultLines) {
+                    await new Promise(r => setTimeout(r, line.delay || 300));
+                    const div = document.createElement('div');
+                    div.className = 'scan-line ' + line.class;
+                    div.innerHTML = line.text;
+                    output.appendChild(div);
+                }
+                
+                if (data.suggested_competitors && data.suggested_competitors.length > 0) {
+                    await new Promise(r => setTimeout(r, 500));
+                    const compDiv = document.createElement('div');
+                    compDiv.className = 'scan-line success';
+                    compDiv.innerHTML = 'Found <span class="data">' + data.suggested_competitors.length + '</span> competitor threats:';
+                    output.appendChild(compDiv);
+                    
+                    for (let i = 0; i < data.suggested_competitors.length; i++) {
+                        await new Promise(r => setTimeout(r, 300));
+                        const comp = data.suggested_competitors[i];
+                        const cDiv = document.createElement('div');
+                        cDiv.className = 'scan-line data';
+                        cDiv.innerHTML = '  ' + (i + 1) + '. ' + comp.domain;
+                        output.appendChild(cDiv);
+                    }
+                }
+                
+                await new Promise(r => setTimeout(r, 800));
+                const doneDiv = document.createElement('div');
+                doneDiv.className = 'scan-line success';
+                doneDiv.innerHTML = '<br><span class="prompt">$</span> Discovery complete. Populating form...';
+                output.appendChild(doneDiv);
+                
+                await new Promise(r => setTimeout(r, 1000));
+                overlay.classList.remove('active');
+                populateForm(data);
+                
+            } else {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'scan-line';
+                errorDiv.style.color = '#ef4444';
+                errorDiv.innerHTML = 'ERROR: ' + (data.error || 'Discovery failed');
+                output.appendChild(errorDiv);
+                
+                await new Promise(r => setTimeout(r, 2000));
+                overlay.classList.remove('active');
+            }
+            
+        } catch (error) {
+            console.error('Discovery error:', error);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'scan-line';
+            errorDiv.style.color = '#ef4444';
+            errorDiv.innerHTML = 'ERROR: Network request failed';
+            output.appendChild(errorDiv);
+            
+            await new Promise(r => setTimeout(r, 2000));
+            overlay.classList.remove('active');
+        }
+        
+        btn.disabled = false;
+        btn.classList.remove('scanning');
+        btn.querySelector('span').textContent = 'Auto-Detect';
+    }
+    
+    function populateForm(data) {
+        document.getElementById('businessSection').classList.add('active');
+        document.getElementById('competitorSection').classList.add('active');
+        
+        if (data.business_name) {
+            document.getElementById('businessName').value = data.business_name;
+            document.getElementById('nameField').classList.add('field-discovered');
+        }
+        
+        if (data.location) {
+            document.getElementById('location').value = data.location;
+            document.getElementById('locationField').classList.add('field-discovered');
+        }
+        
+        if (data.industry) {
+            document.getElementById('industry').value = data.industry;
+            document.getElementById('industryField').classList.add('field-discovered');
+        }
+        
+        document.getElementById('websiteUrl').value = data.url;
+        document.getElementById('websiteField').classList.add('field-discovered');
+        
+        if (data.keywords && data.keywords.length > 0) {
+            document.getElementById('keywords').value = data.keywords.join(', ');
+            document.getElementById('keywordsField').classList.add('field-discovered');
+        }
+        
+        if (data.tech_stack && data.tech_stack !== 'Unknown') {
+            document.getElementById('techStack').value = data.tech_stack;
+            document.getElementById('techStackText').textContent = data.tech_stack;
+            document.getElementById('techStackDisplay').style.display = 'block';
+        }
+        
+        renderCompetitors(data.suggested_competitors || []);
+        
+        document.getElementById('createBtn').disabled = false;
+    }
+    
+    function renderCompetitors(competitors) {
+        const container = document.getElementById('competitorsList');
+        
+        if (!competitors || competitors.length === 0) {
+            container.innerHTML = '<div class="empty-state" style="padding: 30px;"><p style="color: var(--text-muted);">No competitors discovered</p></div>';
+            document.getElementById('competitorsText').value = '';
+            return;
+        }
+        
+        let html = '';
+        const domains = [];
+        
+        competitors.forEach((comp, index) => {
+            domains.push(comp.url || comp.domain);
+            html += `
+                <div class="competitor-item" data-index="${index}">
+                    <div class="competitor-rank">${index + 1}</div>
+                    <div class="competitor-info">
+                        <div class="domain">${comp.domain}</div>
+                        <div class="title">${comp.title || ''}</div>
+                        <div class="snippet">${comp.snippet || ''}</div>
+                    </div>
+                    <button type="button" class="competitor-remove" onclick="removeCompetitor(${index})">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+        document.getElementById('competitorsText').value = domains.join('\n');
+    }
+    
+    function removeCompetitor(index) {
+        if (discoveredData && discoveredData.suggested_competitors) {
+            discoveredData.suggested_competitors.splice(index, 1);
+            renderCompetitors(discoveredData.suggested_competitors);
+        }
+    }
+    
+    async function submitOnboarding(event) {
+        event.preventDefault();
+        
+        const form = document.getElementById('onboardingForm');
+        const formData = new FormData(form);
+        
+        const createBtn = document.getElementById('createBtn');
+        createBtn.disabled = true;
+        createBtn.textContent = 'Creating...';
+        
+        try {
+            const response = await fetch('/admin/onboarding/create', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                document.getElementById('successText').textContent = data.message;
+                document.getElementById('viewBusinessLink').href = '/admin/business/' + data.business_id;
+                document.getElementById('successMessage').classList.add('show');
+                
+                form.reset();
+                discoveredData = null;
+                document.getElementById('businessSection').classList.remove('active');
+                document.getElementById('competitorSection').classList.remove('active');
+                document.querySelectorAll('.field-discovered').forEach(el => el.classList.remove('field-discovered'));
+                document.getElementById('techStackDisplay').style.display = 'none';
+                document.getElementById('competitorsList').innerHTML = '<div class="empty-state" style="padding: 30px;"><p style="color: var(--text-muted);">Run Auto-Detect to discover competitors</p></div>';
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                alert('Error: ' + (data.error || 'Failed to create business'));
+            }
+            
+        } catch (error) {
+            console.error('Submit error:', error);
+            alert('Network error. Please try again.');
+        }
+        
+        createBtn.disabled = false;
+        createBtn.textContent = 'Create Business';
+        
+        return false;
+    }
+    
+    document.getElementById('discoveryUrl').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            runAutoDiscovery();
+        }
+    });
+</script>
+{% endblock %}

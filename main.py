@@ -2726,6 +2726,142 @@ async def activate_submit(
 
 
 # =============================================================================
+# AUTO-DISCOVERY INTELLIGENCE API
+# =============================================================================
+
+@app.post("/api/intel/auto-discover")
+async def intel_auto_discover(request: Request):
+    """
+    Auto-Discovery endpoint - The "Magic Wand" for sales demos.
+    Takes a URL and returns complete business intelligence:
+    - Tech stack detection
+    - Business name and location extraction
+    - Industry classification
+    - Top 3 competitor discovery via Google Search
+    """
+    from services.auto_discovery import auto_discover
+    
+    user = get_current_user(request)
+    if not user or not user.is_admin:
+        return JSONResponse({"error": "Admin access required"}, status_code=403)
+    
+    try:
+        body = await request.json()
+        url = body.get("url", "").strip()
+    except:
+        return JSONResponse({"error": "Invalid request body"}, status_code=400)
+    
+    if not url:
+        return JSONResponse({"error": "URL is required"}, status_code=400)
+    
+    result = await auto_discover(url)
+    return JSONResponse(result)
+
+
+@app.get("/admin/onboarding")
+async def admin_onboarding_page(request: Request):
+    """
+    Admin page for onboarding new businesses with Auto-Discovery.
+    """
+    user = get_current_user(request)
+    if not user or not user.is_admin:
+        return RedirectResponse(url="/login", status_code=302)
+    
+    return templates.TemplateResponse(
+        "admin/onboarding.html",
+        {"request": request, "user": user}
+    )
+
+
+@app.post("/admin/onboarding/create")
+async def admin_onboarding_create(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    business_name: str = Form(...),
+    website_url: str = Form(...),
+    location: str = Form(""),
+    industry: str = Form(""),
+    tech_stack: str = Form(""),
+    competitors: str = Form(""),
+    keywords: str = Form(""),
+    run_initial_scan: bool = Form(False)
+):
+    """
+    Create a new business from the onboarding form and optionally run initial intelligence scan.
+    """
+    from services.sherlock_engine import is_sherlock_enabled
+    
+    user = get_current_user(request)
+    if not user or not user.is_admin:
+        return JSONResponse({"error": "Admin access required"}, status_code=403)
+    
+    db = get_db_session()
+    try:
+        normalized_url = website_url.strip()
+        if not normalized_url.startswith(("http://", "https://")):
+            normalized_url = f"https://{normalized_url}"
+        
+        existing = db.query(Business).filter(
+            Business.domains.contains(normalized_url.replace("https://", "").replace("http://", "").replace("www.", ""))
+        ).first()
+        
+        if existing:
+            return JSONResponse({
+                "success": False,
+                "error": f"Business already exists: {existing.name}",
+                "business_id": existing.id
+            }, status_code=400)
+        
+        business = Business(
+            name=business_name,
+            display_name=business_name,
+            domains=normalized_url.replace("https://", "").replace("http://", ""),
+            owner_user_id=user.id,
+            is_demo=False,
+            has_free_report=True,
+            industry=industry,
+            competitors=competitors
+        )
+        
+        db.add(business)
+        db.commit()
+        db.refresh(business)
+        
+        result = {
+            "success": True,
+            "business_id": business.id,
+            "business_name": business.name,
+            "message": f"Business '{business_name}' created successfully"
+        }
+        
+        if run_initial_scan and is_sherlock_enabled():
+            async def run_initial_intelligence():
+                from services.sherlock_engine import ingest_knowledge
+                try:
+                    ingest_knowledge(normalized_url, "client_site", business.id, user.id)
+                    
+                    if competitors:
+                        comp_list = [c.strip() for c in competitors.split("\n") if c.strip()]
+                        for comp_url in comp_list[:3]:
+                            if not comp_url.startswith(("http://", "https://")):
+                                comp_url = f"https://{comp_url}"
+                            ingest_knowledge(comp_url, "competitor_site", business.id, user.id)
+                except Exception as e:
+                    print(f"Initial intelligence scan error: {e}")
+            
+            background_tasks.add_task(run_initial_intelligence)
+            result["message"] += " - Intelligence scan started in background."
+        
+        return JSONResponse(result)
+        
+    except Exception as e:
+        db.rollback()
+        return JSONResponse({"error": str(e)}, status_code=500)
+    finally:
+        db.close()
+
+
+# =============================================================================
 # SHERLOCK SEMANTIC INTELLIGENCE API
 # =============================================================================
 

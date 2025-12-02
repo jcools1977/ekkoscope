@@ -484,7 +484,8 @@
             <nav>
                 <ul class="sidebar-nav">
                     <li><a href="/admin" class="{% if request.url.path == '/admin' %}active{% endif %}">Dashboard</a></li>
-                    <li><a href="/admin/businesses" class="{% if '/admin/business' in request.url.path %}active{% endif %}">Businesses</a></li>
+                    <li><a href="/admin/businesses" class="{% if '/admin/business' in request.url.path and '/onboarding' not in request.url.path %}active{% endif %}">Businesses</a></li>
+                    <li><a href="/admin/onboarding" class="{% if '/onboarding' in request.url.path %}active{% endif %}">Onboarding</a></li>
                     <li><a href="/" target="_blank">View Site</a></li>
                 </ul>
             </nav>
