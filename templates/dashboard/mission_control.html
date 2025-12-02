@@ -308,12 +308,12 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             backdrop-filter: blur(10px);
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 2000;
+            z-index: 99999;
         }
         
         .rescan-modal.active {
@@ -2680,8 +2680,7 @@ Instructions:
             }
         });
         
-        // Rescan functionality
-        const rescanBusinessId = {{ business.id }};
+        // Rescan functionality - uses businessId from strategist section
         let terminalLineDelay = 0;
         
         function addTerminalLine(text, className = '') {
@@ -2721,7 +2720,7 @@ Instructions:
             
             try {
                 const formData = new FormData();
-                formData.append('business_id', rescanBusinessId);
+                formData.append('business_id', businessId);
                 
                 const response = await fetch('/api/sherlock/rescan', {
                     method: 'POST',
