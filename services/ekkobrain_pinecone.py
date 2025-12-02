@@ -14,7 +14,8 @@ from .config import (
     PINECONE_INDEX_NAME, 
     PINECONE_ENABLED,
     EKKOBRAIN_EMBED_MODEL,
-    OPENAI_API_KEY
+    OPENAI_API_KEY,
+    PINECONE_NAMESPACES
 )
 
 logger = logging.getLogger(__name__)
@@ -81,12 +82,13 @@ def embed_text(text: str) -> Optional[List[float]]:
         return None
 
 
-def upsert_patterns(vectors: List[Dict[str, Any]]):
+def upsert_patterns(vectors: List[Dict[str, Any]], namespace: str = None):
     """
     Upsert pattern vectors into Pinecone.
     
     Args:
         vectors: List of dicts with {id, values, metadata}
+        namespace: Pinecone namespace (defaults to 'patterns' namespace)
     """
     if not PINECONE_ENABLED or index is None:
         return
@@ -94,9 +96,11 @@ def upsert_patterns(vectors: List[Dict[str, Any]]):
     if not vectors:
         return
     
+    ns = namespace or PINECONE_NAMESPACES.get("patterns", "audit-patterns")
+    
     try:
-        index.upsert(vectors=vectors)
-        logger.info("Upserted %d patterns to EkkoBrain", len(vectors))
+        index.upsert(vectors=vectors, namespace=ns)
+        logger.info("Upserted %d patterns to EkkoBrain (namespace: %s)", len(vectors), ns)
     except Exception as e:
         logger.warning("Failed to upsert EkkoBrain patterns: %s", e)
 
@@ -105,6 +109,7 @@ def search_patterns(
     query_text: str,
     top_k: int = 8,
     filter: Optional[Dict[str, Any]] = None,
+    namespace: str = None,
 ) -> List[Dict[str, Any]]:
     """
     Search for similar patterns in EkkoBrain.
@@ -113,12 +118,15 @@ def search_patterns(
         query_text: Text to find similar patterns for
         top_k: Maximum number of results
         filter: Optional metadata filter (e.g., {"industry": "roofing"})
+        namespace: Pinecone namespace (defaults to 'patterns' namespace)
     
     Returns:
         List of matches with {id, score, metadata}
     """
     if not PINECONE_ENABLED or index is None:
         return []
+    
+    ns = namespace or PINECONE_NAMESPACES.get("patterns", "audit-patterns")
     
     try:
         emb = embed_text(query_text)
@@ -130,6 +138,7 @@ def search_patterns(
             top_k=top_k,
             include_metadata=True,
             filter=filter,
+            namespace=ns,
         )
         
         return [

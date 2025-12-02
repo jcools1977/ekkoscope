@@ -27,6 +27,14 @@ PINECONE_ENABLED = bool(PINECONE_API_KEY)
 EKKOBRAIN_EMBED_MODEL = os.getenv("EKKOBRAIN_EMBED_MODEL", "text-embedding-3-large")
 EKKOBRAIN_EMBED_DIMENSIONS = 3072
 
+PINECONE_NAMESPACES = {
+    "business": "business-content",
+    "competitor": "competitor-content", 
+    "patterns": "audit-patterns",
+    "missions": "gap-missions",
+    "insights": "strategic-insights"
+}
+
 
 def is_perplexity_enabled() -> bool:
     """Check if Perplexity API is configured and enabled."""

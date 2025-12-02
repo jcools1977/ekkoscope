@@ -21,7 +21,11 @@ from bs4 import BeautifulSoup
 from .config import (
     OPENAI_API_KEY,
     PINECONE_API_KEY,
-    PINECONE_ENABLED
+    PINECONE_ENABLED,
+    PINECONE_INDEX_NAME,
+    EKKOBRAIN_EMBED_MODEL,
+    EKKOBRAIN_EMBED_DIMENSIONS,
+    PINECONE_NAMESPACES
 )
 from .database import (
     SessionLocal,
@@ -33,17 +37,10 @@ from .database import (
 
 logger = logging.getLogger(__name__)
 
-SHERLOCK_INDEX_NAME = os.getenv("SHERLOCK_INDEX_NAME", "ekkobrain")
-SHERLOCK_EMBED_MODEL = "text-embedding-3-large"
-SHERLOCK_EMBED_DIMENSIONS = 3072
-
-SHERLOCK_NAMESPACES = {
-    "business": "business-content",
-    "competitor": "competitor-content", 
-    "patterns": "audit-patterns",
-    "missions": "gap-missions",
-    "insights": "strategic-insights"
-}
+SHERLOCK_INDEX_NAME = PINECONE_INDEX_NAME
+SHERLOCK_EMBED_MODEL = EKKOBRAIN_EMBED_MODEL
+SHERLOCK_EMBED_DIMENSIONS = EKKOBRAIN_EMBED_DIMENSIONS
+SHERLOCK_NAMESPACES = PINECONE_NAMESPACES
 
 pc = None
 sherlock_index = None
