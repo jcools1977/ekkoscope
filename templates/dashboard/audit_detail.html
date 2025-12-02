@@ -505,12 +505,22 @@
         
         {% if audit.pdf_path %}
         <div class="card">
-            <h2 class="card-title"><span class="section-icon"><svg viewBox="0 0 60 60" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="dlGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#2EE6A8"/><stop offset="100%" style="stop-color:#00E5A0"/></linearGradient></defs><circle cx="30" cy="30" r="24" fill="none" stroke="url(#dlGrad)" stroke-width="2" opacity="0.3"/><circle cx="30" cy="30" r="16" fill="none" stroke="url(#dlGrad)" stroke-width="1.5" opacity="0.4"/><circle cx="30" cy="30" r="3" fill="url(#dlGrad)"/><path d="M 8 8 A 30 30 0 0 1 52 8" fill="none" stroke="url(#dlGrad)" stroke-width="2" stroke-linecap="round"/></svg></span> Download Report</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Get your full PDF report with detailed insights and recommendations.</p>
-            <a href="/admin/audit/{{ audit.id }}/download" class="download-btn">
-                <svg class="btn-logo" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="btnGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#2EE6A8"/><stop offset="100%" style="stop-color:#00E5A0"/></linearGradient></defs><circle cx="30" cy="30" r="24" fill="none" stroke="url(#btnGrad)" stroke-width="2" opacity="0.4"/><circle cx="30" cy="30" r="16" fill="none" stroke="url(#btnGrad)" stroke-width="1.5" opacity="0.5"/><circle cx="30" cy="30" r="8" fill="none" stroke="url(#btnGrad)" stroke-width="1" opacity="0.6"/><path d="M 30 30 L 30 6 A 24 24 0 0 1 51 42 Z" fill="url(#btnGrad)" opacity="0.2"/><circle cx="30" cy="30" r="4" fill="url(#btnGrad)"/></svg>
-                Download PDF
-            </a>
+            <h2 class="card-title"><span class="section-icon"><svg viewBox="0 0 60 60" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="dlGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#2EE6A8"/><stop offset="100%" style="stop-color:#00E5A0"/></linearGradient></defs><circle cx="30" cy="30" r="24" fill="none" stroke="url(#dlGrad)" stroke-width="2" opacity="0.3"/><circle cx="30" cy="30" r="16" fill="none" stroke="url(#dlGrad)" stroke-width="1.5" opacity="0.4"/><circle cx="30" cy="30" r="3" fill="url(#dlGrad)"/><path d="M 8 8 A 30 30 0 0 1 52 8" fill="none" stroke="url(#dlGrad)" stroke-width="2" stroke-linecap="round"/></svg></span> Report Actions</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">View interactive analytics or download your full PDF report.</p>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a href="/dashboard/business/{{ business.id }}/audit/{{ audit.id }}/analytics" class="download-btn" style="background: linear-gradient(135deg, #00e5ff, #7c3aed);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"/>
+                        <line x1="12" y1="20" x2="12" y2="4"/>
+                        <line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                    View Analytics Dashboard
+                </a>
+                <a href="/admin/audit/{{ audit.id }}/download" class="download-btn">
+                    <svg class="btn-logo" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="btnGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#2EE6A8"/><stop offset="100%" style="stop-color:#00E5A0"/></linearGradient></defs><circle cx="30" cy="30" r="24" fill="none" stroke="url(#btnGrad)" stroke-width="2" opacity="0.4"/><circle cx="30" cy="30" r="16" fill="none" stroke="url(#btnGrad)" stroke-width="1.5" opacity="0.5"/><circle cx="30" cy="30" r="8" fill="none" stroke="url(#btnGrad)" stroke-width="1" opacity="0.6"/><path d="M 30 30 L 30 6 A 24 24 0 0 1 51 42 Z" fill="url(#btnGrad)" opacity="0.2"/><circle cx="30" cy="30" r="4" fill="url(#btnGrad)"/></svg>
+                    Download PDF
+                </a>
+            </div>
         </div>
         {% endif %}
         

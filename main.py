@@ -466,6 +466,79 @@ async def dashboard_audit_detail(request: Request, business_id: int, audit_id: i
         db.close()
 
 
+@app.get("/dashboard/business/{business_id}/audit/{audit_id}/analytics", response_class=HTMLResponse)
+async def dashboard_audit_analytics(request: Request, business_id: int, audit_id: int):
+    """View detailed analytics dashboard for an audit."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    
+    db = get_db_session()
+    try:
+        if user.is_admin:
+            business = db.query(Business).filter(Business.id == business_id).first()
+        else:
+            business = db.query(Business).filter(
+                Business.id == business_id,
+                Business.owner_user_id == user.id
+            ).first()
+        
+        if not business:
+            return RedirectResponse(url="/dashboard", status_code=302)
+        
+        audit = db.query(Audit).filter(Audit.id == audit_id, Audit.business_id == business_id).first()
+        if not audit:
+            return RedirectResponse(url=f"/dashboard/business/{business_id}", status_code=302)
+        
+        if audit.status != "completed":
+            return RedirectResponse(url=f"/dashboard/business/{business_id}/audit/{audit_id}", status_code=302)
+        
+        visibility_summary = audit.get_visibility_summary() or {}
+        
+        summary = {
+            "total_queries": visibility_summary.get("total_queries", 0),
+            "overall_target_found": visibility_summary.get("overall_target_found", 0),
+            "overall_target_percent": visibility_summary.get("overall_target_percent", 0),
+            "provider_stats": visibility_summary.get("provider_stats", {}),
+            "top_competitors": visibility_summary.get("top_competitors", []),
+            "intent_breakdown": visibility_summary.get("intent_breakdown", {})
+        }
+        
+        queries = []
+        for aq in audit.audit_queries:
+            providers_list = []
+            for vr in aq.visibility_results:
+                target_found = bool(vr.brand_name and business.name.lower() in vr.brand_name.lower())
+                providers_list.append({
+                    "provider": vr.provider,
+                    "target_found": target_found,
+                    "brand_name": vr.brand_name,
+                    "rank": vr.rank
+                })
+            target_found_count = sum(1 for p in providers_list if p.get("target_found"))
+            query_obj = type('Query', (), {
+                "query": aq.query_text,
+                "intent": aq.intent,
+                "providers": providers_list,
+                "target_found_count": target_found_count
+            })()
+            queries.append(query_obj)
+        
+        return templates.TemplateResponse(
+            "dashboard/report_analytics.html",
+            {
+                "request": request,
+                "user": user,
+                "business": business,
+                "audit": audit,
+                "summary": summary,
+                "queries": queries
+            }
+        )
+    finally:
+        db.close()
+
+
 @app.get("/dashboard/business/{business_id}/edit", response_class=HTMLResponse)
 async def dashboard_business_edit_page(request: Request, business_id: int):
     """Show edit form for a business."""
