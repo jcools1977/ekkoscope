@@ -578,8 +578,9 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
             from collections import Counter
             competitor_counter = Counter()
             business_aliases = [business.name.lower()]
-            if business.brand_aliases:
-                business_aliases.extend([a.strip().lower() for a in business.brand_aliases.split(',') if a.strip()])
+            brand_aliases = getattr(business, 'brand_aliases', None)
+            if brand_aliases:
+                business_aliases.extend([a.strip().lower() for a in brand_aliases.split(',') if a.strip()])
             
             for aq in audit.audit_queries:
                 for vr in aq.visibility_results:
