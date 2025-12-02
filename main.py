@@ -1777,7 +1777,7 @@ async def admin_demo_pdf(request: Request):
 
 @app.get("/admin/businesses", response_class=HTMLResponse)
 async def admin_businesses(request: Request):
-    """List all businesses."""
+    """List all businesses with visibility monitoring."""
     if not is_authenticated(request):
         return RedirectResponse(url="/admin/login", status_code=302)
     
@@ -1791,6 +1791,22 @@ async def admin_businesses(request: Request):
         
         business_data = []
         for biz in businesses:
+            latest_audit = None
+            visibility_score = None
+            last_scan = None
+            
+            completed_audits = [a for a in biz.audits if a.status == 'done']
+            if completed_audits:
+                latest_audit = max(completed_audits, key=lambda a: a.completed_at or a.created_at)
+                last_scan = latest_audit.completed_at or latest_audit.created_at
+                
+                if latest_audit.visibility_summary:
+                    try:
+                        summary = latest_audit.visibility_summary if isinstance(latest_audit.visibility_summary, dict) else {}
+                        visibility_score = summary.get('visibility_score', summary.get('overall_visibility'))
+                    except:
+                        pass
+            
             business_data.append({
                 "id": biz.id,
                 "name": biz.name,
@@ -1800,7 +1816,10 @@ async def admin_businesses(request: Request):
                 "subscription_active": biz.subscription_active,
                 "plan": biz.plan or "snapshot",
                 "created_at": biz.created_at,
-                "audit_count": len(biz.audits)
+                "audit_count": len(biz.audits),
+                "visibility_score": visibility_score,
+                "last_scan": last_scan,
+                "autofix_enabled": biz.autofix_enabled if hasattr(biz, 'autofix_enabled') else False
             })
         
         return templates.TemplateResponse(

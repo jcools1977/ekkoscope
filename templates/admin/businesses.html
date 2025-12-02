@@ -29,6 +29,46 @@
     .plan-ongoing { background: rgba(46, 230, 168, 0.2); color: var(--brand-teal); }
     .sub-active { background: rgba(46, 230, 168, 0.15); color: var(--brand-teal); border: 1px solid rgba(46, 230, 168, 0.3); }
     .sub-inactive { background: rgba(100, 116, 139, 0.1); color: #64748b; }
+    
+    .visibility-score {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    .visibility-score .score-value {
+        min-width: 45px;
+        text-align: right;
+    }
+    .visibility-score.critical { color: #ff4444; }
+    .visibility-score.warning { color: #ffaa00; }
+    .visibility-score.good { color: #00E5A0; }
+    .visibility-bar {
+        width: 60px;
+        height: 6px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    .visibility-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s ease;
+    }
+    .visibility-bar-fill.critical { background: linear-gradient(90deg, #ff4444, #ff6666); }
+    .visibility-bar-fill.warning { background: linear-gradient(90deg, #ffaa00, #ffcc44); }
+    .visibility-bar-fill.good { background: linear-gradient(90deg, #00E5A0, #00ffba); }
+    .autofix-badge {
+        display: inline-block;
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        background: rgba(138, 43, 226, 0.2);
+        color: #a855f7;
+        border: 1px solid rgba(138, 43, 226, 0.3);
+    }
 </style>
 
 <div class="page-header">
@@ -63,12 +103,11 @@
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Domain</th>
+                <th>AI Visibility</th>
+                <th>Last Scan</th>
                 <th>Plan</th>
-                <th>Subscription</th>
-                <th>Source</th>
+                <th>Status</th>
                 <th>Audits</th>
-                <th>Created</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -76,10 +115,45 @@
             {% for biz in businesses %}
             <tr data-subscription="{{ 'active' if biz.subscription_active else 'inactive' }}" 
                 data-plan="{{ biz.plan or 'snapshot' }}"
-                data-source="{{ biz.source }}">
-                <td><a href="/admin/business/{{ biz.id }}">{{ biz.name }}</a></td>
-                <td>{{ biz.primary_domain }}</td>
-                <td><span class="plan-badge plan-{{ biz.plan or 'snapshot' }}">{{ biz.plan or 'snapshot' }}</span></td>
+                data-source="{{ biz.source }}"
+                data-visibility="{{ biz.visibility_score or 0 }}">
+                <td>
+                    <a href="/admin/business/{{ biz.id }}" style="font-weight: 600;">{{ biz.name }}</a>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ biz.primary_domain }}</div>
+                </td>
+                <td>
+                    {% if biz.visibility_score is not none %}
+                        {% set score = biz.visibility_score|int %}
+                        {% if score < 20 %}
+                            {% set level = 'critical' %}
+                        {% elif score < 50 %}
+                            {% set level = 'warning' %}
+                        {% else %}
+                            {% set level = 'good' %}
+                        {% endif %}
+                        <div class="visibility-score {{ level }}">
+                            <span class="score-value">{{ score }}%</span>
+                            <div class="visibility-bar">
+                                <div class="visibility-bar-fill {{ level }}" style="width: {{ score }}%;"></div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <span style="color: var(--text-muted);">No scan</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if biz.last_scan %}
+                        {{ biz.last_scan.strftime('%b %d, %Y') }}
+                    {% else %}
+                        <span style="color: var(--text-muted);">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="plan-badge plan-{{ biz.plan or 'snapshot' }}">{{ biz.plan or 'snapshot' }}</span>
+                    {% if biz.autofix_enabled %}
+                        <span class="autofix-badge">AUTO-FIX</span>
+                    {% endif %}
+                </td>
                 <td>
                     {% if biz.subscription_active %}
                     <span class="plan-badge sub-active">Active</span>
@@ -87,10 +161,8 @@
                     <span class="plan-badge sub-inactive">-</span>
                     {% endif %}
                 </td>
-                <td><span class="status-badge {% if biz.source == 'admin' %}status-done{% else %}status-pending{% endif %}">{{ biz.source }}</span></td>
                 <td>{{ biz.audit_count }}</td>
-                <td>{{ biz.created_at.strftime('%Y-%m-%d') if biz.created_at else '-' }}</td>
-                <td><a href="/admin/business/{{ biz.id }}">View</a></td>
+                <td><a href="/admin/business/{{ biz.id }}" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">View</a></td>
             </tr>
             {% endfor %}
         </tbody>
