@@ -283,6 +283,21 @@
             25%, 75% { opacity: 0.5; }
         }
         
+        .error-404-text {
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 0.65rem;
+            color: var(--danger-red);
+            text-shadow: 0 0 8px rgba(255, 51, 51, 0.8), 0 0 15px rgba(255, 51, 51, 0.5);
+            margin-top: 0.25rem;
+            letter-spacing: 1px;
+            animation: subtle-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes subtle-pulse {
+            0%, 100% { opacity: 0.9; }
+            50% { opacity: 0.6; }
+        }
+        
         /* Fix Preview Modal Styles */
         .fix-preview-modal {
             position: fixed;
@@ -535,6 +550,13 @@
         .paywall-option-price {
             font-size: 0.75rem;
             opacity: 0.8;
+        }
+        
+        .paywall-option-subtext {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            margin-top: 0.25rem;
+            font-weight: 400;
         }
         
         .paywall-dismiss {
@@ -1513,6 +1535,7 @@
                 <div class="gauge-status {% if visibility_score < 20 %}status-critical{% elif visibility_score < 50 %}status-warning{% else %}status-nominal{% endif %}">
                     {% if visibility_score == 0 %}
                     SIGNAL LOST
+                    <div class="error-404-text">ERROR 404: YOUR BUSINESS IS INVISIBLE TO AI</div>
                     {% elif visibility_score < 20 %}
                     Critical: Invisible to AI
                     {% elif visibility_score < 50 %}
@@ -1898,23 +1921,19 @@
                 <div class="loading-steps">
                     <div class="loading-step" id="step1">
                         <span class="step-icon">○</span>
-                        <span>Analyzing query intent...</span>
+                        <span>Analyzing Search Intent...</span>
                     </div>
                     <div class="loading-step" id="step2">
                         <span class="step-icon">○</span>
-                        <span>Drafting H1 header...</span>
+                        <span>Drafting H1 Headers & Meta Tags...</span>
                     </div>
                     <div class="loading-step" id="step3">
                         <span class="step-icon">○</span>
-                        <span>Generating page content...</span>
+                        <span>Writing Local Schema Markup...</span>
                     </div>
                     <div class="loading-step" id="step4">
                         <span class="step-icon">○</span>
-                        <span>Optimizing meta tags...</span>
-                    </div>
-                    <div class="loading-step" id="step5">
-                        <span class="step-icon">○</span>
-                        <span>Building schema markup...</span>
+                        <span>Finalizing Blueprints...</span>
                     </div>
                 </div>
             </div>
@@ -1968,8 +1987,8 @@
                                 <div class="paywall-option-price">$1,188/mo - Fix everything, every month</div>
                             </a>
                             <a href="/pricing" class="paywall-option secondary">
-                                <div class="paywall-option-title">Tactical Strike</div>
-                                <div class="paywall-option-price">$297 one-time - Unlock just this blueprint</div>
+                                <div class="paywall-option-title">Unlock This Fix Only ($297)</div>
+                                <div class="paywall-option-subtext">One-time purchase. No subscription.</div>
                             </a>
                         </div>
                         
@@ -2247,8 +2266,8 @@
             previewStage.classList.remove('active');
             loadingBar.style.width = '0%';
             
-            // Reset steps
-            for (let i = 1; i <= 5; i++) {
+            // Reset steps (4 steps now)
+            for (let i = 1; i <= 4; i++) {
                 const step = document.getElementById('step' + i);
                 step.classList.remove('active', 'complete');
                 step.querySelector('.step-icon').textContent = '○';
@@ -2266,13 +2285,16 @@
             // Show modal
             modal.classList.add('active');
             
-            // Animated loading sequence
+            // Labor Illusion: 4-second loading sequence (4000ms total)
+            // Step 1: 0-1000ms "Analyzing Search Intent..."
+            // Step 2: 1000-2000ms "Drafting H1 Headers & Meta Tags..."
+            // Step 3: 2000-3000ms "Writing Local Schema Markup..."
+            // Step 4: 3000-4000ms "Finalizing Blueprints..."
             const steps = [
-                { step: 1, progress: 20, delay: 400 },
-                { step: 2, progress: 40, delay: 800 },
-                { step: 3, progress: 60, delay: 1200 },
-                { step: 4, progress: 80, delay: 1600 },
-                { step: 5, progress: 100, delay: 2000 }
+                { step: 1, progress: 25, delay: 0 },
+                { step: 2, progress: 50, delay: 1000 },
+                { step: 3, progress: 75, delay: 2000 },
+                { step: 4, progress: 100, delay: 3000 }
             ];
             
             steps.forEach(({ step, progress, delay }) => {
@@ -2293,19 +2315,19 @@
                 }, delay);
             });
             
-            // Complete final step and show preview
+            // Complete final step and show preview after 4 seconds
             setTimeout(() => {
-                const step5 = document.getElementById('step5');
-                step5.classList.remove('active');
-                step5.classList.add('complete');
-                step5.querySelector('.step-icon').textContent = '✓';
+                const step4 = document.getElementById('step4');
+                step4.classList.remove('active');
+                step4.classList.add('complete');
+                step4.querySelector('.step-icon').textContent = '✓';
                 
                 // Transition to preview
                 setTimeout(() => {
                     loadingStage.style.display = 'none';
                     previewStage.classList.add('active');
                 }, 300);
-            }, 2400);
+            }, 4000);
         }
         
         function closeFixPreview() {
