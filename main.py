@@ -1478,8 +1478,13 @@ async def checkout_autofix(request: Request):
         return RedirectResponse(url="/pricing?error=beta_admin_only", status_code=302)
     
     try:
-        await load_stripe_config()
+        config = await load_stripe_config()
         stripe_client = get_stripe_client()
+        
+        autofix_price_id = config.price_ekkobrain_monthly
+        if not autofix_price_id:
+            print("ERROR: STRIPE_PRICE_AUTOFIX_1188 not configured")
+            return RedirectResponse(url="/pricing?error=price_not_configured", status_code=302)
         
         domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
         if not domain:
@@ -1494,15 +1499,7 @@ async def checkout_autofix(request: Request):
         session = stripe_client.checkout.Session.create(
             mode="subscription",
             line_items=[{
-                "price_data": {
-                    "currency": "usd",
-                    "unit_amount": 118800,
-                    "recurring": {"interval": "month"},
-                    "product_data": {
-                        "name": "EkkoScope Auto-Fix",
-                        "description": "Bi-weekly reports + 4 AI agents auto-generate fixes"
-                    }
-                },
+                "price": autofix_price_id,
                 "quantity": 1
             }],
             success_url=success_url,
@@ -1539,8 +1536,13 @@ async def dashboard_checkout_autofix(request: Request, business_id: int):
         if not business:
             return RedirectResponse(url="/dashboard", status_code=302)
         
-        await load_stripe_config()
+        config = await load_stripe_config()
         stripe_client = get_stripe_client()
+        
+        autofix_price_id = config.price_ekkobrain_monthly
+        if not autofix_price_id:
+            print("ERROR: STRIPE_PRICE_AUTOFIX_1188 not configured")
+            return RedirectResponse(url=f"/dashboard/business/{business.id}?error=price_not_configured", status_code=302)
         
         domain = os.getenv("REPLIT_DEV_DOMAIN") or os.getenv("REPLIT_DOMAINS", "").split(",")[0]
         if not domain:
@@ -1555,15 +1557,7 @@ async def dashboard_checkout_autofix(request: Request, business_id: int):
         session = stripe_client.checkout.Session.create(
             mode="subscription",
             line_items=[{
-                "price_data": {
-                    "currency": "usd",
-                    "unit_amount": 118800,
-                    "recurring": {"interval": "month"},
-                    "product_data": {
-                        "name": "EkkoScope Auto-Fix",
-                        "description": f"Bi-weekly reports + 4 AI agents for {business.name}"
-                    }
-                },
+                "price": autofix_price_id,
                 "quantity": 1
             }],
             success_url=success_url,
