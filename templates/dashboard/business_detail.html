@@ -47,6 +47,51 @@
             font-weight: 600;
         }
         
+        /* Customer Preview Mode */
+        .preview-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.75rem;
+            background: rgba(255, 170, 0, 0.15);
+            border: 1px solid rgba(255, 170, 0, 0.4);
+            border-radius: 6px;
+            color: #ffaa00;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .preview-toggle:hover {
+            background: rgba(255, 170, 0, 0.25);
+            border-color: #ffaa00;
+        }
+        .preview-toggle.active {
+            background: rgba(255, 170, 0, 0.3);
+            border-color: #ffaa00;
+            box-shadow: 0 0 15px rgba(255, 170, 0, 0.3);
+        }
+        .preview-toggle svg {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .preview-banner {
+            display: none;
+            background: linear-gradient(90deg, rgba(255, 170, 0, 0.2), rgba(255, 170, 0, 0.1), rgba(255, 170, 0, 0.2));
+            border-bottom: 1px solid rgba(255, 170, 0, 0.4);
+            padding: 0.5rem 1rem;
+            text-align: center;
+            color: #ffaa00;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        body.customer-preview .preview-banner { display: block; }
+        body.customer-preview .admin-only { display: none !important; }
+        body.customer-preview .customer-only { display: block !important; }
+        body.customer-preview .admin-badge { display: none !important; }
+        .customer-only { display: none; }
+        
         .logout-btn {
             padding: 0.5rem 1rem;
             background: transparent;
@@ -707,6 +752,15 @@
             <div class="overlay-timer" style="margin-top: 1rem;">Loading results...</div>
         </div>
     </div>
+    
+    {% if user.is_admin %}
+    <div class="preview-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; display: inline; vertical-align: middle; margin-right: 6px;">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+        CUSTOMER PREVIEW MODE - You are viewing this page as a customer would see it
+    </div>
+    {% endif %}
 
     <nav class="dashboard-nav">
         <a href="/dashboard" class="nav-logo">
@@ -745,7 +799,7 @@
                     Edit Profile
                 </a>
                 {% if user.is_admin %}
-                <form action="/dashboard/business/{{ business.id }}/run-audit" method="post" style="display:inline;" id="auditForm">
+                <form action="/dashboard/business/{{ business.id }}/run-audit" method="post" style="display:inline;" id="auditForm" class="admin-only">
                     <button type="submit" class="radar-button" id="radarBtn">
                         <svg class="radar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
                             <defs>
@@ -776,12 +830,43 @@
                         <span class="radar-loading-text">Running Audit...</span>
                     </button>
                 </form>
-                <a href="/admin/business/{{ business.id }}" class="admin-link">
+                <a href="/admin/business/{{ business.id }}" class="admin-link admin-only">
                     Admin View
                 </a>
+                <button class="preview-toggle" id="previewToggle" onclick="toggleCustomerPreview()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <span id="previewToggleText">Preview as Customer</span>
+                </button>
                 {% endif %}
             </div>
         </div>
+        
+        {% if user.is_admin %}
+        <div class="subscription-status customer-only {{ 'active' if business.subscription_active else '' }}">
+            <div class="subscription-header">
+                <div>
+                    <span class="subscription-badge {{ 'active' if business.subscription_active else 'inactive' }}">
+                        {% if business.subscription_active %}
+                        Active Subscription
+                        {% else %}
+                        No Subscription
+                        {% endif %}
+                    </span>
+                    {% if business.ekkobrain_access %}
+                    <span class="ekkobrain-badge">EkkoBrain</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if not business.subscription_active %}
+            <div class="subscription-details" style="margin-top: 1rem;">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">Get ongoing AI visibility monitoring and recommendations.</p>
+                <a href="/dashboard/business/{{ business.id }}/checkout/continuous" class="btn btn-primary">Upgrade to Continuous Monitoring</a>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
         
         {% if not user.is_admin %}
         <div class="subscription-status {{ 'active' if business.subscription_active else '' }}">
@@ -878,7 +963,7 @@
                     {% endif %}
                     <div class="audit-channel">Channel: {{ audit.channel | replace('_', ' ') | title }}</div>
                 </a>
-                <div class="audit-actions">
+                <div class="audit-actions admin-only">
                     {% if audit.status in ['running', 'pending'] %}
                     <form method="POST" action="/dashboard/business/{{ business.id }}/audit/{{ audit.id }}/stop" style="display:inline;" onsubmit="return confirm('Stop this running audit?');">
                         <button type="submit" class="btn-stop">Stop</button>
@@ -1060,6 +1145,34 @@
             showOverlay({{ running_audit.id }});
         });
         {% endif %}
+        
+        function toggleCustomerPreview() {
+            const body = document.body;
+            const toggle = document.getElementById('previewToggle');
+            const toggleText = document.getElementById('previewToggleText');
+            
+            if (body.classList.contains('customer-preview')) {
+                body.classList.remove('customer-preview');
+                toggle.classList.remove('active');
+                toggleText.textContent = 'Preview as Customer';
+                sessionStorage.removeItem('customerPreview');
+            } else {
+                body.classList.add('customer-preview');
+                toggle.classList.add('active');
+                toggleText.textContent = 'Exit Preview';
+                sessionStorage.setItem('customerPreview', 'true');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            if (sessionStorage.getItem('customerPreview') === 'true') {
+                document.body.classList.add('customer-preview');
+                const toggle = document.getElementById('previewToggle');
+                const toggleText = document.getElementById('previewToggleText');
+                if (toggle) toggle.classList.add('active');
+                if (toggleText) toggleText.textContent = 'Exit Preview';
+            }
+        });
     </script>
 </body>
 </html>
