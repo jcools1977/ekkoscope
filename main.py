@@ -579,7 +579,6 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
         provider_stats = visibility_summary.get("provider_stats", {})
         
         raw_competitors = visibility_summary.get("top_competitors", []) or []
-        logger.info("[MISSION] Initial raw_competitors from summary: %s", len(raw_competitors))
         
         if not raw_competitors:
             from collections import Counter
@@ -588,8 +587,6 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
             brand_aliases = getattr(business, 'brand_aliases', None)
             if brand_aliases:
                 business_aliases.extend([a.strip().lower() for a in brand_aliases.split(',') if a.strip()])
-            
-            logger.info("[MISSION] Building competitors from audit queries. Aliases: %s", business_aliases)
             
             for aq in audit.audit_queries:
                 for vr in aq.visibility_results:
@@ -600,7 +597,6 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
                             competitor_counter[vr.brand_name] += 1
             
             raw_competitors = [{"name": name, "count": count} for name, count in competitor_counter.most_common(15)]
-            logger.info("[MISSION] Built %d competitors from queries: %s", len(raw_competitors), [c['name'] for c in raw_competitors[:5]])
         
         competitors = []
         total_competitor_mentions = sum(c.get("count", 0) for c in raw_competitors) if raw_competitors else 0
@@ -732,10 +728,6 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
         lost_leads_per_month = int((visibility_gap / 100) * base_monthly_inquiries)
         monthly_revenue_leak = lost_leads_per_month * avg_job_value
         hourly_revenue_leak = round(monthly_revenue_leak / 720, 2)
-        
-        logger.info("[REVENUE CALC] Business: %s, Industry: '%s', Type: '%s'", business.name, industry, business_type)
-        logger.info("[REVENUE CALC] avg_job_value: %s, visibility_gap: %s, base_inquiries: %s", avg_job_value, visibility_gap, base_monthly_inquiries)
-        logger.info("[REVENUE CALC] lost_leads: %s, monthly_leak: %s, hourly_leak: %s", lost_leads_per_month, monthly_revenue_leak, hourly_revenue_leak)
         
         return templates.TemplateResponse(
             "dashboard/mission_control.html",
