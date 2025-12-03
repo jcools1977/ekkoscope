@@ -48,10 +48,6 @@ localPort = 37271
 externalPort = 8000
 
 [[ports]]
-localPort = 38401
-externalPort = 8008
-
-[[ports]]
 localPort = 38529
 externalPort = 3000
 
@@ -82,15 +78,10 @@ externalPort = 4200
 [userenv]
 
 [userenv.shared]
-STRIPE_PRICE_SNAPSHOT = "price_1SXrky49IDZUQDseBmZoKXMm"
-STRIPE_PRICE_ONGOING_SETUP = "price_1SXrky49IDZUQDseCIr8f7XS"
-STRIPE_PRICE_ONGOING_MONTHLY = "price_1SXrky49IDZUQDsel3bvvUUd"
 ADMIN_EMAILS = "john@an2b.com"
-STRIPE_PRICE_EKKOBRAIN_MONTHLY = "price_1SYnD3BB4Ktzr0deYAfBA8TX"
-STRIPE_PRICE_TRIAL_490 = "price_1SZEPaBB4Ktzr0deAsoJXFgu"
 STRIPE_PRICE_REPORT_490 = "price_1SZEen49IDZUQDseISHGUM0q"
-STRIPE_PRICE_AGENTIC_990 = "price_1SZEeo49IDZUQDseR9v5tnNc"
 STRIPE_PRICE_CONTINUOUS_290 = "price_1SZEm249IDZUQDsehNuH5VUc"
+STRIPE_PRICE_AUTOFIX_1188 = "price_1SaIYP49IDZUQDseVPcGaabY"
 
 [deployment]
 deploymentTarget = "autoscale"
