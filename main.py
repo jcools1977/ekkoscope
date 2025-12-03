@@ -723,9 +723,18 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
         if top_threat_dominance > 0:
             visibility_gap = max(visibility_gap, top_threat_dominance)
         
-        base_monthly_inquiries = 60 if avg_job_value < 200 else (30 if avg_job_value < 1000 else 15)
+        if avg_job_value < 200:
+            base_monthly_inquiries = 120
+        elif avg_job_value < 500:
+            base_monthly_inquiries = 80
+        elif avg_job_value < 1000:
+            base_monthly_inquiries = 60
+        elif avg_job_value < 5000:
+            base_monthly_inquiries = 30
+        else:
+            base_monthly_inquiries = 15
         
-        lost_leads_per_month = int((visibility_gap / 100) * base_monthly_inquiries)
+        lost_leads_per_month = max(1, round((visibility_gap / 100) * base_monthly_inquiries))
         monthly_revenue_leak = lost_leads_per_month * avg_job_value
         hourly_revenue_leak = round(monthly_revenue_leak / 720, 2)
         
