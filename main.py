@@ -672,6 +672,8 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
         top_competitor = competitors[0] if competitors else None
         
         industry = (business.industry or "").lower()
+        business_type = (business.business_type or "").lower()
+        
         industry_avg_job_values = {
             "plumbing": 450,
             "hvac": 800,
@@ -689,21 +691,38 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
             "financial": 3000,
             "restaurant": 35,
             "retail": 75,
-            "ecommerce": 120,
+            "ecommerce": 350,
             "saas": 500,
+            "packaging": 280,
+            "shipping": 320,
+            "supplies": 250,
+            "manufacturing": 1500,
+            "wholesale": 800,
+            "b2b": 650,
         }
         
         avg_job_value = 500
+        search_terms = f"{industry} {business_type}".lower()
         for ind_key, value in industry_avg_job_values.items():
-            if ind_key in industry:
+            if ind_key in search_terms:
                 avg_job_value = value
                 break
         
-        visibility_gap = max(0, top_threat_dominance - visibility_score) if competitors else 30
+        if visibility_score <= 5:
+            visibility_gap = 100
+        elif visibility_score <= 20:
+            visibility_gap = 100 - visibility_score
+        else:
+            visibility_gap = max(50, 100 - visibility_score)
         
-        monthly_lost_opportunities = int((visibility_gap / 100) * 30 * 2)
-        monthly_revenue_leak = monthly_lost_opportunities * avg_job_value
-        hourly_revenue_leak = round(monthly_revenue_leak / (30 * 24), 2)
+        if top_threat_dominance > 0:
+            visibility_gap = max(visibility_gap, top_threat_dominance)
+        
+        base_monthly_inquiries = 60 if avg_job_value < 200 else (30 if avg_job_value < 1000 else 15)
+        
+        lost_leads_per_month = int((visibility_gap / 100) * base_monthly_inquiries)
+        monthly_revenue_leak = lost_leads_per_month * avg_job_value
+        hourly_revenue_leak = round(monthly_revenue_leak / 720, 2)
         
         return templates.TemplateResponse(
             "dashboard/mission_control.html",
