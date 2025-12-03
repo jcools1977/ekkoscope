@@ -669,6 +669,42 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
         except Exception:
             pass
         
+        top_competitor = competitors[0] if competitors else None
+        
+        industry = (business.industry or "").lower()
+        industry_avg_job_values = {
+            "plumbing": 450,
+            "hvac": 800,
+            "roofing": 12000,
+            "electrical": 350,
+            "landscaping": 200,
+            "pest control": 150,
+            "moving": 1200,
+            "cleaning": 180,
+            "auto repair": 550,
+            "dental": 400,
+            "legal": 2500,
+            "real estate": 8000,
+            "insurance": 1500,
+            "financial": 3000,
+            "restaurant": 35,
+            "retail": 75,
+            "ecommerce": 120,
+            "saas": 500,
+        }
+        
+        avg_job_value = 500
+        for ind_key, value in industry_avg_job_values.items():
+            if ind_key in industry:
+                avg_job_value = value
+                break
+        
+        visibility_gap = max(0, top_threat_dominance - visibility_score) if competitors else 30
+        
+        monthly_lost_opportunities = int((visibility_gap / 100) * 30 * 2)
+        monthly_revenue_leak = monthly_lost_opportunities * avg_job_value
+        hourly_revenue_leak = round(monthly_revenue_leak / (30 * 24), 2)
+        
         return templates.TemplateResponse(
             "dashboard/mission_control.html",
             {
@@ -681,11 +717,16 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
                 "queries_found": queries_found,
                 "provider_stats": provider_stats,
                 "competitors": competitors,
+                "top_competitor": top_competitor,
                 "top_threat_dominance": top_threat_dominance,
                 "market_leader_score": market_leader_score,
                 "intent_breakdown": formatted_intent,
                 "missing_queries": missing_queries,
-                "recommendations": recommendations
+                "recommendations": recommendations,
+                "hourly_revenue_leak": hourly_revenue_leak,
+                "monthly_revenue_leak": monthly_revenue_leak,
+                "avg_job_value": avg_job_value,
+                "visibility_gap": visibility_gap
             }
         )
     finally:

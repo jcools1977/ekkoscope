@@ -1897,15 +1897,15 @@
                 <div class="threat-comparison">
                     <div class="threat-row">
                         <div class="threat-header">
-                            <span class="threat-name">{% if top_competitor %}{{ top_competitor.name }}{% else %}Coastal Roofing{% endif %}</span>
+                            <span class="threat-name">{% if top_competitor %}{{ top_competitor.name }}{% else %}Market Leader{% endif %}</span>
                             <div>
-                                <span class="threat-value enemy">{{ market_leader_score }}%</span>
+                                <span class="threat-value enemy">{% if top_competitor %}{{ top_competitor.dominance }}{% else %}{{ market_leader_score }}{% endif %}%</span>
                                 <span class="threat-trend up">▲ Trending Up</span>
                             </div>
                         </div>
                         <div class="threat-bar-wrapper">
-                            <div class="threat-bar enemy" style="width: {{ market_leader_score }}%;">
-                                <span class="threat-bar-label">{{ market_leader_score }}%</span>
+                            <div class="threat-bar enemy" style="width: {% if top_competitor %}{{ top_competitor.dominance }}{% else %}{{ market_leader_score }}{% endif %}%;">
+                                <span class="threat-bar-label">{% if top_competitor %}{{ top_competitor.dominance }}{% else %}{{ market_leader_score }}{% endif %}%</span>
                             </div>
                         </div>
                     </div>
@@ -1915,7 +1915,7 @@
                             <span class="threat-name">{{ business.name }}</span>
                             <div>
                                 <span class="threat-value friendly">{{ visibility_score }}%</span>
-                                <span class="threat-trend critical">▼ Critical</span>
+                                <span class="threat-trend {% if visibility_score < 20 %}critical{% elif visibility_score < 50 %}warning{% else %}nominal{% endif %}">{% if visibility_score < 20 %}▼ Critical{% elif visibility_score < 50 %}→ Needs Work{% else %}▲ Strong{% endif %}</span>
                             </div>
                         </div>
                         <div class="threat-bar-wrapper">
@@ -1928,7 +1928,7 @@
                 
                 <div class="gap-indicator">
                     <div class="gap-label">Market Share Gap</div>
-                    <div class="gap-value">-{{ market_leader_score - visibility_score }}%</div>
+                    <div class="gap-value">-{{ visibility_gap|default(top_threat_dominance - visibility_score) }}%</div>
                 </div>
             </div>
             
@@ -2097,15 +2097,23 @@
     <script>
         const currentVisibility = {{ visibility_score }};
         const marketLeaderScore = {{ market_leader_score }};
-        const topCompetitorName = "{% if top_competitor %}{{ top_competitor.name }}{% else %}Coastal Roofing{% endif %}";
+        const topCompetitorName = "{% if top_competitor %}{{ top_competitor.name }}{% else %}Market Leader{% endif %}";
         const businessName = "{{ business.name }}";
         
+        const hourlyLeak = {{ hourly_revenue_leak|default(0) }};
+        const monthlyLeak = {{ monthly_revenue_leak|default(0) }};
+        const avgJobValue = {{ avg_job_value|default(500) }};
+        const visibilityGap = {{ visibility_gap|default(0) }};
+        
         let bleedAmount = 0;
-        const hourlyLeak = 8.29 + (Math.random() * 2);
         
         function updateBleedTicker() {
-            bleedAmount += hourlyLeak / 3600;
-            document.getElementById('bleedValue').textContent = '-$' + bleedAmount.toFixed(2);
+            if (hourlyLeak > 0) {
+                bleedAmount += hourlyLeak / 3600;
+                document.getElementById('bleedValue').textContent = '-$' + bleedAmount.toFixed(2);
+            } else {
+                document.getElementById('bleedValue').textContent = '$0.00';
+            }
         }
         
         setInterval(updateBleedTicker, 1000);
