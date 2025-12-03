@@ -162,10 +162,11 @@
                     {% endif %}
                 </td>
                 <td>{{ biz.audit_count }}</td>
-                <td style="display: flex; gap: 0.5rem;">
+                <td style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     <a href="/admin/business/{{ biz.id }}" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Details</a>
                     {% if biz.audit_count > 0 %}
                     <a href="/admin/business/{{ biz.id }}/mission" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: linear-gradient(135deg, #00E5A0, #18A3FF); color: #000; border: none;">Mission Control</a>
+                    <a href="/dossier/{{ biz.id }}" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background: linear-gradient(135deg, #8B5CF6, #A855F7); color: #fff; border: none;">Dossier</a>
                     {% endif %}
                 </td>
             </tr>
