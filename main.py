@@ -1529,14 +1529,16 @@ async def download_dossier(request: Request, business_id: int):
             raise HTTPException(status_code=403, detail="Not authorized")
         
         latest_audit = db.query(Audit).filter(
-            Audit.business_id == business_id
+            Audit.business_id == business_id,
+            Audit.status.in_(["done", "completed"])
         ).order_by(Audit.created_at.desc()).first()
         
-        if not latest_audit or not latest_audit.results:
-            raise HTTPException(status_code=400, detail="No audit results available. Run an audit first.")
+        if not latest_audit:
+            raise HTTPException(status_code=400, detail="No completed audit available. Run an audit first.")
         
-        import json
-        analysis = json.loads(latest_audit.results) if isinstance(latest_audit.results, str) else latest_audit.results
+        analysis = latest_audit.get_visibility_summary()
+        if not analysis:
+            raise HTTPException(status_code=400, detail="No audit results available. Run an audit first.")
         
         sherlock_data = None
         try:
