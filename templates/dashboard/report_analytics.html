@@ -804,8 +804,14 @@
         // Provider Performance Chart
         const providerCtx = document.getElementById('providerChart').getContext('2d');
         const providerStats = {{ summary.provider_stats|tojson|safe }};
-        const providerLabels = Object.keys(providerStats).map(p => p.charAt(0).toUpperCase() + p.slice(1));
-        const providerData = Object.values(providerStats).map(s => s.found_percent || 0);
+        // Map provider internal names to display names
+        const providerDisplayNames = {
+            'openai_sim': 'ChatGPT',
+            'perplexity_web': 'Perplexity',
+            'gemini_sim': 'Gemini'
+        };
+        const providerLabels = Object.keys(providerStats).map(p => providerDisplayNames[p] || p.charAt(0).toUpperCase() + p.slice(1));
+        const providerData = Object.values(providerStats).map(s => s.target_percent || 0);
         
         new Chart(providerCtx, {
             type: 'bar',

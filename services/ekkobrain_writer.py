@@ -177,6 +177,59 @@ def _log_queries_to_db(
             query_text = q.get("query", "")
             visibility_by_query[query_text] = q.get("providers", [])
     
+    import re
+    
+    def normalize_name(name: str) -> str:
+        """Normalize a business name for comparison by removing punctuation and extra spaces."""
+        name = name.lower().strip()
+        name = re.sub(r'[^\w\s]', '', name)
+        name = re.sub(r'\s+', ' ', name)
+        return name
+    
+    def extract_domain_name(url: str) -> str:
+        """Extract clean domain name from URL for comparison."""
+        if not url:
+            return ""
+        url = url.lower()
+        url = re.sub(r'^https?://', '', url)
+        url = re.sub(r'^www\.', '', url)
+        domain = url.split('/')[0].split(':')[0]
+        return domain.replace('.com', '').replace('.net', '').replace('.org', '')
+    
+    def is_target_match(brand_name: str, brand_url: str, business_name: str, business_url: str, aliases: list) -> bool:
+        """Check if a brand matches the target business using multiple strategies."""
+        norm_brand = normalize_name(brand_name)
+        norm_business = normalize_name(business_name)
+        
+        if norm_brand == norm_business:
+            return True
+        
+        for alias in aliases:
+            if normalize_name(alias) == norm_brand:
+                return True
+        
+        brand_domain = extract_domain_name(brand_url)
+        business_domain = extract_domain_name(business_url)
+        if brand_domain and business_domain and brand_domain == business_domain:
+            return True
+        
+        brand_words = set(norm_brand.split())
+        business_words = set(norm_business.split())
+        if brand_words and business_words:
+            overlap = brand_words & business_words
+            if len(overlap) >= 2 or (len(overlap) == 1 and len(brand_words) == 1):
+                primary_word = norm_business.split()[0] if norm_business else ""
+                if primary_word in overlap:
+                    return True
+        
+        return False
+    
+    business_name_lower = business.name.lower()
+    business_url = getattr(business, 'primary_domain', '') or ''
+    business_aliases = []
+    if hasattr(business, 'brand_aliases') and business.brand_aliases:
+        business_aliases.extend([a.strip() for a in business.brand_aliases.split(',') if a.strip()])
+    
     for q_data in queries_with_intent:
         query_text = q_data.get("query", "")
         intent = q_data.get("intent", "informational")
@@ -185,14 +238,18 @@ def _log_queries_to_db(
             audit_id=audit.id,
             query_text=query_text,
             intent=intent,
-            region=region_group
+            region=region_group,
+            target_found=False
         )
         db.add(audit_query)
         db.flush()
         
+        query_target_found = False
+        
         providers = visibility_by_query.get(query_text, [])
         for provider_data in providers:
             provider = provider_data.get("provider", "unknown")
+            target_found_in_provider = provider_data.get("target_found", False)
             brands = provider_data.get("recommended_brands", [])
             
             for rank, brand in enumerate(brands[:5], 1):
@@ -206,15 +263,26 @@ def _log_queries_to_db(
                     reason = ""
                 
                 if brand_name:
+                    is_target = is_target_match(brand_name, brand_url, business.name, business_url, business_aliases)
+                    prominence = 6 - rank if is_target and rank <= 5 else 0
+                    
+                    if is_target:
+                        query_target_found = True
+                    
                     vis_result = QueryVisibilityResult(
                         audit_query_id=audit_query.id,
                         provider=provider,
                         brand_name=brand_name,
                         brand_url=brand_url,
                         reason=reason,
-                        rank=rank
+                        rank=rank,
+                        is_target=is_target,
+                        prominence_score=prominence
                     )
                     db.add(vis_result)
+        
+        if query_target_found:
+            audit_query.target_found = True
 
 
 def _log_blueprints_to_db(

@@ -254,6 +254,7 @@ class AuditQuery(Base):
     query_text = Column(String(500), nullable=False, index=True)
     intent = Column(String(50), index=True)
     region = Column(String(100), nullable=True)
+    target_found = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     audit = relationship("Audit", back_populates="audit_queries")
@@ -271,6 +272,8 @@ class QueryVisibilityResult(Base):
     brand_url = Column(String(500), nullable=True)
     reason = Column(Text, nullable=True)
     rank = Column(Integer, nullable=True)
+    is_target = Column(Boolean, default=False)
+    prominence_score = Column(Integer, default=0)
     
     audit_query = relationship("AuditQuery", back_populates="visibility_results")
 
@@ -581,6 +584,27 @@ def migrate_db():
             conn.execute(text("ALTER TABLE businesses ADD COLUMN first_report_generated BOOLEAN DEFAULT 0"))
             conn.commit()
             print("Migration: Added 'first_report_generated' column to businesses table")
+        
+        result = conn.execute(text("PRAGMA table_info(audit_queries)"))
+        aq_columns = [row[1] for row in result.fetchall()]
+        
+        if "target_found" not in aq_columns:
+            conn.execute(text("ALTER TABLE audit_queries ADD COLUMN target_found BOOLEAN DEFAULT 0"))
+            conn.commit()
+            print("Migration: Added 'target_found' column to audit_queries table")
+        
+        result = conn.execute(text("PRAGMA table_info(query_visibility_results)"))
+        vr_columns = [row[1] for row in result.fetchall()]
+        
+        if "is_target" not in vr_columns:
+            conn.execute(text("ALTER TABLE query_visibility_results ADD COLUMN is_target BOOLEAN DEFAULT 0"))
+            conn.commit()
+            print("Migration: Added 'is_target' column to query_visibility_results table")
+        
+        if "prominence_score" not in vr_columns:
+            conn.execute(text("ALTER TABLE query_visibility_results ADD COLUMN prominence_score INTEGER DEFAULT 0"))
+            conn.commit()
+            print("Migration: Added 'prominence_score' column to query_visibility_results table")
 
 
 def init_db():

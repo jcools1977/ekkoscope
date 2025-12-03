@@ -503,14 +503,23 @@ async def dashboard_audit_analytics(request: Request, business_id: int, audit_id
             "intent_breakdown": visibility_summary.get("intent_breakdown", {})
         }
         
+        provider_name_map = {
+            "openai_sim": "openai",
+            "perplexity_web": "perplexity",
+            "gemini_sim": "gemini"
+        }
+        
         queries = []
         for aq in audit.audit_queries:
             providers_list = []
             for vr in aq.visibility_results:
-                target_found = bool(vr.brand_name and business.name.lower() in vr.brand_name.lower())
+                is_target = getattr(vr, 'is_target', False) or (
+                    vr.brand_name and business.name.lower() in vr.brand_name.lower()
+                )
+                normalized_provider = provider_name_map.get(vr.provider, vr.provider)
                 providers_list.append({
-                    "provider": vr.provider,
-                    "target_found": target_found,
+                    "provider": normalized_provider,
+                    "target_found": is_target,
                     "brand_name": vr.brand_name,
                     "rank": vr.rank
                 })

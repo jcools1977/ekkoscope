@@ -47,6 +47,18 @@ The backend is built with FastAPI and Uvicorn on Python 3.11+. It handles AI vis
 - **Activation Code System**: Supports one-time-use activation codes for prospects.
 - **Free First Report Feature**: New users receive one free AI visibility report upon signup.
 - **Sentinel OS Integration**: Real-time logging of AI queries and report generation events to the Sentinel OS dashboard.
+- **AI Visibility Analytics Dashboard**: Interactive Chart.js-powered analytics page showing:
+    - Visibility Score donut chart with percentage display
+    - AI Provider Performance horizontal bar chart (ChatGPT, Perplexity, Gemini)
+    - Query Intent Breakdown polar area chart (emergency, transactional, informational, etc.)
+    - Competitor Visibility Comparison bar chart
+    - Top Competitors table with threat levels
+    - Detailed Query Analysis table showing per-query provider results
+- **Report Integrity Guardrail System**: Prevents hallucinated scores in PDF reports:
+    - Strict Python math for visibility score calculation (not LLM estimation)
+    - Content override for mismatched positive summaries at low scores
+    - Automatic narrative regeneration for critical cases (0% or CRITICAL risk)
+    - Template-based narrative generation matching exact calculated values
 
 ### System Design Choices
 
