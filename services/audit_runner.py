@@ -72,18 +72,26 @@ def run_audit_for_business(business: Business, audit: Audit, db_session: Session
         print(f"[RUNNER DEBUG] run_analysis completed for audit {audit.id}")
         sys.stdout.flush()
         
+        multi_llm = analysis.get("multi_llm_visibility", {})
+        multi_llm_summary = multi_llm.get("summary", {}) if isinstance(multi_llm, dict) else {}
+        
         visibility_summary = {
             "tenant_id": analysis.get("tenant_id"),
             "tenant_name": analysis.get("tenant_name"),
             "run_at": analysis.get("run_at"),
-            "total_queries": analysis.get("total_queries"),
+            "total_queries": multi_llm_summary.get("total_queries") or analysis.get("total_queries"),
             "mentioned_count": analysis.get("mentioned_count"),
             "primary_count": analysis.get("primary_count"),
             "avg_score": analysis.get("avg_score"),
             "visibility_summary": analysis.get("visibility_summary", ""),
             "results": analysis.get("results", []),
             "multi_llm_visibility": analysis.get("multi_llm_visibility"),
-            "perplexity_visibility": analysis.get("perplexity_visibility")
+            "perplexity_visibility": analysis.get("perplexity_visibility"),
+            "overall_target_found": multi_llm_summary.get("overall_target_found", 0),
+            "overall_target_percent": multi_llm_summary.get("overall_target_percent", 0),
+            "provider_stats": multi_llm_summary.get("provider_stats", {}),
+            "top_competitors": multi_llm_summary.get("top_competitors", []),
+            "intent_breakdown": multi_llm_summary.get("intent_breakdown", {})
         }
         
         suggestions_data = {

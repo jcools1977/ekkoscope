@@ -494,14 +494,29 @@ async def dashboard_audit_analytics(request: Request, business_id: int, audit_id
         
         visibility_summary = audit.get_visibility_summary() or {}
         
-        summary = {
-            "total_queries": visibility_summary.get("total_queries", 0),
-            "overall_target_found": visibility_summary.get("overall_target_found", 0),
-            "overall_target_percent": visibility_summary.get("overall_target_percent", 0),
-            "provider_stats": visibility_summary.get("provider_stats", {}),
-            "top_competitors": visibility_summary.get("top_competitors", []),
-            "intent_breakdown": visibility_summary.get("intent_breakdown", {})
-        }
+        multi_llm = visibility_summary.get("multi_llm_visibility", {})
+        nested_summary = multi_llm.get("summary", {}) if isinstance(multi_llm, dict) else {}
+        
+        nested_is_valid = nested_summary and nested_summary.get("total_queries") is not None and nested_summary.get("overall_target_found") is not None
+        
+        if nested_is_valid:
+            summary = {
+                "total_queries": nested_summary.get("total_queries", 0),
+                "overall_target_found": nested_summary.get("overall_target_found", 0),
+                "overall_target_percent": nested_summary.get("overall_target_percent", 0),
+                "provider_stats": nested_summary.get("provider_stats", {}),
+                "top_competitors": nested_summary.get("top_competitors", []),
+                "intent_breakdown": nested_summary.get("intent_breakdown", {})
+            }
+        else:
+            summary = {
+                "total_queries": visibility_summary.get("total_queries", 0),
+                "overall_target_found": visibility_summary.get("overall_target_found", 0),
+                "overall_target_percent": visibility_summary.get("overall_target_percent", 0),
+                "provider_stats": visibility_summary.get("provider_stats", {}),
+                "top_competitors": visibility_summary.get("top_competitors", []),
+                "intent_breakdown": visibility_summary.get("intent_breakdown", {})
+            }
         
         provider_name_map = {
             "openai_sim": "openai",
@@ -581,13 +596,23 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
         
         visibility_summary = audit.get_visibility_summary() or {}
         
-        total_queries = visibility_summary.get("total_queries", 0)
-        queries_found = visibility_summary.get("overall_target_found", 0)
-        visibility_score = visibility_summary.get("overall_target_percent", 0)
+        multi_llm = visibility_summary.get("multi_llm_visibility", {})
+        nested_summary = multi_llm.get("summary", {}) if isinstance(multi_llm, dict) else {}
         
-        provider_stats = visibility_summary.get("provider_stats", {})
+        nested_is_valid = nested_summary and nested_summary.get("total_queries") is not None and nested_summary.get("overall_target_found") is not None
         
-        raw_competitors = visibility_summary.get("top_competitors", []) or []
+        if nested_is_valid:
+            total_queries = nested_summary.get("total_queries", 0)
+            queries_found = nested_summary.get("overall_target_found", 0)
+            visibility_score = nested_summary.get("overall_target_percent", 0)
+            provider_stats = nested_summary.get("provider_stats", {})
+            raw_competitors = nested_summary.get("top_competitors", []) or []
+        else:
+            total_queries = visibility_summary.get("total_queries", 0)
+            queries_found = visibility_summary.get("overall_target_found", 0)
+            visibility_score = visibility_summary.get("overall_target_percent", 0)
+            provider_stats = visibility_summary.get("provider_stats", {})
+            raw_competitors = visibility_summary.get("top_competitors", []) or []
         
         if not raw_competitors:
             from collections import Counter
@@ -628,7 +653,10 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
             top_threat_dominance = 0
             market_leader_score = max(35, visibility_score + 20)
         
-        intent_breakdown = visibility_summary.get("intent_breakdown", {}) or {}
+        if nested_is_valid:
+            intent_breakdown = nested_summary.get("intent_breakdown", {}) or {}
+        else:
+            intent_breakdown = visibility_summary.get("intent_breakdown", {}) or {}
         formatted_intent = {}
         for intent_type, data in intent_breakdown.items():
             if not intent_type or intent_type.strip() == "":
@@ -1625,7 +1653,8 @@ async def download_dossier(request: Request, business_id: int):
         
         audit_data = {
             "queries": [],
-            "audit_id": latest_audit.id
+            "audit_id": latest_audit.id,
+            "visibility_summary": analysis
         }
         for aq in latest_audit.audit_queries:
             query_data = {

@@ -27,9 +27,58 @@ def calculate_true_visibility_score(audit_data: Dict[str, Any]) -> Dict[str, Any
     Calculate the REAL visibility score using strict math.
     NO LLM estimation - pure Python calculation.
     
+    PRIMARY SOURCE: visibility_summary (computed at audit time with full context)
+    FALLBACK: Query-level target_found fields (for new audits with proper tracking)
+    
     Returns:
         Dict with calculated_score, client_mentions, total_queries, and status
     """
+    visibility_summary = audit_data.get("visibility_summary", {})
+    
+    if visibility_summary:
+        multi_llm = visibility_summary.get("multi_llm_visibility", {})
+        nested_summary = multi_llm.get("summary", {}) if isinstance(multi_llm, dict) else {}
+        
+        nested_is_valid = nested_summary and nested_summary.get("total_queries") is not None and nested_summary.get("overall_target_found") is not None
+        
+        if nested_is_valid:
+            total_queries = nested_summary.get("total_queries", 0)
+            client_mentions = nested_summary.get("overall_target_found", 0)
+            calculated_score = nested_summary.get("overall_target_percent", 0)
+            logger.info(f"[INTEGRITY] Using nested multi_llm summary for visibility data")
+        else:
+            total_queries = visibility_summary.get("total_queries", 0)
+            client_mentions = visibility_summary.get("overall_target_found", 0)
+            calculated_score = visibility_summary.get("overall_target_percent", 0)
+            logger.info(f"[INTEGRITY] Using top-level visibility_summary data")
+    else:
+        total_queries = 0
+        client_mentions = 0
+        calculated_score = 0
+        logger.warning(f"[INTEGRITY] No visibility_summary found, using zeroes")
+    
+    if isinstance(calculated_score, (int, float)) and total_queries > 0:
+        calculated_score = round(float(calculated_score), 1)
+        
+        if calculated_score == 0:
+            risk_level = "CRITICAL"
+        elif calculated_score < 20:
+            risk_level = "HIGH"
+        elif calculated_score < 50:
+            risk_level = "MODERATE"
+        else:
+            risk_level = "LOW"
+        
+        logger.info(f"[INTEGRITY] Using visibility_summary: {calculated_score}% ({client_mentions}/{total_queries})")
+        
+        return {
+            "calculated_score": calculated_score,
+            "client_mentions": client_mentions,
+            "total_queries": total_queries,
+            "status": "FROM_SUMMARY",
+            "risk_level": risk_level
+        }
+    
     queries = audit_data.get("queries", [])
     if not queries:
         queries = audit_data.get("audit_queries", [])
@@ -83,6 +132,8 @@ def calculate_true_visibility_score(audit_data: Dict[str, Any]) -> Dict[str, Any
         risk_level = "MODERATE"
     else:
         risk_level = "LOW"
+    
+    logger.info(f"[INTEGRITY] Calculated from queries: {calculated_score}% ({client_mentions}/{total_queries})")
     
     return {
         "calculated_score": calculated_score,
