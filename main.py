@@ -542,6 +542,7 @@ async def dashboard_audit_analytics(request: Request, business_id: int, audit_id
 async def dashboard_mission_control(request: Request, business_id: int, audit_id: int):
     """Mission Control - Living dashboard for AI visibility operations."""
     from sqlalchemy.orm import joinedload
+    from services.database import AuditQuery
     
     user = get_current_user(request)
     if not user:
