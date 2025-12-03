@@ -1929,12 +1929,12 @@ async def admin_businesses(request: Request):
                 latest_audit = max(completed_audits, key=lambda a: a.completed_at or a.created_at)
                 last_scan = latest_audit.completed_at or latest_audit.created_at
                 
-                if latest_audit.visibility_summary:
-                    try:
-                        summary = latest_audit.visibility_summary if isinstance(latest_audit.visibility_summary, dict) else {}
+                try:
+                    summary = latest_audit.get_visibility_summary()
+                    if summary:
                         visibility_score = summary.get('visibility_score', summary.get('overall_visibility'))
-                    except:
-                        pass
+                except:
+                    pass
             
             business_data.append({
                 "id": biz.id,
