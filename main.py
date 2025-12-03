@@ -2292,6 +2292,51 @@ async def admin_business_edit(
         db.close()
 
 
+@app.post("/api/admin/business/{business_id}/plan")
+async def api_admin_update_plan(request: Request, business_id: int):
+    """API endpoint to update a business plan (admin only)."""
+    if not is_authenticated(request):
+        return JSONResponse({"error": "Admin access required"}, status_code=403)
+    
+    try:
+        data = await request.json()
+        new_plan = data.get("plan", "free")
+        
+        valid_plans = ["free", "snapshot", "ongoing", "premium", "enterprise"]
+        if new_plan not in valid_plans:
+            return JSONResponse({"error": f"Invalid plan. Must be one of: {', '.join(valid_plans)}"}, status_code=400)
+        
+        db = get_db_session()
+        try:
+            business = db.query(Business).filter(Business.id == business_id).first()
+            if not business:
+                return JSONResponse({"error": "Business not found"}, status_code=404)
+            
+            old_plan = business.plan
+            business.plan = new_plan
+            
+            if new_plan in ["ongoing", "premium", "enterprise"]:
+                business.subscription_active = True
+            elif new_plan in ["free", "snapshot"]:
+                business.subscription_active = False
+            
+            db.commit()
+            
+            return JSONResponse({
+                "success": True,
+                "business_id": business_id,
+                "old_plan": old_plan,
+                "new_plan": new_plan,
+                "subscription_active": business.subscription_active
+            })
+            
+        finally:
+            db.close()
+            
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 # =============================================================================
 # CLIENT HANDOFF MODULE
 # =============================================================================

@@ -25,10 +25,32 @@
         font-weight: 600;
         text-transform: uppercase;
     }
+    .plan-free { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
     .plan-snapshot { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
     .plan-ongoing { background: rgba(46, 230, 168, 0.2); color: var(--brand-teal); }
+    .plan-premium { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+    .plan-enterprise { background: rgba(234, 179, 8, 0.2); color: #fbbf24; }
     .sub-active { background: rgba(46, 230, 168, 0.15); color: var(--brand-teal); border: 1px solid rgba(46, 230, 168, 0.3); }
     .sub-inactive { background: rgba(100, 116, 139, 0.1); color: #64748b; }
+    
+    .plan-select {
+        background: var(--bg-deep);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--text-primary);
+        padding: 0.3rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        min-width: 100px;
+    }
+    .plan-select:hover {
+        border-color: var(--brand-teal);
+    }
+    .plan-select:focus {
+        outline: none;
+        border-color: var(--brand-teal);
+        box-shadow: 0 0 0 2px rgba(46, 230, 168, 0.2);
+    }
     
     .visibility-score {
         display: inline-flex;
@@ -149,7 +171,13 @@
                     {% endif %}
                 </td>
                 <td>
-                    <span class="plan-badge plan-{{ biz.plan or 'snapshot' }}">{{ biz.plan or 'snapshot' }}</span>
+                    <select class="plan-select" onchange="updatePlan({{ biz.id }}, this.value)" data-biz-id="{{ biz.id }}">
+                        <option value="free" {% if biz.plan == 'free' or not biz.plan %}selected{% endif %}>Free</option>
+                        <option value="snapshot" {% if biz.plan == 'snapshot' %}selected{% endif %}>Snapshot ($490)</option>
+                        <option value="ongoing" {% if biz.plan == 'ongoing' %}selected{% endif %}>Ongoing ($290/mo)</option>
+                        <option value="premium" {% if biz.plan == 'premium' %}selected{% endif %}>Premium ($1,188/mo)</option>
+                        <option value="enterprise" {% if biz.plan == 'enterprise' %}selected{% endif %}>Enterprise</option>
+                    </select>
                     {% if biz.autofix_enabled %}
                         <span class="autofix-badge">AUTO-FIX</span>
                     {% endif %}
@@ -190,6 +218,50 @@
                 
                 row.style.display = show ? '' : 'none';
             });
+        }
+        
+        async function updatePlan(businessId, newPlan) {
+            const select = document.querySelector(`select[data-biz-id="${businessId}"]`);
+            const originalValue = select.dataset.originalPlan || select.value;
+            
+            try {
+                select.disabled = true;
+                select.style.opacity = '0.5';
+                
+                const response = await fetch(`/api/admin/business/${businessId}/plan`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plan: newPlan })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to update plan');
+                }
+                
+                const result = await response.json();
+                
+                select.style.opacity = '1';
+                select.disabled = false;
+                select.dataset.originalPlan = newPlan;
+                
+                const row = select.closest('tr');
+                if (row) {
+                    row.dataset.plan = newPlan;
+                }
+                
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #00E5A0; color: #000; padding: 12px 24px; border-radius: 8px; font-weight: 600; z-index: 9999; animation: fadeIn 0.3s ease;';
+                toast.textContent = `Plan updated to ${newPlan.toUpperCase()}`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+                
+            } catch (error) {
+                select.value = originalValue;
+                select.style.opacity = '1';
+                select.disabled = false;
+                
+                alert('Failed to update plan: ' + error.message);
+            }
         }
     </script>
     {% else %}
