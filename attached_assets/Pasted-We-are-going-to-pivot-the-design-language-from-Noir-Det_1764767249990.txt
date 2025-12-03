@@ -1,0 +1,119 @@
+We are going to pivot the design language from "Noir Detective" to "Tier-1 Strategy Consulting" (think McKinsey meets Palantir). The document should look like something a CEO pays $50k for.
+
+Here is the complete Professional Overhaul Plan.
+
+1. The New "System Prompt" (The Voice) 🧠
+Replace your current "Detective" prompt in the backend with this.
+
+Copy/Paste into Replit:
+
+System Role: You are a Senior Market Intelligence Analyst for a high-end strategic consulting firm. You are generating a "Threat Assessment" for a business client.
+
+Tone Guidelines:
+
+Objective & Direct: Do not use metaphors ("Crime Scene", "Smoking Gun"). Use precise business terminology.
+
+High-Stakes: Frame low visibility not as a "mistake," but as a "critical vulnerability" and "revenue risk."
+
+Action-Oriented: Every insight must lead to a strategic directive.
+
+Vocabulary Swap Protocol:
+
+Instead of "Suspects" → Use "Market Incumbents" or "Competitive Threats".
+
+Instead of "Evidence" → Use "Intelligence Artifacts" or "Verified Data Points".
+
+Instead of "Solving the Crime" → Use "Remediation Strategy" or "Gap Closure Protocol".
+
+Instead of "Invisible" → Use "Zero-Signal Detected".
+
+Output Goal: The user should read this and feel they are receiving a classified briefing on their market position.
+
+2. The Document Visual Overhaul (The Look) 📄
+We are ditching the "File Folder" look for a "Swiss Style" layout (Clean grids, heavy typography, plenty of whitespace).
+
+The New Structure (PDF Layout):
+
+Page 1: The Executive Briefing (The "BLUF")
+Header: Minimalist. Logo top left. "CONFIDENTIAL MARKET BRIEF" top right (Small, grey, all caps).
+
+The Hero Metric: A massive, clean number for Visibility Score.
+
+Visual: If 0%, show a large Red Circle with "0%" inside. Label: "Current Market Penetration".
+
+The Executive Summary: A 3-bullet narrative.
+
+"Critical Risk: A-D Metal Roofing currently holds 0% Share of Voice in AI-mediated search."
+
+"Primary Threat: Competitor 'Coastal Roofing' commands 28% market share."
+
+"Strategic Imperative: Immediate deployment of 'Emergency' landing pages is required to intercept competitor traffic."
+
+Page 2: The Threat Landscape (The Data)
+Title: "Competitive Vector Analysis"
+
+The Chart: A clean Bar Chart comparing Client vs. Competitors.
+
+The Insight Table:
+
+Column 1: Adversary (Competitor Name).
+
+Column 2: Dominance (% Share).
+
+Column 3: Key Weapon (e.g., "They rank for 'Emergency Repair'").
+
+Page 3: Semantic Gap Intelligence (The "Why")
+Title: "Content Gap Forensics"
+
+Layout: Two columns: "Competitor Signal" vs. "Your Signal".
+
+Competitor Side (Red BG): Display the raw text snippet from their site. "Service within 1 hour."
+
+Your Side (Grey BG): "No matching signal detected."
+
+The Analyst Note: "Observation: Competitor signals 'Speed' and 'Urgency'. Your content signals 'General Availability'. This semantic mismatch causes AI models to deprecate your ranking for emergency queries."
+
+Page 4: The Remediation Protocol (The Plan)
+Title: "30-Day Tactical Roadmap"
+
+Visual: A vertical Timeline (Gantt Chart style).
+
+Phase 1 (Wk 1): Infrastructure Hardening. (Schema, Meta Tags).
+
+Phase 2 (Wk 2): Asset Deployment. (Launch Emergency Page).
+
+Phase 3 (Wk 3): Authority Signals. (Citations).
+
+Call to Action: A clean link at the bottom: "Access Mission Control to Deploy Assets".
+
+3. The Implementation Prompt (For Replit)
+Copy/Paste this to update the PDF Generator:
+
+Task: Overhaul the PDF Report generation to be "Corporate Professional."
+
+Remove all "Noir" Branding: Delete "Classified Stamp," "Folder" backgrounds, and "Detective" icons.
+
+New Aesthetic:
+
+Font: Inter or Helvetica (Clean Sans-Serif).
+
+Colors: Deep Navy (#0F172A), Slate Grey (#64748B), and Alert Red (#EF4444) for risks. No neon green.
+
+Layout: Use a grid system. Borders should be thin (1px solid #E2E8F0).
+
+Data Presentation:
+
+Render the "Competitive Landscape" as a clean Table with "Share of Voice" bars.
+
+Render the "Semantic Gaps" as a side-by-side comparison box called "Signal Analysis."
+
+Header/Footer:
+
+Header: "Ekkoscope Intelligence | Client: [Name] | Date: [Date]"
+
+Footer: "CONFIDENTIAL - FOR INTERNAL USE ONLY."
+
+Why this works better
+When a business owner sees a "Detective File," they think, "Cute marketing." When they see a "Threat Assessment" with "Remediation Protocols," they think, "I need to fix this before my board/partner sees it."
+
+It shifts the emotion from Amusement to Professional Anxiety. That is where the budget opens up.
