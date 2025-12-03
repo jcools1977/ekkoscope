@@ -1118,9 +1118,86 @@ def consult_strategist(
         evidence_chunks = evidence_chunks[:top_k]
         
         if not evidence_chunks:
-            result["answer"] = "I don't have enough data yet to answer that question. Please ingest some competitor websites first using the Sherlock scanner."
-            result["success"] = True
-            return result
+            logger.info("No evidence for business %d - auto-ingesting data", business_id)
+            
+            client_url = business.primary_domain if business else None
+            if client_url and not client_url.startswith("http"):
+                client_url = f"https://{client_url}"
+            
+            competitor_urls = []
+            if business:
+                completed_audits = [a for a in business.audits if a.status == 'done']
+                if completed_audits:
+                    latest_audit = max(completed_audits, key=lambda a: a.completed_at or a.created_at)
+                    try:
+                        vis_summary = latest_audit.get_visibility_summary() or {}
+                        top_competitors = vis_summary.get('top_competitors', [])
+                        for comp in top_competitors[:3]:
+                            comp_name = comp.get('name', '') if isinstance(comp, dict) else str(comp)
+                            if comp_name:
+                                competitor_urls.append(f"https://www.{comp_name.lower().replace(' ', '')}.com")
+                    except Exception as e:
+                        logger.warning("Failed to extract competitors from audit: %s", e)
+            
+            if client_url:
+                try:
+                    client_result = ingest_knowledge(client_url, "client_site", business_id)
+                    if client_result.get("success"):
+                        logger.info("Auto-ingested client: %s", client_url)
+                    
+                    for comp_url in competitor_urls[:3]:
+                        try:
+                            comp_result = ingest_knowledge(comp_url, "competitor_site", business_id)
+                            if comp_result.get("success"):
+                                logger.info("Auto-ingested competitor: %s", comp_url)
+                        except:
+                            continue
+                    
+                    for namespace in namespaces_to_search:
+                        try:
+                            retry_results = sherlock_index.query(
+                                vector=query_embedding,
+                                filter=query_filter,
+                                top_k=top_k,
+                                include_metadata=True,
+                                namespace=namespace
+                            )
+                            
+                            if retry_results and hasattr(retry_results, 'matches'):
+                                for match in retry_results.matches:
+                                    if match.score < 0.3:
+                                        continue
+                                    metadata = match.metadata or {}
+                                    source_url = metadata.get("url", "Unknown")
+                                    source_title = metadata.get("title", "")
+                                    content_type = metadata.get("type", "unknown")
+                                    topics_str = metadata.get("topics", "[]")
+                                    try:
+                                        topics = json.loads(topics_str) if isinstance(topics_str, str) else []
+                                    except:
+                                        topics = []
+                                    evidence_chunks.append({
+                                        "source": source_url,
+                                        "title": source_title,
+                                        "type": content_type,
+                                        "topics": topics,
+                                        "relevance": round(match.score, 3),
+                                        "namespace": namespace
+                                    })
+                                    sources.append(f"[{content_type.upper()}] {source_title or source_url}")
+                        except:
+                            continue
+                    
+                    evidence_chunks.sort(key=lambda x: x["relevance"], reverse=True)
+                    evidence_chunks = evidence_chunks[:top_k]
+                    
+                except Exception as ingest_err:
+                    logger.error("Auto-ingest error: %s", ingest_err)
+            
+            if not evidence_chunks:
+                result["answer"] = "I'm still gathering intelligence on your market. I've started scanning your website and competitors - please try again in about 30 seconds, or ask me a different question."
+                result["success"] = True
+                return result
         
         evidence_text = ""
         for i, chunk in enumerate(evidence_chunks, 1):
