@@ -497,27 +497,6 @@ async def dashboard_audit_analytics(request: Request, business_id: int, audit_id
         multi_llm = visibility_summary.get("multi_llm_visibility", {})
         nested_summary = multi_llm.get("summary", {}) if isinstance(multi_llm, dict) else {}
         
-        nested_is_valid = nested_summary and nested_summary.get("total_queries") is not None and nested_summary.get("overall_target_found") is not None
-        
-        if nested_is_valid:
-            summary = {
-                "total_queries": nested_summary.get("total_queries", 0),
-                "overall_target_found": nested_summary.get("overall_target_found", 0),
-                "overall_target_percent": nested_summary.get("overall_target_percent", 0),
-                "provider_stats": nested_summary.get("provider_stats", {}),
-                "top_competitors": nested_summary.get("top_competitors", []),
-                "intent_breakdown": nested_summary.get("intent_breakdown", {})
-            }
-        else:
-            summary = {
-                "total_queries": visibility_summary.get("total_queries", 0),
-                "overall_target_found": visibility_summary.get("overall_target_found", 0),
-                "overall_target_percent": visibility_summary.get("overall_target_percent", 0),
-                "provider_stats": visibility_summary.get("provider_stats", {}),
-                "top_competitors": visibility_summary.get("top_competitors", []),
-                "intent_breakdown": visibility_summary.get("intent_breakdown", {})
-            }
-        
         provider_name_map = {
             "openai_sim": "openai",
             "perplexity_web": "perplexity",
@@ -525,19 +504,46 @@ async def dashboard_audit_analytics(request: Request, business_id: int, audit_id
         }
         
         queries = []
+        queries_with_target = 0
+        total_queries = len(audit.audit_queries)
+        provider_stats = {"openai": {"target_found": 0, "total_probes": 0}, "perplexity": {"target_found": 0, "total_probes": 0}, "gemini": {"target_found": 0, "total_probes": 0}}
+        competitor_counts = {}
+        intent_breakdown = {}
+        
         for aq in audit.audit_queries:
             providers_list = []
+            query_has_target = False
+            
+            if aq.intent:
+                intent_breakdown[aq.intent] = intent_breakdown.get(aq.intent, 0) + 1
+            
             for vr in aq.visibility_results:
                 is_target = getattr(vr, 'is_target', False) or (
                     vr.brand_name and business.name.lower() in vr.brand_name.lower()
                 )
                 normalized_provider = provider_name_map.get(vr.provider, vr.provider)
+                
+                if normalized_provider in provider_stats:
+                    provider_stats[normalized_provider]["total_probes"] += 1
+                    if is_target:
+                        provider_stats[normalized_provider]["target_found"] += 1
+                
+                if vr.brand_name and not is_target:
+                    competitor_counts[vr.brand_name] = competitor_counts.get(vr.brand_name, 0) + 1
+                
                 providers_list.append({
                     "provider": normalized_provider,
                     "target_found": is_target,
                     "brand_name": vr.brand_name,
                     "rank": vr.rank
                 })
+                
+                if is_target:
+                    query_has_target = True
+            
+            if query_has_target:
+                queries_with_target += 1
+            
             target_found_count = sum(1 for p in providers_list if p.get("target_found"))
             query_obj = type('Query', (), {
                 "query": aq.query_text,
@@ -546,6 +552,28 @@ async def dashboard_audit_analytics(request: Request, business_id: int, audit_id
                 "target_found_count": target_found_count
             })()
             queries.append(query_obj)
+        
+        recalc_percent = round((queries_with_target / total_queries) * 100, 1) if total_queries > 0 else 0.0
+        
+        for pname, stats in provider_stats.items():
+            if stats["total_probes"] > 0:
+                stats["target_percent"] = round((stats["target_found"] / stats["total_probes"]) * 100, 1)
+            else:
+                stats["target_percent"] = 0.0
+        
+        top_competitors = [
+            {"name": name, "count": count, "percent": round((count / total_queries) * 100, 1) if total_queries > 0 else 0}
+            for name, count in sorted(competitor_counts.items(), key=lambda x: -x[1])[:10]
+        ]
+        
+        summary = {
+            "total_queries": total_queries,
+            "overall_target_found": queries_with_target,
+            "overall_target_percent": recalc_percent,
+            "provider_stats": provider_stats,
+            "top_competitors": top_competitors,
+            "intent_breakdown": intent_breakdown
+        }
         
         return templates.TemplateResponse(
             "dashboard/report_analytics.html",
@@ -596,23 +624,51 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
         
         visibility_summary = audit.get_visibility_summary() or {}
         
-        multi_llm = visibility_summary.get("multi_llm_visibility", {})
-        nested_summary = multi_llm.get("summary", {}) if isinstance(multi_llm, dict) else {}
+        provider_name_map = {
+            "openai_sim": "openai",
+            "perplexity_web": "perplexity",
+            "gemini_sim": "gemini"
+        }
         
-        nested_is_valid = nested_summary and nested_summary.get("total_queries") is not None and nested_summary.get("overall_target_found") is not None
+        total_queries = len(audit.audit_queries)
+        queries_found = 0
+        provider_stats = {"openai": {"target_found": 0, "total_probes": 0}, "perplexity": {"target_found": 0, "total_probes": 0}, "gemini": {"target_found": 0, "total_probes": 0}}
+        competitor_counts = {}
         
-        if nested_is_valid:
-            total_queries = nested_summary.get("total_queries", 0)
-            queries_found = nested_summary.get("overall_target_found", 0)
-            visibility_score = nested_summary.get("overall_target_percent", 0)
-            provider_stats = nested_summary.get("provider_stats", {})
-            raw_competitors = nested_summary.get("top_competitors", []) or []
-        else:
-            total_queries = visibility_summary.get("total_queries", 0)
-            queries_found = visibility_summary.get("overall_target_found", 0)
-            visibility_score = visibility_summary.get("overall_target_percent", 0)
-            provider_stats = visibility_summary.get("provider_stats", {})
-            raw_competitors = visibility_summary.get("top_competitors", []) or []
+        for aq in audit.audit_queries:
+            query_has_target = False
+            for vr in aq.visibility_results:
+                is_target = getattr(vr, 'is_target', False) or (
+                    vr.brand_name and business.name.lower() in vr.brand_name.lower()
+                )
+                normalized_provider = provider_name_map.get(vr.provider, vr.provider)
+                
+                if normalized_provider in provider_stats:
+                    provider_stats[normalized_provider]["total_probes"] += 1
+                    if is_target:
+                        provider_stats[normalized_provider]["target_found"] += 1
+                
+                if vr.brand_name and not is_target:
+                    competitor_counts[vr.brand_name] = competitor_counts.get(vr.brand_name, 0) + 1
+                
+                if is_target:
+                    query_has_target = True
+            
+            if query_has_target:
+                queries_found += 1
+        
+        visibility_score = round((queries_found / total_queries) * 100, 1) if total_queries > 0 else 0.0
+        
+        for pname, stats in provider_stats.items():
+            if stats["total_probes"] > 0:
+                stats["target_percent"] = round((stats["target_found"] / stats["total_probes"]) * 100, 1)
+            else:
+                stats["target_percent"] = 0.0
+        
+        raw_competitors = [
+            {"name": name, "count": count}
+            for name, count in sorted(competitor_counts.items(), key=lambda x: -x[1])[:15]
+        ]
         
         if not raw_competitors:
             from collections import Counter
@@ -653,21 +709,32 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
             top_threat_dominance = 0
             market_leader_score = max(35, visibility_score + 20)
         
-        if nested_is_valid:
-            intent_breakdown = nested_summary.get("intent_breakdown", {}) or {}
-        else:
-            intent_breakdown = visibility_summary.get("intent_breakdown", {}) or {}
+        intent_breakdown = {}
+        for aq in audit.audit_queries:
+            intent = aq.intent or "general"
+            if intent not in intent_breakdown:
+                intent_breakdown[intent] = {"total": 0, "found": 0}
+            intent_breakdown[intent]["total"] += 1
+            
+            query_has_target = False
+            for vr in aq.visibility_results:
+                is_target = getattr(vr, 'is_target', False) or (
+                    vr.brand_name and business.name.lower() in vr.brand_name.lower()
+                )
+                if is_target:
+                    query_has_target = True
+                    break
+            if query_has_target:
+                intent_breakdown[intent]["found"] += 1
+        
         formatted_intent = {}
         for intent_type, data in intent_breakdown.items():
             if not intent_type or intent_type.strip() == "":
                 continue
-            if isinstance(data, dict):
-                formatted_intent[intent_type] = {
-                    "total": data.get("total", 0),
-                    "found": data.get("found", 0)
-                }
-            else:
-                formatted_intent[intent_type] = {"total": int(data) if data else 0, "found": 0}
+            formatted_intent[intent_type] = {
+                "total": data.get("total", 0),
+                "found": data.get("found", 0)
+            }
         
         if not formatted_intent:
             formatted_intent = {"general": {"total": total_queries, "found": queries_found}}
