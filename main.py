@@ -459,29 +459,26 @@ async def dashboard_audit_detail(request: Request, business_id: int, audit_id: i
         
         if audit.status in ("completed", "done") and audit.audit_queries:
             total_queries = len(audit.audit_queries)
-            queries_with_target = 0
-            mentioned_count = 0
+            total_provider_probes = 0
+            total_provider_hits = 0
             
             for aq in audit.audit_queries:
-                query_has_target = False
                 for vr in aq.visibility_results:
+                    total_provider_probes += 1
                     is_target = getattr(vr, 'is_target', False) or (
                         vr.brand_name and business.name.lower() in vr.brand_name.lower()
                     )
                     if is_target:
-                        query_has_target = True
-                        mentioned_count += 1
-                if query_has_target:
-                    queries_with_target += 1
+                        total_provider_hits += 1
             
-            visibility_score = round((queries_with_target / total_queries) * 100, 1) if total_queries > 0 else 0.0
-            avg_score = round((queries_with_target / total_queries) * 2, 2) if total_queries > 0 else 0.0
+            visibility_score = round((total_provider_hits / total_provider_probes) * 100, 1) if total_provider_probes > 0 else 0.0
+            avg_score = round((total_provider_hits / total_provider_probes) * 2, 2) if total_provider_probes > 0 else 0.0
             
             if analysis_data and 'visibility' in analysis_data:
                 analysis_data['visibility']['visibility_score'] = visibility_score
                 analysis_data['visibility']['total_queries'] = total_queries
-                analysis_data['visibility']['mentioned_count'] = queries_with_target
-                analysis_data['visibility']['primary_count'] = queries_with_target
+                analysis_data['visibility']['mentioned_count'] = total_provider_hits
+                analysis_data['visibility']['primary_count'] = total_provider_hits
                 analysis_data['visibility']['avg_score'] = avg_score
         
         return templates.TemplateResponse(
@@ -531,15 +528,17 @@ async def dashboard_audit_analytics(request: Request, business_id: int, audit_id
         }
         
         queries = []
-        queries_with_target = 0
         total_queries = len(audit.audit_queries)
+        total_provider_probes = 0
+        total_provider_hits = 0
         provider_stats = {"openai": {"target_found": 0, "total_probes": 0}, "perplexity": {"target_found": 0, "total_probes": 0}, "gemini": {"target_found": 0, "total_probes": 0}}
         competitor_counts = {}
         intent_breakdown = {}
         
         for aq in audit.audit_queries:
             providers_list = []
-            query_has_target = False
+            query_hits = 0
+            query_probes = 0
             
             if aq.intent:
                 intent_breakdown[aq.intent] = intent_breakdown.get(aq.intent, 0) + 1
@@ -550,10 +549,17 @@ async def dashboard_audit_analytics(request: Request, business_id: int, audit_id
                 )
                 normalized_provider = provider_name_map.get(vr.provider, vr.provider)
                 
+                total_provider_probes += 1
+                query_probes += 1
+                
                 if normalized_provider in provider_stats:
                     provider_stats[normalized_provider]["total_probes"] += 1
                     if is_target:
                         provider_stats[normalized_provider]["target_found"] += 1
+                
+                if is_target:
+                    total_provider_hits += 1
+                    query_hits += 1
                 
                 if vr.brand_name and not is_target:
                     competitor_counts[vr.brand_name] = competitor_counts.get(vr.brand_name, 0) + 1
@@ -564,23 +570,19 @@ async def dashboard_audit_analytics(request: Request, business_id: int, audit_id
                     "brand_name": vr.brand_name,
                     "rank": vr.rank
                 })
-                
-                if is_target:
-                    query_has_target = True
             
-            if query_has_target:
-                queries_with_target += 1
-            
-            target_found_count = sum(1 for p in providers_list if p.get("target_found"))
+            query_score_percent = round((query_hits / query_probes) * 100) if query_probes > 0 else 0
             query_obj = type('Query', (), {
                 "query": aq.query_text,
                 "intent": aq.intent,
                 "providers": providers_list,
-                "target_found_count": target_found_count
+                "target_found_count": query_hits,
+                "total_probes": query_probes,
+                "score_percent": query_score_percent
             })()
             queries.append(query_obj)
         
-        recalc_percent = round((queries_with_target / total_queries) * 100, 1) if total_queries > 0 else 0.0
+        visibility_percent = round((total_provider_hits / total_provider_probes) * 100, 1) if total_provider_probes > 0 else 0.0
         
         for pname, stats in provider_stats.items():
             if stats["total_probes"] > 0:
@@ -589,14 +591,15 @@ async def dashboard_audit_analytics(request: Request, business_id: int, audit_id
                 stats["target_percent"] = 0.0
         
         top_competitors = [
-            {"name": name, "count": count, "percent": round((count / total_queries) * 100, 1) if total_queries > 0 else 0}
+            {"name": name, "count": count, "percent": round((count / total_provider_probes) * 100, 1) if total_provider_probes > 0 else 0}
             for name, count in sorted(competitor_counts.items(), key=lambda x: -x[1])[:10]
         ]
         
         summary = {
             "total_queries": total_queries,
-            "overall_target_found": queries_with_target,
-            "overall_target_percent": recalc_percent,
+            "total_probes": total_provider_probes,
+            "overall_target_found": total_provider_hits,
+            "overall_target_percent": visibility_percent,
             "provider_stats": provider_stats,
             "top_competitors": top_competitors,
             "intent_breakdown": intent_breakdown
@@ -658,33 +661,33 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
         }
         
         total_queries = len(audit.audit_queries)
-        queries_found = 0
+        total_provider_probes = 0
+        total_provider_hits = 0
         provider_stats = {"openai": {"target_found": 0, "total_probes": 0}, "perplexity": {"target_found": 0, "total_probes": 0}, "gemini": {"target_found": 0, "total_probes": 0}}
         competitor_counts = {}
         
         for aq in audit.audit_queries:
-            query_has_target = False
             for vr in aq.visibility_results:
                 is_target = getattr(vr, 'is_target', False) or (
                     vr.brand_name and business.name.lower() in vr.brand_name.lower()
                 )
                 normalized_provider = provider_name_map.get(vr.provider, vr.provider)
                 
+                total_provider_probes += 1
+                
                 if normalized_provider in provider_stats:
                     provider_stats[normalized_provider]["total_probes"] += 1
                     if is_target:
                         provider_stats[normalized_provider]["target_found"] += 1
                 
+                if is_target:
+                    total_provider_hits += 1
+                
                 if vr.brand_name and not is_target:
                     competitor_counts[vr.brand_name] = competitor_counts.get(vr.brand_name, 0) + 1
-                
-                if is_target:
-                    query_has_target = True
-            
-            if query_has_target:
-                queries_found += 1
         
-        visibility_score = round((queries_found / total_queries) * 100, 1) if total_queries > 0 else 0.0
+        queries_found = total_provider_hits
+        visibility_score = round((total_provider_hits / total_provider_probes) * 100, 1) if total_provider_probes > 0 else 0.0
         
         for pname, stats in provider_stats.items():
             if stats["total_probes"] > 0:
@@ -740,31 +743,27 @@ async def dashboard_mission_control(request: Request, business_id: int, audit_id
         for aq in audit.audit_queries:
             intent = aq.intent or "general"
             if intent not in intent_breakdown:
-                intent_breakdown[intent] = {"total": 0, "found": 0}
-            intent_breakdown[intent]["total"] += 1
+                intent_breakdown[intent] = {"total_probes": 0, "found": 0}
             
-            query_has_target = False
             for vr in aq.visibility_results:
+                intent_breakdown[intent]["total_probes"] += 1
                 is_target = getattr(vr, 'is_target', False) or (
                     vr.brand_name and business.name.lower() in vr.brand_name.lower()
                 )
                 if is_target:
-                    query_has_target = True
-                    break
-            if query_has_target:
-                intent_breakdown[intent]["found"] += 1
+                    intent_breakdown[intent]["found"] += 1
         
         formatted_intent = {}
         for intent_type, data in intent_breakdown.items():
             if not intent_type or intent_type.strip() == "":
                 continue
             formatted_intent[intent_type] = {
-                "total": data.get("total", 0),
+                "total": data.get("total_probes", 0),
                 "found": data.get("found", 0)
             }
         
         if not formatted_intent:
-            formatted_intent = {"general": {"total": total_queries, "found": queries_found}}
+            formatted_intent = {"general": {"total": total_provider_probes, "found": total_provider_hits}}
         
         missing_queries = []
         for aq in audit.audit_queries:
