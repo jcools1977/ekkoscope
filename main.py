@@ -31,6 +31,7 @@ SESSION_SECRET = os.getenv("SESSION_SECRET", secrets.token_hex(32))
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/reports", StaticFiles(directory="reports"), name="reports")
 templates = Jinja2Templates(directory="templates")
 
 TENANTS = {}
