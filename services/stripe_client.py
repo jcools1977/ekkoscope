@@ -95,10 +95,10 @@ async def load_stripe_config() -> StripeConfig:
         publishable_key = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
     
     webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
-    price_id = os.getenv("STRIPE_PRICE_REPORT_490") or os.getenv("STRIPE_PRICE_SNAPSHOT")
-    price_ongoing_setup = os.getenv("STRIPE_PRICE_ONGOING_SETUP")
-    price_ongoing_monthly = os.getenv("STRIPE_PRICE_CONTINUOUS_290") or os.getenv("STRIPE_PRICE_ONGOING_MONTHLY")
-    price_ekkobrain_monthly = os.getenv("STRIPE_PRICE_AUTOFIX_1188") or os.getenv("STRIPE_PRICE_EKKOBRAIN_MONTHLY")
+    price_id = os.getenv("STRIPE_PRICE_REPORT_490")
+    price_ongoing_setup = None
+    price_ongoing_monthly = os.getenv("STRIPE_PRICE_CONTINUOUS_290")
+    price_ekkobrain_monthly = os.getenv("STRIPE_PRICE_AUTOFIX_1188")
     
     if not api_key:
         raise ValueError("Stripe API key not configured. Set up Stripe connection or STRIPE_SECRET_KEY environment variable.")
