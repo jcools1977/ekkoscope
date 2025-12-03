@@ -457,6 +457,33 @@ async def dashboard_audit_detail(request: Request, business_id: int, audit_id: i
         
         analysis_data = get_audit_analysis_data(audit)
         
+        if audit.status in ("completed", "done") and audit.audit_queries:
+            total_queries = len(audit.audit_queries)
+            queries_with_target = 0
+            mentioned_count = 0
+            
+            for aq in audit.audit_queries:
+                query_has_target = False
+                for vr in aq.visibility_results:
+                    is_target = getattr(vr, 'is_target', False) or (
+                        vr.brand_name and business.name.lower() in vr.brand_name.lower()
+                    )
+                    if is_target:
+                        query_has_target = True
+                        mentioned_count += 1
+                if query_has_target:
+                    queries_with_target += 1
+            
+            visibility_score = round((queries_with_target / total_queries) * 100, 1) if total_queries > 0 else 0.0
+            avg_score = round((queries_with_target / total_queries) * 2, 2) if total_queries > 0 else 0.0
+            
+            if analysis_data and 'visibility' in analysis_data:
+                analysis_data['visibility']['visibility_score'] = visibility_score
+                analysis_data['visibility']['total_queries'] = total_queries
+                analysis_data['visibility']['mentioned_count'] = queries_with_target
+                analysis_data['visibility']['primary_count'] = queries_with_target
+                analysis_data['visibility']['avg_score'] = avg_score
+        
         return templates.TemplateResponse(
             "dashboard/audit_detail.html",
             {"request": request, "user": user, "business": business, "audit": audit, "analysis": analysis_data}
