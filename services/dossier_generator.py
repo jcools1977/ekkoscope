@@ -15,6 +15,11 @@ from fpdf import FPDF
 from collections import Counter
 
 from services.ekkoscope_sentinel import log_report_generated
+from services.report_integrity import (
+    verify_report_integrity_sync, 
+    calculate_true_visibility_score,
+    generate_corrected_narrative
+)
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +121,8 @@ def build_dossier_pdf(
     analysis: Dict[str, Any],
     sherlock_data: Optional[Dict[str, Any]] = None,
     competitor_evidence: Optional[List[Dict[str, Any]]] = None,
-    business_id: Optional[int] = None
+    business_id: Optional[int] = None,
+    audit_data: Optional[Dict[str, Any]] = None
 ) -> bytes:
     """
     Generate executive-grade intelligence report PDF.
@@ -127,6 +133,7 @@ def build_dossier_pdf(
         sherlock_data: Gap analysis data from Sherlock
         competitor_evidence: Evidence from Pinecone analysis
         business_id: Optional business ID for asset links
+        audit_data: Raw audit data for integrity verification
     
     Returns:
         PDF bytes
@@ -135,11 +142,35 @@ def build_dossier_pdf(
         if not analysis:
             analysis = {}
         
-        visibility_score = analysis.get("avg_score", 0) or 0
-        mentioned_count = analysis.get("mentioned_count", 0) or 0
-        total_queries = analysis.get("total_queries", 10) or 10
-        
-        visibility_pct = round((mentioned_count / total_queries) * 100) if total_queries > 0 else 0
+        if audit_data:
+            logger.info(f"[DOSSIER] Running integrity guardrail for {business_name}")
+            true_score = calculate_true_visibility_score(audit_data)
+            
+            verified_analysis = verify_report_integrity_sync(
+                analysis, 
+                audit_data, 
+                business_name
+            )
+            
+            if verified_analysis.get("_integrity_check", {}).get("corrections_made"):
+                corrections = verified_analysis["_integrity_check"]["corrections_made"]
+                logger.warning(f"[DOSSIER] Integrity corrections applied: {corrections}")
+            
+            analysis = verified_analysis
+            
+            visibility_pct = round(true_score["calculated_score"])
+            mentioned_count = true_score["client_mentions"]
+            total_queries = true_score["total_queries"]
+            
+            logger.info(
+                f"[DOSSIER] Using verified score: {visibility_pct}% "
+                f"({mentioned_count}/{total_queries})"
+            )
+        else:
+            visibility_score = analysis.get("avg_score", 0) or 0
+            mentioned_count = analysis.get("mentioned_count", 0) or 0
+            total_queries = analysis.get("total_queries", 10) or 10
+            visibility_pct = round((mentioned_count / total_queries) * 100) if total_queries > 0 else 0
         
         pdf = IntelligenceReportPDF(business_name)
         pdf.alias_nb_pages()

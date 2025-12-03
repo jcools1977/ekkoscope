@@ -1614,6 +1614,24 @@ async def download_dossier(request: Request, business_id: int):
         if not analysis:
             raise HTTPException(status_code=400, detail="No audit results available. Run an audit first.")
         
+        audit_data = {
+            "queries": [],
+            "audit_id": latest_audit.id
+        }
+        for aq in latest_audit.audit_queries:
+            query_data = {
+                "query_text": aq.query_text,
+                "target_found": aq.target_found,
+                "visibility_results": []
+            }
+            for vr in aq.visibility_results:
+                query_data["visibility_results"].append({
+                    "brand_name": vr.brand_name,
+                    "is_target": vr.is_target,
+                    "prominence_score": vr.prominence_score
+                })
+            audit_data["queries"].append(query_data)
+        
         sherlock_data = None
         try:
             from services.sherlock_engine import get_missions_for_business, is_sherlock_enabled
@@ -1629,7 +1647,8 @@ async def download_dossier(request: Request, business_id: int):
             analysis=analysis,
             sherlock_data=sherlock_data,
             competitor_evidence=None,
-            business_id=business_id
+            business_id=business_id,
+            audit_data=audit_data
         )
         
         safe_name = "".join(c if c.isalnum() or c in "._- " else "_" for c in business.name)
