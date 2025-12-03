@@ -3068,9 +3068,12 @@ async def admin_onboarding_create(
     website_url: str = Form(...),
     location: str = Form(""),
     industry: str = Form(""),
+    business_type: str = Form("local_service"),
     tech_stack: str = Form(""),
     competitors: str = Form(""),
     keywords: str = Form(""),
+    contact_email: str = Form(""),
+    contact_phone: str = Form(""),
     run_initial_scan: bool = Form(False),
     update_if_exists: bool = Form(False)
 ):
@@ -3106,7 +3109,14 @@ async def admin_onboarding_create(
         if existing and update_if_exists:
             existing.name = business_name
             existing.industry = industry
+            existing.business_type = business_type
             existing.competitors = competitors
+            existing.contact_email = contact_email or existing.contact_email
+            existing.contact_phone = contact_phone or existing.contact_phone
+            if location:
+                existing.set_regions([location])
+            if keywords:
+                existing.set_categories([k.strip() for k in keywords.split(",") if k.strip()])
             db.commit()
             db.refresh(existing)
             business = existing
@@ -3117,8 +3127,15 @@ async def admin_onboarding_create(
                 primary_domain=clean_domain,
                 owner_user_id=user.id,
                 industry=industry,
-                competitors=competitors
+                business_type=business_type,
+                competitors=competitors,
+                contact_email=contact_email,
+                contact_phone=contact_phone
             )
+            if location:
+                business.set_regions([location])
+            if keywords:
+                business.set_categories([k.strip() for k in keywords.split(",") if k.strip()])
             is_update = False
             db.add(business)
         

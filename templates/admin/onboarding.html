@@ -513,8 +513,9 @@
             
             <div class="form-grid">
                 <div class="form-group" id="industryField">
-                    <label for="industry">Industry</label>
-                    <input type="text" id="industry" name="industry" placeholder="e.g., Roofing">
+                    <label for="industry">Industry <span style="color: var(--brand-teal); font-size: 11px;">(auto-detected)</span></label>
+                    <input type="text" id="industry" name="industry" readonly style="background: rgba(46, 230, 168, 0.1); cursor: not-allowed;" placeholder="Detected from website...">
+                    <small style="color: var(--text-muted);">Industry is automatically detected by AI - no manual entry</small>
                 </div>
                 
                 <div class="form-group" id="websiteField">
@@ -529,7 +530,20 @@
                 <small>Comma-separated list of main services or products</small>
             </div>
             
+            <div class="form-grid">
+                <div class="form-group" id="contactEmailField">
+                    <label for="contactEmail">Contact Email <span style="color: var(--brand-teal); font-size: 11px;">(auto-detected)</span></label>
+                    <input type="email" id="contactEmail" name="contact_email" readonly style="background: rgba(46, 230, 168, 0.1); cursor: not-allowed;" placeholder="Detected from website...">
+                </div>
+                
+                <div class="form-group" id="contactPhoneField">
+                    <label for="contactPhone">Contact Phone <span style="color: var(--brand-teal); font-size: 11px;">(auto-detected)</span></label>
+                    <input type="tel" id="contactPhone" name="contact_phone" readonly style="background: rgba(46, 230, 168, 0.1); cursor: not-allowed;" placeholder="Detected from website...">
+                </div>
+            </div>
+            
             <input type="hidden" id="techStack" name="tech_stack" value="">
+            <input type="hidden" id="businessType" name="business_type" value="">
         </div>
         
         <div class="form-section" id="competitorSection">
@@ -639,7 +653,8 @@
                     { text: 'Business identified: <span class="data">' + (data.business_name || 'Analyzing...') + '</span>', delay: 500, class: 'success' },
                     { text: 'Location found: <span class="data">' + (data.location || 'Unknown') + '</span>', delay: 700, class: 'success' },
                     { text: 'Industry: <span class="data">' + (data.industry || 'General') + '</span>', delay: 900, class: 'success' },
-                    { text: 'Hunting for competitors...', delay: 1100, class: 'info' },
+                    { text: 'Contact: <span class="data">' + (data.contact_email || data.contact_phone || 'Scanning...') + '</span>', delay: 1000, class: 'success' },
+                    { text: 'Hunting for competitors...', delay: 1200, class: 'info' },
                 ];
                 
                 for (const line of resultLines) {
@@ -736,6 +751,20 @@
             document.getElementById('techStack').value = data.tech_stack;
             document.getElementById('techStackText').textContent = data.tech_stack;
             document.getElementById('techStackDisplay').style.display = 'block';
+        }
+        
+        if (data.business_type) {
+            document.getElementById('businessType').value = data.business_type;
+        }
+        
+        if (data.contact_email) {
+            document.getElementById('contactEmail').value = data.contact_email;
+            document.getElementById('contactEmailField').classList.add('field-discovered');
+        }
+        
+        if (data.contact_phone) {
+            document.getElementById('contactPhone').value = data.contact_phone;
+            document.getElementById('contactPhoneField').classList.add('field-discovered');
         }
         
         renderCompetitors(data.suggested_competitors || []);

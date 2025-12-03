@@ -97,6 +97,7 @@ class Business(Base):
     competitors = Column(Text, default="[]")  # JSON list of competitor domains/info
     contact_name = Column(String(255), nullable=True)
     contact_email = Column(String(255), nullable=True)
+    contact_phone = Column(String(50), nullable=True)
     source = Column(String(20), default="public")
     subscription_active = Column(Boolean, default=False)
     autofix_enabled = Column(Boolean, default=False)  # True for $1188/month subscribers

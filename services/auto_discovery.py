@@ -101,7 +101,10 @@ async def auto_discover(url: str) -> Dict[str, Any]:
             "business_name": str,
             "location": str,
             "industry": str,
+            "business_type": str,
             "keywords": List[str],
+            "contact_email": str,
+            "contact_phone": str,
             "suggested_competitors": List[Dict],
             "raw_metadata": Dict
         }
@@ -114,7 +117,10 @@ async def auto_discover(url: str) -> Dict[str, Any]:
         "business_name": "",
         "location": "",
         "industry": "",
+        "business_type": "",
         "keywords": [],
+        "contact_email": "",
+        "contact_phone": "",
         "suggested_competitors": [],
         "raw_metadata": {},
         "errors": []
@@ -131,13 +137,18 @@ async def auto_discover(url: str) -> Dict[str, Any]:
     result["raw_metadata"] = metadata
     result["title"] = metadata.get("title", "")
     result["tech_stack"] = detect_tech_stack(html_content)
+    result["contact_phone"] = metadata.get("phone", "")
     
     llm_analysis = await analyze_with_llm(metadata, html_content[:15000])
     if llm_analysis:
         result["business_name"] = llm_analysis.get("business_name", "")
         result["location"] = llm_analysis.get("location", "")
         result["industry"] = llm_analysis.get("industry", "")
+        result["business_type"] = llm_analysis.get("business_type", llm_analysis.get("industry", ""))
         result["keywords"] = llm_analysis.get("keywords", [])
+        result["contact_email"] = llm_analysis.get("contact_email", "")
+        if not result["contact_phone"]:
+            result["contact_phone"] = llm_analysis.get("contact_phone", "")
     
     if result["business_name"] and result["location"]:
         competitors = await find_competitors(
@@ -283,8 +294,11 @@ Body Text Excerpt: {metadata.get('body_text', '')[:2000]}
 Return a JSON object with:
 - business_name: The company/business name (not tagline)
 - location: City and State (e.g., "Morehead City, NC") - extract from footer, address, or content
-- industry: Primary industry category (e.g., "Roofing", "Plumbing", "Law Firm", "Restaurant")
+- industry: Primary industry category - be SPECIFIC (e.g., "Plumbing", "Metal Roofing", "Personal Injury Law", "Italian Restaurant", "HVAC"). This drives AI queries so specificity is critical.
+- business_type: One of: "local_service", "ecommerce", "professional_service", "restaurant", "healthcare", "retail", "saas", "agency", "contractor". Choose the best fit.
 - keywords: List of 3-5 main service/product keywords this business offers
+- contact_email: Any business email address found (e.g., info@company.com, contact@domain.com)
+- contact_phone: Primary business phone number if found
 
 Be precise. If you can't find something, return empty string or empty list.
 Return ONLY valid JSON, no markdown."""
@@ -295,7 +309,7 @@ Return ONLY valid JSON, no markdown."""
                 }
             ],
             temperature=0.1,
-            max_tokens=500
+            max_tokens=600
         )
         
         content = response.choices[0].message.content.strip()
