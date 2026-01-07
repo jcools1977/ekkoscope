@@ -371,3 +371,170 @@ def get_provider_description(provider: str) -> str:
         "perplexity_web": "Web-grounded real-time search",
         "gemini_sim": "Gemini AI simulated assistant"
     }.get(provider, provider)
+
+
+def run_teaser_visibility(
+    business_name: str,
+    primary_domain: str,
+    regions: List[str],
+    teaser_queries: List[Dict[str, Any]],
+    early_exit_on_zero: bool = True
+) -> Dict[str, Any]:
+    """
+    Run a lightweight teaser visibility probe for Sales Mode.
+    
+    Uses only 3 high-impact queries and exits early if 0% visibility is detected.
+    Returns a simplified result structure for sales packets.
+    
+    Args:
+        business_name: Name of the business being analyzed
+        primary_domain: Business website URL
+        regions: Geographic regions
+        teaser_queries: Exactly 3 queries from generate_teaser_queries()
+        early_exit_on_zero: If True, stop after first query shows 0% visibility
+    
+    Returns:
+        Dict with teaser-specific results for sales packet generation
+    """
+    import sys
+    
+    print(f"[TEASER MODE] Starting teaser visibility for {business_name}")
+    sys.stdout.flush()
+    
+    result = {
+        "business_name": business_name,
+        "domain": primary_domain,
+        "score": 0,
+        "score_percent": "0%",
+        "total_probes": 0,
+        "hits": 0,
+        "queries_tested": [],
+        "top_competitor": None,
+        "missing_query": None,
+        "providers_used": [],
+        "early_exit": False
+    }
+    
+    all_competitors: Dict[str, int] = {}
+    
+    for idx, query_item in enumerate(teaser_queries[:3]):
+        query = query_item.get("query", "")
+        intent = query_item.get("intent_type", "informational")
+        
+        if not query:
+            continue
+        
+        print(f"[TEASER MODE] Query {idx+1}/3: {query}")
+        sys.stdout.flush()
+        
+        query_result = {
+            "query": query,
+            "intent": intent,
+            "provider_results": [],
+            "target_found": False
+        }
+        
+        queries_with_intent = [{"query": query, "intent": intent, "intent_value": query_item.get("intent_value", 8)}]
+        
+        if OPENAI_ENABLED:
+            try:
+                openai_results = run_openai_visibility_for_queries(
+                    business_name, primary_domain, regions, queries_with_intent
+                )
+                if openai_results:
+                    for vis in openai_results:
+                        result["total_probes"] += 1
+                        if vis.success:
+                            if vis.target_found:
+                                result["hits"] += 1
+                                query_result["target_found"] = True
+                            
+                            for brand in vis.recommended_brands:
+                                if brand.name.lower() != business_name.lower():
+                                    all_competitors[brand.name] = all_competitors.get(brand.name, 0) + 1
+                            
+                            query_result["provider_results"].append({
+                                "provider": "openai_sim",
+                                "target_found": vis.target_found,
+                                "competitors": [b.name for b in vis.recommended_brands[:3]]
+                            })
+                    
+                    if "openai_sim" not in result["providers_used"]:
+                        result["providers_used"].append("openai_sim")
+                        
+            except Exception as e:
+                logger.warning(f"Teaser OpenAI probe failed: {e}")
+        
+        if GEMINI_ENABLED:
+            try:
+                from services.gemini_visibility import run_gemini_visibility_for_queries
+                gemini_results = run_gemini_visibility_for_queries(
+                    business_name, primary_domain, regions, queries_with_intent
+                )
+                if gemini_results:
+                    for vis in gemini_results:
+                        result["total_probes"] += 1
+                        if vis.success:
+                            if vis.target_found:
+                                result["hits"] += 1
+                                query_result["target_found"] = True
+                            
+                            for brand in vis.recommended_brands:
+                                if brand.name.lower() != business_name.lower():
+                                    all_competitors[brand.name] = all_competitors.get(brand.name, 0) + 1
+                            
+                            query_result["provider_results"].append({
+                                "provider": "gemini_sim",
+                                "target_found": vis.target_found,
+                                "competitors": [b.name for b in vis.recommended_brands[:3]]
+                            })
+                    
+                    if "gemini_sim" not in result["providers_used"]:
+                        result["providers_used"].append("gemini_sim")
+                        
+            except Exception as e:
+                logger.warning(f"Teaser Gemini probe failed: {e}")
+        
+        result["queries_tested"].append(query_result)
+        
+        if early_exit_on_zero and not query_result["target_found"] and result["hits"] == 0:
+            result["early_exit"] = True
+            result["missing_query"] = query
+            print(f"[TEASER MODE] Early exit - 0% visibility confirmed on query: {query}")
+            sys.stdout.flush()
+            break
+    
+    successful_probes = sum(
+        1 for qt in result["queries_tested"] 
+        for pr in qt.get("provider_results", [])
+    )
+    
+    if successful_probes == 0:
+        result["error"] = "No providers available - cannot determine visibility"
+        result["score_percent"] = "N/A"
+        print(f"[TEASER MODE] FAILED: No successful provider probes - cannot claim 0% visibility")
+        sys.stdout.flush()
+        return result
+    
+    if result["total_probes"] > 0:
+        score_pct = round((result["hits"] / result["total_probes"]) * 100, 1)
+        result["score"] = score_pct
+        result["score_percent"] = f"{score_pct}%"
+    
+    if all_competitors:
+        top_comp = max(all_competitors.keys(), key=lambda k: all_competitors[k])
+        result["top_competitor"] = {
+            "name": top_comp,
+            "mentions": all_competitors[top_comp]
+        }
+    
+    if not result["missing_query"] and result["queries_tested"]:
+        for qt in result["queries_tested"]:
+            if not qt["target_found"]:
+                result["missing_query"] = qt["query"]
+                break
+    
+    print(f"[TEASER MODE] Complete: {result['score_percent']} visibility, {len(result['providers_used'])} providers, {successful_probes} successful probes")
+    sys.stdout.flush()
+    
+    return result

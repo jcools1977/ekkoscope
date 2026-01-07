@@ -366,3 +366,112 @@ def get_query_intent_map(
         }
         for q in comprehensive
     }
+
+
+def generate_teaser_queries(
+    category: str,
+    region: str,
+    business_type: str = "local_service"
+) -> List[Dict[str, Any]]:
+    """
+    Generate exactly 3 high-impact queries for Sales Mode teaser audits.
+    
+    Returns 1 Emergency + 1 High Ticket + 1 Transactional query.
+    These are the highest-value queries most likely to show 0% visibility.
+    
+    Args:
+        category: The business category (e.g., "roofing", "plumbing")
+        region: The geographic region (e.g., "Charleston SC")
+        business_type: Type of business for template selection
+    
+    Returns:
+        List of exactly 3 query dicts with query, intent_type, intent_value
+    """
+    queries = []
+    
+    if business_type == "local_service":
+        queries = [
+            {
+                "query": f"emergency {category} in {region}",
+                "intent_type": "emergency",
+                "intent_value": 10,
+                "category_focus": category
+            },
+            {
+                "query": f"best {category} company in {region}",
+                "intent_type": "high_ticket",
+                "intent_value": 9,
+                "category_focus": category
+            },
+            {
+                "query": f"{category} near {region}",
+                "intent_type": "transactional",
+                "intent_value": 8,
+                "category_focus": category
+            }
+        ]
+    elif business_type == "ecom":
+        queries = [
+            {
+                "query": f"same day {category} delivery",
+                "intent_type": "emergency",
+                "intent_value": 10,
+                "category_focus": category
+            },
+            {
+                "query": f"bulk {category} supplier for businesses",
+                "intent_type": "high_ticket",
+                "intent_value": 9,
+                "category_focus": category
+            },
+            {
+                "query": f"best place to buy {category} online",
+                "intent_type": "transactional",
+                "intent_value": 8,
+                "category_focus": category
+            }
+        ]
+    elif business_type == "b2b_service":
+        queries = [
+            {
+                "query": f"urgent {category} services",
+                "intent_type": "emergency",
+                "intent_value": 10,
+                "category_focus": category
+            },
+            {
+                "query": f"enterprise {category} solutions",
+                "intent_type": "high_ticket",
+                "intent_value": 9,
+                "category_focus": category
+            },
+            {
+                "query": f"best {category} company for businesses",
+                "intent_type": "transactional",
+                "intent_value": 8,
+                "category_focus": category
+            }
+        ]
+    else:
+        queries = [
+            {
+                "query": f"emergency {category} in {region}",
+                "intent_type": "emergency",
+                "intent_value": 10,
+                "category_focus": category
+            },
+            {
+                "query": f"best {category} in {region}",
+                "intent_type": "high_ticket",
+                "intent_value": 9,
+                "category_focus": category
+            },
+            {
+                "query": f"{category} services {region}",
+                "intent_type": "transactional",
+                "intent_value": 8,
+                "category_focus": category
+            }
+        ]
+    
+    return queries

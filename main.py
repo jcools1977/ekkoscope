@@ -3862,6 +3862,228 @@ async def sherlock_get_mission(request: Request, mission_id: int):
 
 
 # =============================================================================
+# SALES MODE API - HEADLESS TEASER AUDITS FOR COLD OUTREACH
+# =============================================================================
+
+_sales_rate_limit_cache: dict = {}
+SALES_RATE_LIMIT_WINDOW = 60
+SALES_RATE_LIMIT_MAX = 5
+
+
+def _check_sales_rate_limit(client_ip: str) -> bool:
+    """Simple in-memory rate limiter for sales endpoints. Returns True if allowed."""
+    import time
+    now = time.time()
+    
+    if client_ip not in _sales_rate_limit_cache:
+        _sales_rate_limit_cache[client_ip] = []
+    
+    _sales_rate_limit_cache[client_ip] = [
+        t for t in _sales_rate_limit_cache[client_ip] 
+        if now - t < SALES_RATE_LIMIT_WINDOW
+    ]
+    
+    if len(_sales_rate_limit_cache[client_ip]) >= SALES_RATE_LIMIT_MAX:
+        return False
+    
+    _sales_rate_limit_cache[client_ip].append(now)
+    return True
+
+
+def _validate_sales_url(url: str) -> tuple:
+    """Validate URL for sales mode to prevent SSRF attacks."""
+    from urllib.parse import urlparse
+    import ipaddress
+    import socket
+    
+    if not url:
+        return False, "URL is required"
+    
+    try:
+        parsed = urlparse(url if url.startswith("http") else f"https://{url}")
+        
+        if not parsed.netloc:
+            return False, "Invalid URL format"
+        
+        if not parsed.scheme or parsed.scheme not in ["http", "https"]:
+            return False, "Only HTTP/HTTPS URLs are allowed"
+        
+        host = parsed.hostname
+        if not host:
+            return False, "Invalid hostname"
+        
+        host_lower = host.lower()
+        blocked_hostnames = [
+            "localhost", "localhost.localdomain", "ip6-localhost", 
+            "ip6-loopback", "metadata.google.internal", "169.254.169.254"
+        ]
+        if host_lower in blocked_hostnames:
+            return False, "Internal URLs are not allowed"
+        
+        def _is_ip_blocked(ip_obj) -> bool:
+            """Check if an IP address is private/internal/blocked."""
+            if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_reserved:
+                return True
+            if ip_obj.is_link_local or ip_obj.is_multicast:
+                return True
+            if isinstance(ip_obj, ipaddress.IPv4Address):
+                first_octet = int(str(ip_obj).split('.')[0])
+                if first_octet == 0 or first_octet == 127:
+                    return True
+            return False
+        
+        try:
+            ip = ipaddress.ip_address(host)
+            if _is_ip_blocked(ip):
+                return False, "Internal/private IP addresses are not allowed"
+        except ValueError:
+            try:
+                addr_info = socket.getaddrinfo(host, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
+                for family, _, _, _, sockaddr in addr_info:
+                    ip_str = sockaddr[0]
+                    try:
+                        ip = ipaddress.ip_address(ip_str)
+                        if _is_ip_blocked(ip):
+                            return False, "Hostname resolves to internal/private IP address"
+                    except ValueError:
+                        continue
+            except socket.gaierror:
+                pass
+        
+        return True, parsed.geturl()
+    except Exception:
+        return False, "Invalid URL"
+
+
+@app.post("/api/sales/teaser")
+async def sales_teaser_audit(request: Request):
+    """
+    Run a headless teaser audit for cold outreach.
+    
+    Accepts a URL, auto-configures the business, runs 3 high-impact queries,
+    and returns a sales packet JSON.
+    
+    Request body: {"url": "https://example.com"}
+    
+    Returns: Sales packet with 0% visibility hook for outreach.
+    """
+    from services.sales_mode import run_teaser_audit
+    
+    client_ip = request.client.host if request.client else "unknown"
+    if not _check_sales_rate_limit(client_ip):
+        return JSONResponse(
+            {"error": "Rate limit exceeded. Maximum 5 requests per minute."},
+            status_code=429
+        )
+    
+    try:
+        body = await request.json()
+        url = body.get("url")
+        
+        valid, url_or_error = _validate_sales_url(url)
+        if not valid:
+            return JSONResponse({"error": url_or_error}, status_code=400)
+        
+        result = run_teaser_audit(url_or_error)
+        
+        if not result.get("success"):
+            return JSONResponse(result, status_code=422)
+        
+        return JSONResponse(result)
+        
+    except Exception as e:
+        logger.error(f"Sales teaser audit error: {e}")
+        return JSONResponse({"error": str(e)[:100]}, status_code=500)
+
+
+@app.post("/api/sales/batch")
+async def sales_batch_teaser(request: Request):
+    """
+    Run teaser audits for multiple URLs.
+    
+    Request body: {"urls": ["https://example1.com", "https://example2.com"]}
+    
+    Returns: List of sales packets.
+    """
+    from services.sales_mode import run_batch_teaser_audit
+    
+    client_ip = request.client.host if request.client else "unknown"
+    if not _check_sales_rate_limit(client_ip):
+        return JSONResponse(
+            {"error": "Rate limit exceeded. Maximum 5 requests per minute."},
+            status_code=429
+        )
+    
+    try:
+        body = await request.json()
+        urls = body.get("urls", [])
+        
+        if not urls or not isinstance(urls, list):
+            return JSONResponse({"error": "urls array is required"}, status_code=400)
+        
+        if len(urls) > 10:
+            return JSONResponse({"error": "Maximum 10 URLs per batch"}, status_code=400)
+        
+        validated_urls = []
+        for url in urls:
+            valid, url_or_error = _validate_sales_url(url)
+            if not valid:
+                return JSONResponse({"error": f"Invalid URL '{url}': {url_or_error}"}, status_code=400)
+            validated_urls.append(url_or_error)
+        
+        results = run_batch_teaser_audit(validated_urls)
+        
+        return JSONResponse({
+            "count": len(results),
+            "results": results
+        })
+        
+    except Exception as e:
+        logger.error(f"Sales batch audit error: {e}")
+        return JSONResponse({"error": str(e)[:100]}, status_code=500)
+
+
+@app.post("/api/sales/configure")
+async def sales_auto_configure(request: Request):
+    """
+    Auto-configure a business from a URL without running the audit.
+    
+    Useful for previewing what the system inferred before running the full teaser.
+    
+    Request body: {"url": "https://example.com"}
+    
+    Returns: Inferred business configuration.
+    """
+    from services.auto_configure import auto_configure_business
+    
+    client_ip = request.client.host if request.client else "unknown"
+    if not _check_sales_rate_limit(client_ip):
+        return JSONResponse(
+            {"error": "Rate limit exceeded. Maximum 5 requests per minute."},
+            status_code=429
+        )
+    
+    try:
+        body = await request.json()
+        url = body.get("url")
+        
+        valid, url_or_error = _validate_sales_url(url)
+        if not valid:
+            return JSONResponse({"error": url_or_error}, status_code=400)
+        
+        config = auto_configure_business(url_or_error)
+        
+        if not config.get("success"):
+            return JSONResponse(config, status_code=422)
+        
+        return JSONResponse(config)
+        
+    except Exception as e:
+        logger.error(f"Sales auto-configure error: {e}")
+        return JSONResponse({"error": str(e)[:100]}, status_code=500)
+
+
+# =============================================================================
 # ONGOING PUBLIC PAID FLOW (SPRINT 3)
 # =============================================================================
 

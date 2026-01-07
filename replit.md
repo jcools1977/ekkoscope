@@ -59,6 +59,14 @@ The backend is built with FastAPI and Uvicorn on Python 3.11+. It handles AI vis
     - Content override for mismatched positive summaries at low scores
     - Automatic narrative regeneration for critical cases (0% or CRITICAL risk)
     - Template-based narrative generation matching exact calculated values
+- **Sales Mode (Headless Teaser Audits)**: Automated cold outreach system for prospecting:
+    - **Auto-Configuration**: GPT-4o-mini infers business name, industry, and location from URL scraping
+    - **Teaser Queries**: Runs exactly 3 high-impact queries (emergency, high_ticket, transactional) to minimize cost
+    - **Early-Exit Detection**: Stops on first 0% visibility finding for faster prospecting
+    - **Sales Packet Output**: Returns JSON with hook_message for personalized outreach
+    - **Security**: SSRF protection (IPv4/IPv6 validation via ipaddress module), rate limiting (5 req/min/IP)
+    - **API Endpoints**: `/api/sales/teaser`, `/api/sales/batch`, `/api/sales/configure`
+    - **Error Signaling**: Proper HTTP codes (400 invalid input, 422 operational failure, 429 rate limit, 500 error)
 
 ### System Design Choices
 
