@@ -67,6 +67,15 @@ The backend is built with FastAPI and Uvicorn on Python 3.11+. It handles AI vis
     - **Security**: SSRF protection (IPv4/IPv6 validation via ipaddress module), rate limiting (5 req/min/IP)
     - **API Endpoints**: `/api/sales/teaser`, `/api/sales/batch`, `/api/sales/configure`
     - **Error Signaling**: Proper HTTP codes (400 invalid input, 422 operational failure, 429 rate limit, 500 error)
+- **Swarm Commander (Domain Provisioning Engine)**: Infrastructure-as-Code module for automated domain procurement:
+    - **4-Step Handshake**: BUY (Namecheap) → HANDOVER (Cloudflare zone) → LINK (update nameservers) → FORTIFY (SPF/DKIM/DMARC)
+    - **Domain Check**: Verify availability before purchase via Namecheap API
+    - **Cloudflare Integration**: Automatic zone creation and nameserver assignment
+    - **Security Records**: Auto-inject SPF, DKIM, DMARC for email deliverability (Google/Microsoft/Instantly)
+    - **MX Records**: Optional MX record configuration for email providers
+    - **Dry Run Mode**: Simulate purchase without charging for testing
+    - **API Endpoints**: `/api/swarm/check`, `/api/swarm/provision`, `/api/swarm/status/{domain}`
+    - **Auth**: Provision endpoint requires `X-Admin-Password` header
 
 ### System Design Choices
 

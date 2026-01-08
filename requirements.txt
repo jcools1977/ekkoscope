@@ -24,3 +24,4 @@ pinecone
 requests
 PyPDF2
 pinecone
+tldextract

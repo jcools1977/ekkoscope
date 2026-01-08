@@ -4084,6 +4084,115 @@ async def sales_auto_configure(request: Request):
 
 
 # =============================================================================
+# SWARM COMMANDER API - DOMAIN PROVISIONING
+# =============================================================================
+
+@app.post("/api/swarm/check")
+async def swarm_check_availability(request: Request):
+    """
+    Check if a domain is available for registration.
+    
+    Request body: {"domain": "try-ekkoscope.com"}
+    """
+    from services.swarm_commander import get_swarm_commander
+    
+    try:
+        body = await request.json()
+        domain = body.get("domain", "").strip().lower()
+        
+        if not domain:
+            return JSONResponse({"error": "Domain is required"}, status_code=400)
+        
+        commander = get_swarm_commander()
+        result = commander.check_availability(domain)
+        
+        return JSONResponse(result)
+        
+    except Exception as e:
+        logger.error(f"Swarm check error: {e}")
+        return JSONResponse({"error": str(e)[:100]}, status_code=500)
+
+
+@app.post("/api/swarm/provision")
+async def swarm_provision_domain(request: Request):
+    """
+    Provision a domain with the 4-step handshake.
+    
+    Request body: {
+        "domain": "try-ekkoscope.com",
+        "dry_run": true,
+        "email_provider": "google",
+        "skip_purchase": false
+    }
+    
+    Requires X-Admin-Password header.
+    """
+    from services.swarm_commander import get_swarm_commander, SwarmConfigError
+    
+    stored_password = os.environ.get("ADMIN_PASSWORD", "")
+    weak_passwords = ["ekkoscope2024", "password", "admin123", "12345678"]
+    if not stored_password or len(stored_password) < 8 or stored_password.lower() in weak_passwords:
+        return JSONResponse(
+            {"error": "ADMIN_PASSWORD not properly configured. Set a unique, secure password in secrets."},
+            status_code=503
+        )
+    
+    admin_password = request.headers.get("X-Admin-Password", "")
+    if not admin_password or admin_password != stored_password:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    try:
+        body = await request.json()
+        domain = body.get("domain", "").strip().lower()
+        dry_run = body.get("dry_run", True)
+        email_provider = body.get("email_provider", "google")
+        skip_purchase = body.get("skip_purchase", False)
+        
+        if not domain:
+            return JSONResponse({"error": "Domain is required"}, status_code=400)
+        
+        commander = get_swarm_commander()
+        
+        if not skip_purchase:
+            commander.require_namecheap_config()
+        commander.require_cloudflare_config()
+        
+        result = commander.provision_domain(
+            domain=domain,
+            dry_run=dry_run,
+            email_provider=email_provider,
+            skip_purchase=skip_purchase
+        )
+        
+        return JSONResponse(result.to_dict())
+    
+    except SwarmConfigError as e:
+        return JSONResponse({"error": str(e)}, status_code=422)
+        
+    except Exception as e:
+        logger.error(f"Swarm provision error: {e}")
+        return JSONResponse({"error": str(e)[:100]}, status_code=500)
+
+
+@app.get("/api/swarm/status/{domain}")
+async def swarm_zone_status(domain: str, request: Request):
+    """
+    Get the current status of a domain in Cloudflare.
+    """
+    from services.swarm_commander import get_swarm_commander
+    
+    try:
+        commander = get_swarm_commander()
+        result = commander.get_zone_status(domain)
+        
+        return JSONResponse(result)
+        
+    except Exception as e:
+        logger.error(f"Swarm status error: {e}")
+        return JSONResponse({"error": str(e)[:100]}, status_code=500)
+
+
+# =============================================================================
 # ONGOING PUBLIC PAID FLOW (SPRINT 3)
 # =============================================================================
 
