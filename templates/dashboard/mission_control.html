@@ -2318,74 +2318,285 @@
         }
         
         function copyCodeToClipboard() {
-            const code = `<!-- EkkoScope Schema Fix for ${businessName} -->
+            const businessUrl = "{{ business.url or 'https://example.com' }}";
+            const businessPhone = "{{ business.phone or '(555) 123-4567' }}";
+            const businessCity = "{{ business.city or 'Your City' }}";
+            const businessState = "{{ business.state or 'ST' }}";
+            const businessIndustry = "{{ business.industry or 'professional services' }}";
+            
+            const code = `<!-- =============================================
+     EKKOSCOPE AI VISIBILITY FIX FOR ${businessName.toUpperCase()}
+     Copy this entire block into your website's <head> section
+     ============================================= -->
+
+<!-- LocalBusiness Schema -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "name": "${businessName}",
-  "description": "Professional services optimized for AI visibility",
+  "description": "Professional ${businessIndustry} services in ${businessCity}, ${businessState}. Available 24/7 for emergency needs. Top-rated with excellent customer reviews.",
+  "url": "${businessUrl}",
+  "telephone": "${businessPhone}",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "${businessCity}",
+    "addressRegion": "${businessState}",
+    "addressCountry": "US"
+  },
   "aggregateRating": {
     "@type": "AggregateRating",
     "ratingValue": "4.9",
-    "reviewCount": "127"
+    "reviewCount": "UPDATE_YOUR_REVIEW_COUNT",
+    "bestRating": "5"
   }
 }
 <` + `/script>
 
-<!-- Meta Description Fix -->
-<meta name="description" content="Professional ${businessName} services. Available 24/7 for emergency needs. Top-rated with 4.9 reviews.">
+<!-- Meta Description - Replace your existing one -->
+<meta name="description" content="Professional ${businessIndustry} services in ${businessCity}, ${businessState}. ${businessName} offers expert solutions with 24/7 availability. Call ${businessPhone} today.">
 
 <!-- FAQ Schema -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  "mainEntity": [{
-    "@type": "Question",
-    "name": "Why choose ${businessName}?",
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "We provide expert services with 24/7 availability and industry-leading response times."
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What ${businessIndustry} services do you offer in ${businessCity}?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "${businessName} provides comprehensive ${businessIndustry} services throughout ${businessCity}, ${businessState}. Our experienced team offers professional solutions tailored to your needs."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why choose ${businessName}?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We provide expert ${businessIndustry} services with 24/7 availability, competitive pricing, and a commitment to customer satisfaction."
+      }
     }
-  }]
+  ]
 }
 <` + `/script>`;
             
             navigator.clipboard.writeText(code).then(() => {
-                alert('Code copied to clipboard!');
+                alert('Code copied to clipboard! Paste it into your website\\'s <head> section.');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = code;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('Code copied to clipboard! Paste it into your website\\'s <head> section.');
             });
         }
         
         async function downloadPatchKit() {
             const zip = new JSZip();
             
-            zip.file("schema-fix.html", `<!-- LocalBusiness Schema for ${businessName} -->
+            const businessUrl = "{{ business.url or 'https://example.com' }}";
+            const businessPhone = "{{ business.phone or '(555) 123-4567' }}";
+            const businessCity = "{{ business.city or 'Your City' }}";
+            const businessState = "{{ business.state or 'ST' }}";
+            const businessIndustry = "{{ business.industry or 'professional services' }}";
+            const businessAddress = "{{ business.address or '123 Main Street' }}";
+            
+            const localBusinessSchema = {
+                "@context": "https://schema.org",
+                "@type": "LocalBusiness",
+                "name": businessName,
+                "description": `Professional ${businessIndustry} services in ${businessCity}, ${businessState}. Available 24/7 for emergency needs. Top-rated with excellent customer reviews.`,
+                "url": businessUrl,
+                "telephone": businessPhone,
+                "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": businessAddress,
+                    "addressLocality": businessCity,
+                    "addressRegion": businessState,
+                    "addressCountry": "US"
+                },
+                "geo": {
+                    "@type": "GeoCoordinates",
+                    "latitude": "UPDATE_WITH_YOUR_LATITUDE",
+                    "longitude": "UPDATE_WITH_YOUR_LONGITUDE"
+                },
+                "openingHoursSpecification": [
+                    {
+                        "@type": "OpeningHoursSpecification",
+                        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                        "opens": "08:00",
+                        "closes": "18:00"
+                    }
+                ],
+                "priceRange": "$$",
+                "aggregateRating": {
+                    "@type": "AggregateRating",
+                    "ratingValue": "4.9",
+                    "reviewCount": "UPDATE_WITH_YOUR_REVIEW_COUNT",
+                    "bestRating": "5",
+                    "worstRating": "1"
+                },
+                "sameAs": [
+                    "UPDATE_WITH_YOUR_FACEBOOK_URL",
+                    "UPDATE_WITH_YOUR_LINKEDIN_URL"
+                ]
+            };
+            
+            const faqSchema = {
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": `What ${businessIndustry} services do you offer in ${businessCity}?`,
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": `${businessName} provides comprehensive ${businessIndustry} services throughout ${businessCity}, ${businessState}. Our experienced team offers professional solutions tailored to your needs with industry-leading response times.`
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": `Why choose ${businessName}?`,
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": `We provide expert ${businessIndustry} services with 24/7 availability, competitive pricing, and a commitment to customer satisfaction. Our team has years of experience serving ${businessCity} and surrounding areas.`
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": `How can I contact ${businessName}?`,
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": `You can reach us at ${businessPhone} or visit our website at ${businessUrl}. We serve ${businessCity}, ${businessState} and surrounding areas.`
+                        }
+                    }
+                ]
+            };
+            
+            const serviceSchema = {
+                "@context": "https://schema.org",
+                "@type": "Service",
+                "serviceType": businessIndustry,
+                "provider": {
+                    "@type": "LocalBusiness",
+                    "name": businessName,
+                    "telephone": businessPhone
+                },
+                "areaServed": {
+                    "@type": "City",
+                    "name": businessCity
+                },
+                "description": `Professional ${businessIndustry} services in ${businessCity}, ${businessState}`
+            };
+            
+            zip.file("1-local-business-schema.html", `<!-- LocalBusiness Schema for ${businessName} -->
+<!-- COPY THIS INTO YOUR WEBSITE'S <head> SECTION -->
 <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": "${businessName}"
-}
-<` + `/script>`);
+${JSON.stringify(localBusinessSchema, null, 2)}
+</script>`);
             
-            zip.file("meta-fix.html", `<meta name="description" content="Professional ${businessName} services.">`);
+            zip.file("2-faq-schema.html", `<!-- FAQ Schema for ${businessName} -->
+<!-- COPY THIS INTO YOUR WEBSITE'S <head> SECTION -->
+<script type="application/ld+json">
+${JSON.stringify(faqSchema, null, 2)}
+</script>`);
             
-            zip.file("README.txt", `EkkoScope Patch Kit for ${businessName}
-Generated: ${new Date().toISOString()}
+            zip.file("3-service-schema.html", `<!-- Service Schema for ${businessName} -->
+<!-- COPY THIS INTO YOUR WEBSITE'S <head> SECTION -->
+<script type="application/ld+json">
+${JSON.stringify(serviceSchema, null, 2)}
+</script>`);
+            
+            zip.file("4-meta-tags.html", `<!-- Optimized Meta Tags for ${businessName} -->
+<!-- REPLACE YOUR EXISTING META DESCRIPTION WITH THIS -->
 
-Instructions:
-1. Open schema-fix.html and copy the schema to your site's head section
-2. Update your meta description using meta-fix.html
-3. Re-run your EkkoScope audit to verify improvements`);
+<meta name="description" content="Professional ${businessIndustry} services in ${businessCity}, ${businessState}. ${businessName} offers expert solutions with 24/7 availability. Call ${businessPhone} today.">
+
+<meta name="keywords" content="${businessIndustry}, ${businessCity}, ${businessState}, ${businessName}, professional services, local business">
+
+<!-- Open Graph Tags for Social Sharing -->
+<meta property="og:title" content="${businessName} - ${businessIndustry} in ${businessCity}, ${businessState}">
+<meta property="og:description" content="Professional ${businessIndustry} services. Top-rated with excellent customer reviews. Call ${businessPhone}.">
+<meta property="og:type" content="business.business">
+<meta property="og:url" content="${businessUrl}">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="${businessName} - ${businessIndustry}">
+<meta name="twitter:description" content="Professional ${businessIndustry} services in ${businessCity}, ${businessState}.">`);
             
-            const content = await zip.generateAsync({type: "blob"});
-            const url = URL.createObjectURL(content);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'ekkoscope-patch-kit.zip';
-            a.click();
-            URL.revokeObjectURL(url);
+            zip.file("README.txt", `===============================================
+EKKOSCOPE PATCH KIT FOR ${businessName.toUpperCase()}
+===============================================
+
+Generated: ${new Date().toISOString()}
+Current Visibility: ${currentVisibility}%
+Target: ${marketLeaderScore}%
+
+FILES INCLUDED:
+---------------
+1. 1-local-business-schema.html
+   - LocalBusiness structured data for Google/AI visibility
+   - CRITICAL: Update latitude/longitude with your actual coordinates
+   - CRITICAL: Update review count with your real number
+   
+2. 2-faq-schema.html  
+   - FAQ structured data to appear in AI responses
+   - Customize questions/answers for your specific services
+   
+3. 3-service-schema.html
+   - Service schema to highlight your offerings
+   - Add more services as needed
+   
+4. 4-meta-tags.html
+   - Optimized meta description and social tags
+   - Replace your existing meta tags with these
+
+INSTALLATION INSTRUCTIONS:
+--------------------------
+1. Open each HTML file in a text editor
+2. Review and customize the content (especially placeholders marked "UPDATE_WITH_YOUR_...")
+3. Copy the <script type="application/ld+json">...</script> blocks
+4. Paste them into your website's <head> section
+5. For WordPress: Use a plugin like "Insert Headers and Footers" or add to your theme's header.php
+6. For Squarespace/Wix: Use the custom code injection feature in settings
+7. Test with Google's Rich Results Test: https://search.google.com/test/rich-results
+
+AFTER INSTALLATION:
+-------------------
+- Run another EkkoScope audit to verify improvements
+- Monitor your visibility score over the next 2-4 weeks
+- AI assistants typically re-index within 1-2 weeks
+
+SUPPORT:
+--------
+Questions? Visit https://ekkoscope.com or contact support@ekkoscope.com
+
+---
+EkkoScope - Making Your Business Visible to AI
+`);
+            
+            try {
+                const content = await zip.generateAsync({type: "blob"});
+                const url = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ekkoscope-patch-kit-${businessName.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                closeDeployConsole();
+                alert('Patch Kit downloaded! Check your downloads folder.');
+            } catch (err) {
+                console.error('Download failed:', err);
+                alert('Download failed. Please try again or use the "Copy Code" option.');
+            }
         }
         
         function showGitHubPR() {
